@@ -1,12 +1,13 @@
-import { promises as fs, statSync } from 'fs';
-import { format } from 'util';
-import { fetchHead } from './fetch';
-import { Stats } from '../../models/Stats';
-import { isFileURL, isUrlLike, toURL } from './util';
+import { promises as fs, statSync } from 'node:fs';
+import { format } from 'node:util';
+
+import type { Stats } from '../../models/Stats.js';
+import { fetchHead } from './fetch.js';
+import { isFileURL, isUrlLike, toFileURL } from './url.js';
 
 export async function getStat(filenameOrUri: string): Promise<Stats | Error> {
     if (isUrlLike(filenameOrUri)) {
-        const url = toURL(filenameOrUri);
+        const url = toFileURL(filenameOrUri);
         if (!isFileURL(url)) {
             try {
                 return await getStatHttp(url);

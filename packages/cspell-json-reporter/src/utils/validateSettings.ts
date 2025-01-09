@@ -1,5 +1,6 @@
-import { AssertionError } from 'assert';
-import { CSpellJSONReporterSettings } from '../CSpellJSONReporterSettings';
+import { AssertionError } from 'node:assert';
+
+import type { CSpellJSONReporterSettings } from '../CSpellJSONReporterSettings.js';
 
 function assertBooleanOrUndefined(key: string, value: unknown): asserts value is boolean | undefined {
     if (typeof value !== 'boolean' && value !== undefined) {
@@ -15,7 +16,7 @@ function assertBooleanOrUndefined(key: string, value: unknown): asserts value is
  * Throws an error if passed cspell-json-reporter settings are invalid
  */
 export function validateSettings(settings: unknown): asserts settings is CSpellJSONReporterSettings {
-    if (!settings || typeof settings !== 'object') {
+    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
         throw new AssertionError({
             message: 'cspell-json-reporter settings must be an object',
             actual: typeof settings,
@@ -23,7 +24,7 @@ export function validateSettings(settings: unknown): asserts settings is CSpellJ
         });
     }
 
-    const { outFile, debug, verbose, progress } = settings as CSpellJSONReporterSettings;
+    const { outFile = 'stdout', debug, verbose, progress } = settings as CSpellJSONReporterSettings;
 
     if (typeof outFile !== 'string') {
         throw new AssertionError({

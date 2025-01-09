@@ -1,14 +1,21 @@
-import { parseFlags } from './parseFlags';
-import { createFeatureFlags, FeatureFlag } from './FeatureFlags';
-import { spyOnConsole } from '../test/console';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-const { consoleOutput } = spyOnConsole();
+import { spyOnConsole } from '../test/console.js';
+import type { FeatureFlag } from './FeatureFlags.js';
+import { createFeatureFlags } from './FeatureFlags.js';
+import { parseFlags } from './parseFlags.js';
+
+const consoleSpy = spyOnConsole();
 
 describe('parseFlags', () => {
     const features: FeatureFlag[] = [mkFeature('flag1'), mkFeature('compress'), mkFeature('advanced')];
 
     beforeEach(() => {
-        jest.resetAllMocks();
+        consoleSpy.attach();
+    });
+
+    afterEach(() => {
+        vi.resetAllMocks();
     });
 
     test.each`
@@ -28,7 +35,7 @@ describe('parseFlags', () => {
         const ff = createFeatureFlags();
         ff.registerFeatures(features);
         expect(() => parseFlags(ff, ['mistaken:true'])).toThrow();
-        expect(consoleOutput()).toMatchSnapshot();
+        expect(consoleSpy.consoleOutput()).toMatchSnapshot();
     });
 });
 

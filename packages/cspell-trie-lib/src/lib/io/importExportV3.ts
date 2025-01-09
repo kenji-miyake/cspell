@@ -1,20 +1,12 @@
-import { TrieNode, FLAG_WORD, TrieRoot } from '../TrieNode';
-import { Sequence, genSequence } from 'gensequence';
-import { bufferLines } from '../utils/bufferLines';
-import { trieNodeToRoot } from '../trie-util';
+import { opAppend, pipe } from '@cspell/cspell-pipe/sync';
 
-const EOW = '$'; // End of word
-const BACK = '<'; // Move up the tree
-const EOL = '\n'; // End of Line (ignored)
-const LF = '\r'; // Line Feed (ignored)
-const REF = '#'; // Start of Reference
-const EOR = ';'; // End of Reference
-const ESCAPE = '\\';
+import type { TrieNode, TrieRoot } from '../TrieNode/TrieNode.js';
+import { bufferLines } from '../utils/bufferLines.js';
+import { BACK, EOL, EOR, EOW, ESCAPE, LF, REF } from './constants.js';
+import { importTrieV3AsTrieRoot } from './importV3.js';
 
-const specialCharacters = new Set(
-    [EOW, BACK, EOL, REF, EOR, ESCAPE, LF]
-        .concat('0123456789'.split(''))
-        .concat('`~!@#$%^&*()_-+=[]{};:\'"<>,./?\\|'.split(''))
+const specialCharacters = stringToCharSet(
+    [EOW, BACK, EOL, REF, EOR, ESCAPE, LF, '0123456789', '`~!@#$%^&*()_-+=[]{};:\'"<>,./?\\|'].join(''),
 );
 
 const specialCharacterMap = new Map([
@@ -22,7 +14,6 @@ const specialCharacterMap = new Map([
     ['\r', '\\r'],
     ['\\', '\\\\'],
 ]);
-const characterMap = new Map([...specialCharacterMap].map((a) => [a[1], a[0]]));
 
 const specialPrefix = stringToCharSet('~!');
 
@@ -30,11 +21,16 @@ const WORDS_PER_LINE = 20;
 
 export const DATA = '__DATA__';
 
-function generateHeader(base: number, comment: string): Sequence<string> {
-    const header = ['#!/usr/bin/env cspell-trie reader', 'TrieXv3', 'base=' + base]
-        .concat(comment ? comment.split('\n').map((a) => '# ' + a) : [])
-        .concat(['# Data:', DATA]);
-    return genSequence(header).map((a) => a + '\n');
+function generateHeader(base: number, comment: string): Iterable<string> {
+    const header = [
+        '#!/usr/bin/env cspell-trie reader',
+        'TrieXv3',
+        'base=' + base,
+        ...(comment ? comment.split('\n').map((a) => '# ' + a) : []),
+        '# Data:',
+        DATA,
+    ];
+    return header.map((a) => a + '\n');
 }
 
 export interface ExportOptions {
@@ -55,7 +51,7 @@ export interface ExportOptions {
 /**
  * Serialize a TrieRoot.
  */
-export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 16): Sequence<string> {
+export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 16): Iterable<string> {
     options = typeof options === 'number' ? { base: options, addLineBreaksToImproveDiffs: false } : options;
     const { base = 16, comment = '', addLineBreaksToImproveDiffs: addBreaks = true } = options;
     const radix = base > 36 ? 36 : base < 10 ? 10 : base;
@@ -71,7 +67,7 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
     }
 
     function escape(s: string): string {
-        return specialCharacters.has(s) ? ESCAPE + (specialCharacterMap.get(s) || s) : s;
+        return s in specialCharacters ? ESCAPE + (specialCharacterMap.get(s) || s) : s;
     }
 
     function* flush() {
@@ -90,19 +86,22 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
 
     function* emit(s: string): Generator<string> {
         switch (s) {
-            case EOW:
+            case EOW: {
                 yield* flush();
                 backBuffer.last = EOW;
                 backBuffer.count = 0;
                 backBuffer.words++;
                 break;
-            case BACK:
+            }
+            case BACK: {
                 backBuffer.count++;
                 break;
-            case EOL:
+            }
+            case EOL: {
                 backBuffer.eol = true;
                 break;
-            default:
+            }
+            default: {
                 if (backBuffer.words >= WORDS_PER_LINE) {
                     backBuffer.eol = true;
                 }
@@ -111,6 +110,7 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
                     backBuffer.words++;
                 }
                 yield s;
+            }
         }
     }
 
@@ -125,7 +125,7 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
                 yield* emit(EOL);
             }
             cache.set(node, count++);
-            const c = [...node.c].sort((a, b) => (a[0] < b[0] ? -1 : 1));
+            const c = Object.entries(node.c).sort((a, b) => (a[0] < b[0] ? -1 : 1));
             for (const [s, n] of c) {
                 wordChars[depth] = s;
                 yield* emit(escape(s));
@@ -149,9 +149,11 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
     }
 
     function _calcShouldSimpleRef(node: TrieNode): boolean {
-        if (node.c?.size !== 1) return false;
-        const [n] = [...node.c.values()];
-        return !!n.f && (n.c === undefined || n.c.size === 0);
+        if (!node.c) return false;
+        const values = Object.values(node.c);
+        if (values.length !== 1) return false;
+        const n = values[0];
+        return !!n.f && (!n.c || !Object.values(n.c).length);
     }
 
     function shouldSimpleRef(node: TrieNode): boolean {
@@ -162,11 +164,7 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
         return rr;
     }
 
-    return generateHeader(radix, comment).concat(bufferLines(serialize(root), 1200, ''));
-}
-
-function* toIterableIterator<T>(iter: Iterable<T>): IterableIterator<T> {
-    yield* iter;
+    return pipe(generateHeader(radix, comment), opAppend(bufferLines(serialize(root), 1200, '')));
 }
 
 interface Stack {
@@ -183,155 +181,9 @@ interface ReduceResults {
 
 type Reducer = (acc: ReduceResults, s: string) => ReduceResults;
 
-export function importTrie(linesX: Iterable<string> | string): TrieRoot {
-    linesX = typeof linesX === 'string' ? linesX.split(/(?<=\n)/) : linesX;
-    const root: TrieRoot = trieNodeToRoot({}, {});
-
-    let radix = 16;
-    const comment = /^\s*#/;
-    const iter = toIterableIterator(linesX);
-
-    function parseHeaderRows(headerRows: string[]) {
-        const header = headerRows.slice(0, 2).join('\n');
-        const headerReg = /^TrieXv3\nbase=(\d+)$/;
-        /* istanbul ignore if */
-        if (!headerReg.test(header)) throw new Error('Unknown file format');
-        radix = Number.parseInt(header.replace(headerReg, '$1'), 10);
-    }
-
-    function readHeader(iter: Iterator<string>) {
-        const headerRows: string[] = [];
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-            const next = iter.next();
-            if (next.done) {
-                break;
-            }
-            const line = next.value.trim().replace(/\r|\n/g, '');
-            if (!line || comment.test(line)) {
-                continue;
-            }
-            if (line === DATA) {
-                break;
-            }
-            headerRows.push(line);
-        }
-        parseHeaderRows(headerRows);
-    }
-
-    readHeader(iter);
-
-    const n = genSequence(iter)
-        .concatMap((a) => a.split(''))
-        .reduce(parseStream(radix), {
-            nodes: [root],
-            root,
-            stack: [{ node: root, s: '' }],
-            parser: undefined,
-        });
-    return n.root;
-}
-
-function parseStream(radix: number): Reducer {
-    const eow: TrieNode = Object.freeze({ f: 1 });
-
-    function parseReference(acc: ReduceResults, _: string): ReduceResults {
-        let ref = '';
-
-        function parser(acc: ReduceResults, s: string): ReduceResults {
-            if (s === EOR) {
-                const { root, nodes, stack } = acc;
-                const r = parseInt(ref, radix);
-                const top = stack[stack.length - 1];
-                const p = stack[stack.length - 2].node;
-                p.c?.set(top.s, nodes[r]);
-                return { root, nodes, stack, parser: undefined };
-            }
-            ref = ref + s;
-            return acc;
-        }
-
-        const { nodes } = acc;
-        nodes.pop();
-        return { ...acc, nodes, parser };
-    }
-
-    function parseEscapeCharacter(acc: ReduceResults, _: string): ReduceResults {
-        let prev = '';
-        const parser = function (acc: ReduceResults, s: string): ReduceResults {
-            if (prev) {
-                s = characterMap.get(prev + s) || s;
-                return parseCharacter({ ...acc, parser: undefined }, s);
-            }
-            if (s === ESCAPE) {
-                prev = s;
-                return acc;
-            }
-            return parseCharacter({ ...acc, parser: undefined }, s);
-        };
-        return { ...acc, parser };
-    }
-
-    function parseCharacter(acc: ReduceResults, s: string): ReduceResults {
-        const parser = undefined;
-        const { root, nodes, stack } = acc;
-        const top = stack[stack.length - 1];
-        const node = top.node;
-        node.c = node.c ?? new Map<string, TrieNode>();
-        const n = { f: undefined, c: undefined, n: nodes.length };
-        node.c.set(s, n);
-        stack.push({ node: n, s });
-        nodes.push(n);
-        return { root, nodes, stack, parser };
-    }
-
-    function parseEOW(acc: ReduceResults, _: string): ReduceResults {
-        const parser = parseBack;
-        const { root, nodes, stack } = acc;
-        const top = stack[stack.length - 1];
-        const node = top.node;
-        node.f = FLAG_WORD;
-        if (!node.c) {
-            top.node = eow;
-            const p = stack[stack.length - 2].node;
-            p.c?.set(top.s, eow);
-            nodes.pop();
-        }
-        stack.pop();
-        return { root, nodes, stack, parser };
-    }
-
-    const charactersBack = new Set((BACK + '23456789').split(''));
-    function parseBack(acc: ReduceResults, s: string): ReduceResults {
-        if (!charactersBack.has(s)) {
-            return parserMain({ ...acc, parser: undefined }, s);
-        }
-        let n = s === BACK ? 1 : parseInt(s, 10) - 1;
-        const { stack } = acc;
-        while (n-- > 0) {
-            stack.pop();
-        }
-        return { ...acc, parser: parseBack };
-    }
-
-    function parseIgnore(acc: ReduceResults, _: string): ReduceResults {
-        return acc;
-    }
-
-    const parsers = new Map<string, Reducer>([
-        [EOW, parseEOW],
-        [BACK, parseBack],
-        [REF, parseReference],
-        [ESCAPE, parseEscapeCharacter],
-        [EOL, parseIgnore],
-        [LF, parseIgnore],
-    ]);
-
-    function parserMain(acc: ReduceResults, s: string): ReduceResults {
-        const parser = acc.parser ?? parsers.get(s) ?? parseCharacter;
-        return parser(acc, s);
-    }
-    return parserMain;
+export function importTrie(srcLines: string[] | Iterable<string> | string): TrieRoot {
+    const trie = importTrieV3AsTrieRoot(srcLines);
+    return trie.root;
 }
 
 function stringToCharSet(values: string): Record<string, boolean | undefined> {

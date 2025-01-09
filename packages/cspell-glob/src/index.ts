@@ -1,5 +1,3 @@
-export { GlobMatchOptions, GlobMatcher } from './GlobMatcher';
-export * from './GlobMatcherTypes';
 export {
     fileOrGlobToGlob,
     isGlobPatternNormalized,
@@ -7,4 +5,6 @@ export {
     isGlobPatternWithRoot,
     normalizeGlobPatterns,
     NormalizeOptions,
-} from './globHelper';
+} from './globHelper.js';
+export { GlobMatcher, GlobMatchOptions } from './GlobMatcher.js';
+export * from './GlobMatcherTypes.js';

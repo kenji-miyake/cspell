@@ -1,5 +1,5 @@
-import { isAsyncIterable } from '../helpers';
-import { PipeFn } from '../internalTypes';
+import { isAsyncIterable } from '../helpers/index.js';
+import type { PipeFn } from '../internalTypes.js';
 
 /**
  * Append values onto the end of an iterable.
@@ -9,14 +9,14 @@ import { PipeFn } from '../internalTypes';
 export function opAppendAsync<T>(
     ...iterablesToAppend: (AsyncIterable<T> | Iterable<T>)[]
 ): (iter: AsyncIterable<T> | Iterable<T>) => AsyncIterable<T> {
-    async function* fn(iter: AsyncIterable<T> | Iterable<T>) {
+    async function* fnAppend(iter: AsyncIterable<T> | Iterable<T>) {
         yield* iter;
         for (const i of iterablesToAppend) {
             yield* i;
         }
     }
 
-    return fn;
+    return fnAppend;
 }
 
 /**
@@ -25,14 +25,14 @@ export function opAppendAsync<T>(
  * @returns
  */
 export function opAppendSync<T>(...iterablesToAppend: Iterable<T>[]): (iter: Iterable<T>) => Iterable<T> {
-    function* fn(iter: Iterable<T>) {
+    function* fnAppend(iter: Iterable<T>) {
         yield* iter;
         for (const i of iterablesToAppend) {
             yield* i;
         }
     }
 
-    return fn;
+    return fnAppend;
 }
 
 export function opAppend<T>(...iterablesToAppend: Iterable<T>[]): PipeFn<T, T> {

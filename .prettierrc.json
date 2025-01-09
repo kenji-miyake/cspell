@@ -3,9 +3,15 @@
     "singleQuote": true,
     "overrides": [
         {
-            "files": "**/*.{yaml,yml}",
+            "files": "**/*.{jsonc,json,md,code-workspace}",
             "options": {
-                "singleQuote": false
+                "trailingComma": "none"
+            }
+        },
+        {
+            "files": ["**/src/GlobMatcher.test.ts", "packages/cspell-filetypes/**/definitions.ts"],
+            "options": {
+                "printWidth": 180
             }
         }
     ]

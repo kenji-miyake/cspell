@@ -1,22 +1,27 @@
-import { Trie } from '../trie';
-import { isWordTerminationNode } from '../trie-util';
-import { TrieNode } from '../TrieNode';
-import * as Sug from './suggest';
-import { SuggestionResultBase } from './suggestCollector';
-import { walker } from './walker';
+import { describe, expect, test } from 'vitest';
+
+import { Trie } from '../trie.js';
+import { isWordTerminationNode } from '../TrieNode/trie-util.js';
+import type { TrieNode } from '../TrieNode/TrieNode.js';
+import { walker } from '../walker/index.js';
+import * as Sug from './suggest.js';
+import type { SuggestionResultBase } from './SuggestionTypes.js';
 
 describe('Validate Suggest', () => {
-    test('Tests suggestions against Legacy Suggestion generator', () => {
-        const trie = Trie.create(sampleWords);
-
-        function testWord(word: string) {
-            const results = Sug.suggest(trie.root, word);
-            // results for ${word}
-            expect(results).toEqual(legacySuggest(trie.root, word));
-        }
-
-        // cspell:ignore tallk jernals juornals joyfull
-        ['talks', 'tallk', 'jernals', 'juornals', 'joyfull', ''].forEach(testWord);
+    const trie = Trie.create(sampleWords);
+    // cspell:ignore tallk jernals juornals joyfull
+    test.each`
+        word
+        ${'talks'}
+        ${'tallk'}
+        ${'jernals'}
+        ${'juornals'}
+        ${'joyfull'}
+        ${''}
+    `('Tests suggestions against Legacy Suggestion generator "$word"', ({ word }) => {
+        const results = Sug.suggest(trie.root, word);
+        // results for ${word}
+        expect(results).toEqual(legacySuggest(trie.root, word));
     });
 });
 
@@ -80,7 +85,7 @@ const MAX_NUM_CHANGES = 5;
 function legacySuggest(
     root: TrieNode,
     word: string,
-    maxNumSuggestions: number = defaultMaxNumberSuggestions
+    maxNumSuggestions: number = defaultMaxNumberSuggestions,
 ): SuggestionResultBase[] {
     const bc = baseCost;
     const psc = postSwapCost;
@@ -126,7 +131,7 @@ function legacySuggest(
             matrix[d][i] = Math.min(
                 matrix[d - 1][i - 1] + subCost, // substitute
                 matrix[d - 1][i] + c, // insert
-                matrix[d][i - 1] + c // delete
+                matrix[d][i - 1] + c, // delete
             );
             min = Math.min(min, matrix[d][i]);
             lastLetter = curLetter;

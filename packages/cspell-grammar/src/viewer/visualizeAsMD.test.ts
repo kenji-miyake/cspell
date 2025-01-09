@@ -1,9 +1,12 @@
-import { tokenizedLinesToMarkdown } from './visualizeAsMD';
-import { TypeScript } from '../grammars';
-import { normalizeGrammar } from '../parser/grammarNormalizer';
-import { tokenizeText } from '..';
-import * as path from 'path';
-import { promises as fs, readFileSync } from 'fs';
+import { promises as fs, readFileSync } from 'node:fs';
+import * as path from 'node:path';
+
+import { describe, expect, test } from 'vitest';
+
+import { TypeScript } from '../grammars/index.js';
+import { normalizeGrammar } from '../parser/grammarNormalizer.js';
+import { tokenizeText } from '../parser/index.js';
+import { tokenizedLinesToMarkdown } from './visualizeAsMD.js';
 
 const pathPackage = path.join(__dirname, '../..');
 const pathSamples = path.join(pathPackage, 'samples');

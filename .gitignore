@@ -6,6 +6,10 @@ _.cpuprofile
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log\*
+.yarn
+.pnp.cjs
+.pnp.loader.mjs
+
 
 # Runtime data
 
@@ -21,37 +25,29 @@ lib-cov
 # Coverage directory used by tools like istanbul
 
 coverage
+.coverage
 lcov.info
 
 # nyc test coverage
 
 .nyc_output
 
-# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
+# Rollup
 
-.grunt
-
-# Bower dependency directory (https://bower.io/)
-
-bower_components
-
-# node-waf configuration
-
-.lock-wscript
-
-# Compiled binary addons (https://nodejs.org/api/addons.html)
-
-build/Release
+.rollup.cache
 
 # Ignore compiled files.
 
 dist
 out
+*.d.cts
 
 # And temp files
 
 temp
+.temp
 tmp
+*.log
 
 # Dependency directories
 
@@ -75,7 +71,7 @@ typings/
 
 # Output of 'npm pack'
 
-\*.tgz
+*.tgz
 
 # Yarn Integrity file
 
@@ -103,5 +99,9 @@ typings/
 # Node Performance
 
 *.cpuprofile
+*.heapprofile
+
+# Ignore the local website build.
+docs/docsV2
 
 # cspell:ignore pids jscoverage wscript jspm dotenv eslintcache cspellcache

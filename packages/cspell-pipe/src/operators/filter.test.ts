@@ -1,6 +1,8 @@
-import { toArray, toAsyncIterable } from '../helpers';
-import { pipeAsync, pipeSync } from '../pipe';
-import { opFilter, opFilterAsync } from './filter';
+import { describe, expect, test } from 'vitest';
+
+import { toArray, toAsyncIterable } from '../helpers/index.js';
+import { pipeAsync, pipeSync } from '../pipe.js';
+import { _opFilterSync, opFilter, opFilterAsync } from './filter.js';
 
 describe('Validate filter', () => {
     test('filter', async () => {
@@ -20,6 +22,7 @@ describe('Validate filter', () => {
 
         expect(sync).toEqual(expected);
         expect(async).toEqual(expected);
+        expect([..._opFilterSync(filterFn)(values)]).toEqual(expected);
     });
 
     type Primitives = string | number | boolean;
@@ -37,7 +40,7 @@ describe('Validate filter', () => {
             const aValues = pipeAsync(values, opFilterAsync<Primitives | PromisePrim>(isTruthy));
             const result = await toArray(aValues);
             expect(result).toEqual(expected);
-        }
+        },
     );
 
     test('is a', async () => {
@@ -63,11 +66,11 @@ describe('Validate filter', () => {
                 4,
                 {},
                 'hello',
-                Promise.resolve(undefined),
+                Promise.resolve(),
                 Promise.resolve(Promise.resolve(Promise.resolve('deep'))),
             ],
             opFilterAsync(truthyAsync),
-            opFilter(isString)
+            opFilter(isString),
         );
 
         expect(await toArray(filtered)).toEqual(['string', 'hello', 'deep']);

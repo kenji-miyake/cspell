@@ -1,523 +1,434 @@
-import { TrieRoot, TrieNode } from '../TrieNode';
-import { CompoundWordsMethod, JOIN_SEPARATOR, WORD_SEPARATOR } from './walker';
-import { SuggestionGenerator, suggestionCollector, SuggestionResult } from './suggestCollector';
-import { PairingHeap } from '../utils/PairingHeap';
-import { visualLetterMaskMap } from './orthography';
-import { createSuggestionOptions, GenSuggestionOptionsStrict, SuggestionOptions } from './genSuggestionsOptions';
+import type { TrieCost, WeightMap } from '../distance/weightedMaps.js';
+import type { ITrieNode, TrieOptions } from '../ITrieNode/index.js';
+import { CompoundWordsMethod, JOIN_SEPARATOR, WORD_SEPARATOR } from '../ITrieNode/walker/index.js';
+import type { TrieData } from '../TrieData.js';
+import { PairingHeap } from '../utils/PairingHeap.js';
+import { opCosts } from './constants.js';
+import type { SuggestionOptions } from './genSuggestionsOptions.js';
+import { createSuggestionOptions } from './genSuggestionsOptions.js';
+import { visualLetterMaskMap } from './orthography.js';
+import { suggestionCollector } from './suggestCollector.js';
+import type { SuggestionGenerator, SuggestionResult } from './SuggestionTypes.js';
 
-export function* genCompoundableSuggestions(
-    root: TrieRoot,
-    word: string,
-    options: GenSuggestionOptionsStrict
-): SuggestionGenerator {
-    const { compoundMethod, ignoreCase, changeLimit } = options;
-    const len = word.length;
+type Cost = number;
+// type BranchIdx = number;
+type WordIndex = number;
 
-    const nodes = determineInitialNodes(root, ignoreCase);
-    const noFollow = determineNoFollow(root);
-
-    function compare(a: Candidate, b: Candidate): number {
-        const deltaCost = a.g - b.g;
-        if (deltaCost) return deltaCost;
-        // The costs are the some return the one with the most progress.
-
-        return b.i - a.i;
-    }
-
-    const opCosts = {
-        baseCost: 100,
-        swapCost: 75,
-        duplicateLetterCost: 25,
-        visuallySimilar: 1,
-        firstLetterBias: 25,
-        wordBreak: 99,
-    } as const;
-
-    const bc = opCosts.baseCost;
-    const maxCostScale = 1.03 / 2;
-    const mapSugCost = opCosts.visuallySimilar;
-    const wordSeparator = compoundMethod === CompoundWordsMethod.JOIN_WORDS ? JOIN_SEPARATOR : WORD_SEPARATOR;
-    const compoundIndicator = root.compoundCharacter;
-
-    let costLimit = bc * Math.min(len * maxCostScale, changeLimit);
-    let stopNow = false;
-
-    const candidates = new PairingHeap(compare);
-    const locationCache: LocationCache = new Map();
-    const wordsToEmit: EmitWord[] = [];
-    const pathToLocation: Map<Path, LocationNode> = new Map();
-
-    const edgesToResolve: EdgeToResolve[] = [];
-
-    const emittedWords = new Map<string, number>();
-
-    function updateCostLimit(maxCost: number | symbol | undefined) {
-        switch (typeof maxCost) {
-            case 'number':
-                costLimit = Math.min(maxCost, costLimit);
-                break;
-            case 'symbol':
-                stopNow = true;
-                break;
-        }
-    }
-
-    function getLocationNode(path: Path): LocationNode {
-        const index = path.i;
-        const node = path.n;
-        const foundByIndex = locationCache.get(index);
-        const byTrie: LocationByTriNode = foundByIndex || new Map<TrieNode, LocationNode>();
-        if (!foundByIndex) locationCache.set(index, byTrie);
-        const f = byTrie.get(node);
-        const n: LocationNode = f || { in: new Map(), er: [], bc: 0, p: path, sbc: -1, sfx: [] };
-        if (!f) byTrie.set(node, n);
-        return n;
-    }
-
-    function* emitWord(word: string, cost: number): SuggestionGenerator {
-        if (cost <= costLimit) {
-            // console.log(`e: ${word} ${cost}`);
-            const f = emittedWords.get(word);
-            if (f !== undefined && f <= cost) return undefined;
-            emittedWords.set(word, cost);
-            const lastChar = word[word.length - 1];
-            if (!noFollow[lastChar]) {
-                updateCostLimit(yield { word: word, cost: cost });
-            }
-        }
-        return undefined;
-    }
-
-    function* emitWords(): SuggestionGenerator {
-        for (const w of wordsToEmit) {
-            yield* emitWord(w.word, w.cost);
-        }
-        wordsToEmit.length = 0;
-        return undefined;
-    }
-
-    function addEdgeToBeResolved(path: Path, edge: Edge) {
-        path.r = path.r || new Set();
-        path.r.add(edge);
-    }
-
-    function addEdge(path: Path, edge: Edge): Edge | undefined {
-        const g = path.g + edge.c;
-        const i = edge.i;
-        if (g > costLimit) return undefined;
-
-        const { n } = edge;
-        const w = path.w + edge.s;
-        const can: Path = { e: edge, n, i, w, g, r: undefined, a: true };
-        const location = getLocationNode(can);
-        location.er.push(edge);
-
-        // Is Location Resolved
-        if (location.sbc >= 0 && location.sbc <= can.g) {
-            // No need to go further, this node has been resolved.
-            // Return the edge to be resolved
-            addEdgeToBeResolved(path, edge);
-            edgesToResolve.push({ edge, suffixes: location.sfx });
-            return undefined;
-        }
-        const found = location.in.get(can.w);
-        if (found) {
-            // If the existing path is cheaper or the same keep it.
-            // Do not add the edge.
-            if (found.g <= can.g) return undefined;
-            // Otherwise mark it as inactive and
-            const e = found.e;
-            if (e) {
-                edgesToResolve.push({ edge: e, suffixes: [] });
-            }
-            found.a = false;
-        }
-        addEdgeToBeResolved(path, edge);
-        location.in.set(can.w, can);
-        if (location.p.g > can.g) {
-            pathToLocation.delete(location.p);
-            location.sbc = -1;
-            location.sfx.length = 0;
-            location.p = can;
-        }
-        if (location.p === can) {
-            // Make this path the representation of this location.
-            pathToLocation.set(can, location);
-            candidates.add(can);
-        }
-        return edge;
-    }
-
-    function opWordFound(best: Candidate): void {
-        if (!best.n.f) return;
-        const i = best.i;
-        const toDelete = len - i;
-        const edge: Edge = { p: best, n: best.n, i, s: '', c: bc * toDelete, a: Action.Delete };
-        addEdgeToBeResolved(best, edge);
-        edgesToResolve.push({ edge, suffixes: [{ s: '', c: 0 }] });
-        if (compoundMethod && best.g + opCosts.wordBreak <= costLimit) {
-            const s = wordSeparator;
-            nodes.forEach((node) => {
-                const e: Edge = { p: best, n: node, i, s, c: opCosts.wordBreak, a: Action.WordBreak };
-                addEdge(best, e);
-            });
-        }
-    }
-
-    function opCompoundWord(best: Candidate): void {
-        if (!best.n.c?.get(compoundIndicator)) return;
-        const i = best.i;
-        const s = '';
-        nodes.forEach((node) => {
-            const n = node.c?.get(compoundIndicator);
-            if (!n) return;
-            const e: Edge = { p: best, n, i, s, c: opCosts.wordBreak, a: Action.CompoundWord };
-            addEdge(best, e);
-        });
-    }
-
-    function opInsert(best: Candidate): void {
-        const children = best.n.c;
-        if (!children) return;
-        const i = best.i;
-        const c = bc;
-        for (const [s, n] of children) {
-            const e: Edge = { p: best, n, i, s, c, a: Action.Insert };
-            addEdge(best, e);
-        }
-    }
-
-    function opDelete(best: Candidate, num = 1): Edge | undefined {
-        const i = best.i;
-        const e: Edge = {
-            p: best,
-            n: best.n,
-            i: i + num,
-            s: '',
-            c: bc * num,
-            a: Action.Delete,
-            // t: word.slice(i, i + num),
-        };
-        return addEdge(best, e);
-    }
-
-    function opIdentity(best: Candidate): void {
-        const s = word[best.i];
-        const n = best.n.c?.get(s);
-        if (!n) return;
-        const i = best.i + 1;
-        const e: Edge = { p: best, n, i, s, c: 0, a: Action.Identity };
-        addEdge(best, e);
-    }
-
-    function opReplace(best: Candidate): void {
-        const children = best.n.c;
-        if (!children) return;
-        const wc = word[best.i];
-        const wg = visualLetterMaskMap[wc] || 0;
-        const i = best.i + 1;
-        const cost = bc + (best.i ? 0 : opCosts.firstLetterBias);
-        for (const [s, n] of children) {
-            if (s == wc) continue;
-            const sg = visualLetterMaskMap[s] || 0;
-            const c = wg & sg ? mapSugCost : cost;
-            const e: Edge = { p: best, n, i, s, c, a: Action.Replace /* , t: wc */ };
-            addEdge(best, e);
-        }
-    }
-
-    function opSwap(best: Candidate): void {
-        const children = best.n.c;
-        const i = best.i;
-        const i2 = i + 1;
-        if (!children || len <= i2) return;
-        const wc1 = word[i];
-        const wc2 = word[i2];
-        if (wc1 === wc2) return;
-        const n = best.n.c?.get(wc2);
-        const n2 = n?.c?.get(wc1);
-        if (!n || !n2) return;
-        const e: Edge = {
-            p: best,
-            n: n2,
-            i: i2 + 1,
-            s: wc2 + wc1,
-            c: opCosts.swapCost,
-            a: Action.Swap,
-            // , t: wc1 + wc2,
-        };
-        addEdge(best, e);
-    }
-
-    function opDuplicate(best: Candidate): void {
-        const children = best.n.c;
-        const i = best.i;
-        const i2 = i + 1;
-        if (!children || len <= i2) return;
-        const wc1 = word[i];
-        const wc2 = word[i2];
-        const n = best.n.c?.get(wc1);
-        if (!n) return;
-        if (wc1 === wc2) {
-            // convert double letter to single
-            const e: Edge = { p: best, n, i: i + 2, s: wc1, c: opCosts.duplicateLetterCost, a: Action.Delete };
-            addEdge(best, e);
-            return;
-        }
-        const n2 = n?.c?.get(wc1);
-        if (!n2) return;
-        // convert single to double letter
-        const e: Edge = { p: best, n: n2, i: i2, s: wc1 + wc1, c: opCosts.duplicateLetterCost, a: Action.Insert };
-        addEdge(best, e);
-    }
-
-    function resolveEdges() {
-        let e: EdgeToResolve | undefined;
-        while ((e = edgesToResolve.shift())) {
-            resolveEdge(e);
-        }
-    }
-
-    function resolveLocationEdges(location: LocationNode, suffixes: Suffix[]) {
-        for (const edge of location.er) {
-            edgesToResolve.push({ edge, suffixes });
-        }
-    }
-
-    function resolveEdge({ edge, suffixes }: EdgeToResolve) {
-        const { p, s: es, c: ec } = edge;
-        if (!p.r?.has(edge)) return;
-        const edgeSuffixes = suffixes.map((sfx) => ({ s: es + sfx.s, c: ec + sfx.c }));
-        for (const { s, c } of edgeSuffixes) {
-            const cost = p.g + c;
-            if (cost <= costLimit) {
-                const word = p.w + s;
-                wordsToEmit.push({ word, cost });
-            }
-        }
-        p.r.delete(edge);
-        const location = pathToLocation.get(p);
-        if (location?.p === p) {
-            location.sfx = location.sfx.concat(edgeSuffixes);
-            if (!p.r.size) {
-                location.sbc = p.g;
-                resolveLocationEdges(location, edgeSuffixes);
-            }
-        } else if (!p.r.size) {
-            if (p.e) {
-                // Keep rolling up.
-                edgesToResolve.push({ edge: p.e, suffixes: edgeSuffixes });
-            }
-        }
-    }
-
-    function cancelEdges(path: Path) {
-        if (!path.r) return;
-
-        const suffixes: Suffix[] = [];
-
-        for (const edge of path.r) {
-            edgesToResolve.push({ edge, suffixes });
-        }
-    }
-
-    /************
-     * Below is the core of the A* algorithm
-     */
-
-    updateCostLimit(yield undefined);
-
-    nodes.forEach((node, idx) => {
-        const g = idx ? 1 : 0;
-        candidates.add({ e: undefined, n: node, i: 0, w: '', g, r: undefined, a: true });
-    });
-    const iterationsBeforePolling = 100;
-    let i = iterationsBeforePolling;
-    let maxSize = 0;
-    let best: Candidate | undefined;
-    // const bc2 = 2 * bc;
-    while (!stopNow && (best = candidates.dequeue())) {
-        if (--i < 0) {
-            i = iterationsBeforePolling;
-            updateCostLimit(yield undefined);
-        }
-        maxSize = Math.max(maxSize, candidates.length);
-        if (!best.a) {
-            // best's edges are already part of a location node.
-            continue;
-        }
-        if (best.g > costLimit) {
-            cancelEdges(best);
-            continue;
-        }
-
-        const bi = best.i;
-        opWordFound(best);
-        const children = best.n.c;
-        if (!children) continue;
-
-        if (bi === len) {
-            opInsert(best);
-        } else {
-            opIdentity(best);
-            opReplace(best);
-            opDelete(best);
-            opInsert(best);
-            opSwap(best);
-            opCompoundWord(best);
-            opDuplicate(best);
-        }
-        resolveEdges();
-        yield* emitWords();
-    }
-    resolveEdges();
-    yield* emitWords();
-
-    // console.log(`
-    // word: ${word}
-    // maxSize: ${maxSize}
-    // length: ${candidates.length}
-    // `);
-
-    return undefined;
+/** A Trie structure used to track accumulated costs */
+interface CostTrie {
+    /** cost by index */
+    c: number[];
+    t: Record<string, CostTrie | undefined>;
 }
 
-enum Action {
-    Identity,
-    Replace,
-    Delete,
-    Insert,
-    Swap,
-    CompoundWord,
-    WordBreak,
-}
-
-interface Edge {
-    /** from */
-    p: Path;
-    /** to Node */
-    n: TrieNode;
-    /** index into the original word */
-    i: number;
-    /** suffix character to add to Path p.  */
+interface PNode {
+    /** current node */
+    n: ITrieNode;
+    /** Accumulated cost */
+    c: Cost;
+    /** Index into src word */
+    i: WordIndex;
+    /** letter used or '' */
     s: string;
-    /** edge cost */
-    c: number;
-    /** Action */
-    a: Action;
-    /** Optional Transform */
-    // t?: string | undefined;
+    /** parent node */
+    p: PNode | undefined;
+    /** cost trie to reduce duplicate paths */
+    t: CostTrie;
+    /** edit action taken */
+    a?: string;
 }
 
-interface Path {
-    /** Edge taken to get here */
-    e: Edge | undefined;
-    /** to Node */
-    n: TrieNode;
-    /** index into the original word */
-    i: number;
-    /** Suggested word so far */
-    w: string;
-    /** cost so far */
-    g: number;
-    /** active */
-    a: boolean;
-    /** Edges to be resolved. */
-    r: Set<Edge> | undefined;
+// const ProgressFactor = opCosts.baseCost - 1;
+
+/**
+ * Compare Path Nodes.
+ * Balance the calculation between depth vs cost
+ */
+function comparePath(a: PNode, b: PNode): number {
+    return a.c / (a.i + 1) - b.c / (b.i + 1) + (b.i - a.i);
 }
 
-interface Suffix {
-    /** suffix */
-    s: string;
-    /** Cost of using suffix */
-    c: number;
-}
-
-interface LocationNode {
-    /** Incoming Paths */
-    in: Map<string, Path>;
-    /** Edges to Resolve when Location is Resolved */
-    er: Edge[];
-    /** Best Possible cost - only non-zero when location has been resolved. */
-    bc: number;
-    /** Pending Path to be resolved */
-    p: Path;
-    /**
-     * Suffix Base Cost
-     * The base cost used when calculating the suffixes.
-     * If a new path comes in with a lower base cost,
-     * then the suffixes need to be recalculated.
-     */
-    sbc: number;
-    /** Set of suffixes, calculated when location has been resolved. */
-    sfx: Suffix[];
-}
-
-type LocationByTriNode = Map<TrieNode, LocationNode>;
-
-type LocationCache = Map<number, LocationByTriNode>;
-
-type Candidate = Path;
-
-type NoFollow = Record<string, true | undefined>;
-
-interface EmitWord {
-    word: string;
-    cost: number;
-}
-
-interface EdgeToResolve {
-    edge: Edge;
-    suffixes: Suffix[];
-}
-
-export function suggest(root: TrieRoot | TrieRoot[], word: string, options: SuggestionOptions): SuggestionResult[] {
+export function suggestAStar(trie: TrieData, word: string, options: SuggestionOptions = {}): SuggestionResult[] {
     const opts = createSuggestionOptions(options);
-    const collector = suggestionCollector(word, {
-        numSuggestions: opts.numSuggestions,
-        changeLimit: opts.changeLimit,
-        includeTies: opts.includeTies,
-        ignoreCase: opts.ignoreCase,
-        timeout: opts.timeout,
-    });
-    collector.collect(genSuggestions(root, word, opts));
+    const collector = suggestionCollector(word, opts);
+    collector.collect(getSuggestionsAStar(trie, word, opts));
     return collector.suggestions;
 }
 
-export function* genSuggestions(
-    root: TrieRoot | TrieRoot[],
-    word: string,
-    options: GenSuggestionOptionsStrict
+export function* getSuggestionsAStar(
+    trie: TrieData,
+    srcWord: string,
+    options: SuggestionOptions = {},
 ): SuggestionGenerator {
-    const roots = Array.isArray(root) ? root : [root];
-    for (const r of roots) {
-        yield* genCompoundableSuggestions(r, word, options);
+    const { compoundMethod, changeLimit, ignoreCase, weightMap } = createSuggestionOptions(options);
+    const visMap = visualLetterMaskMap;
+    const root = trie.getRoot();
+    const rootIgnoreCase = (ignoreCase && root.get(root.info.stripCaseAndAccentsPrefix)) || undefined;
+    const pathHeap = new PairingHeap(comparePath);
+    const resultHeap = new PairingHeap(compareSuggestion);
+    const rootPNode: PNode = { n: root, i: 0, c: 0, s: '', p: undefined, t: createCostTrie() };
+    const BC = opCosts.baseCost;
+    const VC = opCosts.visuallySimilar;
+    const DL = opCosts.duplicateLetterCost;
+    const wordSeparator = compoundMethod === CompoundWordsMethod.JOIN_WORDS ? JOIN_SEPARATOR : WORD_SEPARATOR;
+    const sc = specialChars(trie.info);
+    const comp = trie.info.compoundCharacter;
+    const compRoot = root.get(comp);
+    const compRootIgnoreCase = rootIgnoreCase && rootIgnoreCase.get(comp);
+    const emitted: Record<string, number> = Object.create(null);
+
+    const srcLetters = [...srcWord];
+
+    /** Initial limit is based upon the length of the word. */
+    let limit = BC * Math.min(srcLetters.length * opCosts.wordLengthCostFactor, changeLimit);
+
+    pathHeap.add(rootPNode);
+    if (rootIgnoreCase) {
+        pathHeap.add({ n: rootIgnoreCase, i: 0, c: 0, s: '', p: undefined, t: createCostTrie() });
     }
-    return undefined;
+
+    let best = pathHeap.dequeue();
+    let maxSize = pathHeap.size;
+    let suggestionsGenerated = 0;
+    let nodesProcessed = 0;
+    let nodesProcessedLimit = 1000;
+    let minGen = 1;
+    while (best) {
+        if (++nodesProcessed > nodesProcessedLimit) {
+            nodesProcessedLimit += 1000;
+            if (suggestionsGenerated < minGen) {
+                break;
+            }
+            minGen += suggestionsGenerated;
+            // nodesProcessed >>= 1;
+            // suggestionsGenerated >>= 1;
+        }
+        if (best.c > limit) {
+            // break;
+            best = pathHeap.dequeue();
+            maxSize = Math.max(maxSize, pathHeap.size);
+            continue;
+        }
+        processPath(best);
+
+        for (const sug of resultHeap) {
+            ++suggestionsGenerated;
+            if (sug.cost > limit) continue;
+            if (sug.word in emitted && emitted[sug.word] <= sug.cost) continue;
+            // console.warn('%o', sug);
+            const action = yield sug;
+            emitted[sug.word] = sug.cost;
+            if (typeof action === 'number') {
+                // console.log('%o', { limit, newLimit: action, sug });
+                limit = Math.min(action, limit);
+            }
+            if (typeof action === 'symbol') {
+                return;
+            }
+        }
+
+        best = pathHeap.dequeue();
+        maxSize = Math.max(maxSize, pathHeap.size);
+    }
+    // console.log('%o', { maxSize, suggestionsGenerated, nodesProcessed });
+
+    return;
+
+    function compareSuggestion(a: SuggestionResult, b: SuggestionResult): number {
+        const pa = (a.isPreferred && 1) || 0;
+        const pb = (b.isPreferred && 1) || 0;
+        return (
+            pb - pa ||
+            a.cost - b.cost ||
+            // eslint-disable-next-line unicorn/prefer-code-point
+            Math.abs(a.word.charCodeAt(0) - srcWord.charCodeAt(0)) -
+                // eslint-disable-next-line unicorn/prefer-code-point
+                Math.abs(b.word.charCodeAt(0) - srcWord.charCodeAt(0))
+        );
+    }
+
+    function processPath(p: PNode) {
+        const len = srcLetters.length;
+
+        if (p.n.eow && p.i === len) {
+            const word = pNodeToWord(p);
+            const result = { word, cost: p.c };
+            resultHeap.add(result);
+        }
+
+        calcEdges(p);
+    }
+
+    function calcEdges(p: PNode): void {
+        const { n, i, t } = p;
+        const s = srcLetters[i];
+        const sg = visMap[s] || 0;
+        const cost0 = p.c;
+        const cost = cost0 + BC + (i ? 0 : opCosts.firstLetterBias);
+        const costVis = cost0 + VC;
+        const costLegacyCompound = cost0 + opCosts.wordBreak;
+        const costCompound = cost0 + opCosts.compound;
+        if (s) {
+            // Match
+            const m = n.get(s);
+            if (m) {
+                storePath(t, m, i + 1, cost0, s, p, '=', s);
+            }
+
+            if (weightMap) {
+                processWeightMapEdges(p, weightMap);
+            }
+
+            // Double letter, delete 1
+            const ns = srcLetters[i + 1];
+            if (s == ns && m) {
+                storePath(t, m, i + 2, cost0 + DL, s, p, 'dd', s);
+            }
+            // Delete
+            storePath(t, n, i + 1, cost, '', p, 'd', '');
+
+            // Replace
+            for (const [ss, node] of n.entries()) {
+                if (node.id === m?.id || ss in sc) continue;
+                const g = visMap[ss] || 0;
+                // srcWord === 'WALK' && console.log(g.toString(2));
+                const c = sg & g ? costVis : cost;
+                storePath(t, node, i + 1, c, ss, p, 'r', ss);
+            }
+
+            if (n.eow && i && compoundMethod) {
+                // legacy word compound
+                storePath(t, root, i, costLegacyCompound, wordSeparator, p, 'L', wordSeparator);
+            }
+
+            // swap
+            if (ns) {
+                const n1 = n.get(ns);
+                const n2 = n1?.get(s);
+                if (n2) {
+                    const ss = ns + s;
+                    storePath(t, n2, i + 2, cost0 + opCosts.swapCost, ss, p, 's', ss);
+                }
+            }
+        }
+
+        // Natural Compound
+        if (compRoot && costCompound <= limit && n.get(comp)) {
+            if (compRootIgnoreCase) {
+                storePath(t, compRootIgnoreCase, i, costCompound, '', p, '~+', '~+');
+            }
+            storePath(t, compRoot, i, costCompound, '', p, '+', '+');
+        }
+
+        // Insert
+        if (cost <= limit) {
+            // At the end of the word, only append is possible.
+            for (const [char, node] of n.entries()) {
+                if (char in sc) continue;
+                storePath(t, node, i, cost, char, p, 'i', char);
+            }
+        }
+    }
+
+    function processWeightMapEdges(p: PNode, weightMap: WeightMap) {
+        delLetters(p, weightMap, srcLetters, storePath);
+        insLetters(p, weightMap, srcLetters, storePath);
+        repLetters(p, weightMap, srcLetters, storePath);
+        return;
+    }
+
+    /**
+     * Apply a cost to the current step.
+     * @param t - trie node
+     * @param s - letter to apply, empty string means to apply to the current node
+     * @param i - index
+     * @param c - cost
+     * @returns PNode if it was applied, otherwise undefined
+     */
+    function storePath(
+        t: CostTrie,
+        n: ITrieNode,
+        i: number,
+        c: number,
+        s: string,
+        p: PNode,
+        a: string,
+        ss: string,
+    ): void {
+        const tt = getCostTrie(t, ss);
+        const curr = tt.c[i];
+        if (curr <= c || c > limit) return undefined;
+        tt.c[i] = c;
+        pathHeap.add({ n, i, c, s, p, t: tt, a });
+    }
 }
 
-function determineNoFollow(root: TrieRoot): NoFollow {
-    const noFollow: NoFollow = Object.assign(Object.create(null), {
-        [root.compoundCharacter]: true,
-        [root.forbiddenWordPrefix]: true,
-        [root.stripCaseAndAccentsPrefix]: true,
+function delLetters(pNode: PNode, weightMap: WeightMap, letters: string[], storePath: FnStorePath) {
+    const { t, n } = pNode;
+    const trie = weightMap.insDel;
+    let ii = pNode.i;
+    const cost0 = pNode.c - pNode.i;
+
+    const len = letters.length;
+
+    for (let nn = trie.n; ii < len && nn; ) {
+        const tt = nn[letters[ii]];
+        if (!tt) return;
+        ++ii;
+        if (tt.c !== undefined) {
+            storePath(t, n, ii, cost0 + tt.c, '', pNode, 'd', '');
+        }
+        nn = tt.n;
+    }
+}
+
+function insLetters(p: PNode, weightMap: WeightMap, _letters: string[], storePath: FnStorePath) {
+    const { t, i, c, n } = p;
+    const cost0 = c;
+
+    searchTrieCostNodesMatchingTrie2(weightMap.insDel, n, (s, tc, n) => {
+        if (tc.c !== undefined) {
+            storePath(t, n, i, cost0 + tc.c, s, p, 'i', s);
+        }
     });
-    return noFollow;
 }
 
-function determineInitialNodes(root: TrieRoot | TrieRoot[], ignoreCase: boolean): TrieNode[] {
-    const roots = Array.isArray(root) ? root : [root];
-    const rootNodes: TrieNode[] = roots;
-    const noCaseNodes = ignoreCase
-        ? roots
-              .filter((r) => r.stripCaseAndAccentsPrefix)
-              .map((n) => n.c?.get(n.stripCaseAndAccentsPrefix))
-              .filter(isDefined)
-        : [];
-    const nodes: TrieNode[] = rootNodes.concat(noCaseNodes);
-    return nodes;
+function repLetters(pNode: PNode, weightMap: WeightMap, letters: string[], storePath: FnStorePath) {
+    const node = pNode.n;
+    const pt = pNode.t;
+    const cost0 = pNode.c;
+    const len = letters.length;
+    const trie = weightMap.replace;
+    let i = pNode.i;
+
+    for (let n = trie.n; i < len && n; ) {
+        const t = n[letters[i]];
+        if (!t) return;
+        ++i;
+        // yield { i, t };
+        const tInsert = t.t;
+        if (tInsert) {
+            searchTrieCostNodesMatchingTrie2<TrieCost>(tInsert, node, (s, tt, n) => {
+                const c = tt.c;
+                if (c === undefined) {
+                    return;
+                }
+                storePath(pt, n, i, cost0 + c + (tt.p || 0), s, pNode, 'r', s);
+            });
+        }
+        n = t.n;
+    }
 }
 
-function isDefined<T>(v: T | undefined): v is T {
-    return v !== undefined;
+function createCostTrie(): CostTrie {
+    return { c: [], t: Object.create(null) };
 }
+
+function getCostTrie(t: CostTrie, s: string) {
+    if (s.length == 1) {
+        return (t.t[s] ??= createCostTrie());
+    }
+    if (!s) {
+        return t;
+    }
+    let tt = t;
+    for (const c of s) {
+        tt = tt.t[c] ??= createCostTrie();
+    }
+    return tt;
+}
+
+function pNodeToWord(p: PNode): string {
+    const parts: string[] = [];
+    let n: PNode | undefined = p;
+    while (n) {
+        parts.push(n.s);
+        n = n.p;
+    }
+    parts.reverse();
+    return parts.join('');
+}
+
+function specialChars(options: TrieOptions): Record<string, true | undefined> {
+    const charSet: Record<string, true | undefined> = Object.create(null);
+    for (const c of Object.values(options)) {
+        charSet[c] = true;
+    }
+    return charSet;
+}
+
+function orderNodes(p: PNode): PNode[] {
+    const nodes: PNode[] = [];
+    let n: PNode | undefined = p;
+    while (n) {
+        nodes.push(n);
+        n = n.p;
+    }
+    return nodes.reverse();
+}
+
+function editHistory(p: PNode) {
+    const nodes = orderNodes(p);
+    return nodes.map((n) => ({ i: n.i, c: n.c, a: n.a, s: n.s }));
+}
+
+function searchTrieCostNodesMatchingTrie2<T extends { n?: Record<string, T> }>(
+    trie: T,
+    node: ITrieNode,
+    emit: (s: string, t: T, n: ITrieNode) => void,
+    s = '',
+): void {
+    const n = trie.n;
+    if (!n) return;
+    for (const [key, c] of node.entries()) {
+        const t = n[key];
+        if (!t) continue;
+        const pfx = s + key;
+        emit(pfx, t, c);
+        if (t.n) {
+            searchTrieCostNodesMatchingTrie2(t, c, emit, pfx);
+        }
+    }
+}
+
+function prefixLines(content: string, prefix: string): string {
+    return content
+        .split('\n')
+        .map((line) => prefix + line)
+        .join('\n');
+}
+
+function serializeCostTrie(p: PNode): string {
+    while (p.p) {
+        p = p.p;
+    }
+    return _serializeCostTrie(p.t);
+}
+
+function _serializeCostTrie(t: CostTrie): string {
+    const lines: string[] = [];
+    lines.push(`:: [${t.c.join(',')}]`);
+    for (const [letter, child] of Object.entries(t.t)) {
+        lines.push(letter + ':');
+        if (!child) continue;
+        lines.push(prefixLines(_serializeCostTrie(child), '| '));
+    }
+    return lines.join('\n');
+}
+
+type FnStorePath = (
+    t: CostTrie,
+    n: ITrieNode,
+    i: number,
+    c: number,
+    s: string,
+    p: PNode,
+    a: string,
+    ss: string,
+) => void;
+
+export const __testing__ = {
+    comparePath,
+    editHistory,
+    serializeCostTrie,
+};

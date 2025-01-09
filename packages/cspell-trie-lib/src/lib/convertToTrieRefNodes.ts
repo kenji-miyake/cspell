@@ -1,6 +1,8 @@
-import { TrieNode, FLAG_WORD } from './TrieNode';
-import { TrieRefNode } from './trieRef';
 import { genSequence } from 'gensequence';
+
+import type { TrieNode } from './TrieNode/TrieNode.js';
+import { FLAG_WORD } from './TrieNode/TrieNode.js';
+import type { TrieRefNode } from './trieRef.js';
 
 const MinReferenceCount = 3;
 
@@ -26,7 +28,7 @@ export function convertToTrieRefNodes(root: TrieNode): IterableIterator<TrieRefN
             return;
         }
         tallies.set(n, 1);
-        for (const c of n.c?.values() || []) {
+        for (const c of (n.c && Object.values(n.c)) || []) {
             tally(c);
         }
     }
@@ -41,14 +43,14 @@ export function convertToTrieRefNodes(root: TrieNode): IterableIterator<TrieRefN
             rollupTally.set(n, sum);
             return sum;
         }
-        const sum = [...n.c.values()].reduce((acc, v) => acc + rollup(v), tallies.get(n) || 0);
+        const sum = Object.values(n.c).reduce((acc, v) => acc + rollup(v), tallies.get(n) || 0);
         rollupTally.set(n, sum);
         return sum;
     }
 
     function* walkByTallies(tallies: Map<TrieNode, number>): IterableIterator<TrieRefNode> {
-        const nodes = [...genSequence(tallies).filter((a) => a[1] >= MinReferenceCount)].sort((a, b) => b[1] - a[1]);
-        for (const [n] of nodes) {
+        const nodes = genSequence(tallies).filter((a) => a[1] >= MinReferenceCount);
+        for (const [n] of [...nodes].sort((a, b) => b[1] - a[1])) {
             yield* walkByRollup(n);
         }
     }
@@ -56,13 +58,12 @@ export function convertToTrieRefNodes(root: TrieNode): IterableIterator<TrieRefN
     function* walkByRollup(n: TrieNode): IterableIterator<TrieRefNode> {
         if (cached.has(n)) return;
         if (n.f && !n.c) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             cached.set(n, cached.get(eow)!);
             return;
         }
 
-        const children = [...(n.c?.values() || [])].sort(
-            (a, b) => (rollupTally.get(b) || 0) - (rollupTally.get(a) || 0)
+        const children = ((n.c && Object.values(n.c)) || []).sort(
+            (a, b) => (rollupTally.get(b) || 0) - (rollupTally.get(a) || 0),
         );
 
         for (const c of children) {
@@ -76,7 +77,9 @@ export function convertToTrieRefNodes(root: TrieNode): IterableIterator<TrieRefN
     function convert(n: TrieNode): TrieRefNode {
         const { f, c } = n;
         const r = c
-            ? [...c].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([s, n]) => [s, cached.get(n)] as [string, number])
+            ? Object.entries(c)
+                  .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+                  .map(([s, n]) => [s, cached.get(n)] as [string, number])
             : undefined;
         const rn: TrieRefNode = r ? (f ? { f, r } : { r }) : { f };
         return rn;

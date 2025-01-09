@@ -1,13 +1,15 @@
 import { opFlatten, opMap, pipeSync } from '@cspell/cspell-pipe/sync';
-import type { CharacterSetCosts, DictionaryInformation } from '../models/DictionaryInformation';
-import { parseLocale } from '../models/locale';
-import type { SuggestionCostMapDef } from '../models/suggestionCostsDef';
-import { isDefined } from '../utils/util';
-import { EditCostsRequired, mapEditCosts } from './mapCosts';
-import { hunspellInformationToSuggestionCostDef } from './mapHunspellInformation';
-import { PenaltyAdjustment } from '../distance/weightedMaps';
-import { calcFirstCharacterReplaceDefs, parseAccents, parseAlphabet } from './mapToSuggestionCostDef';
-import { ArrayItem } from '../types';
+
+import type { PenaltyAdjustment } from '../distance/weightedMaps.js';
+import type { CharacterSetCosts, DictionaryInformation } from '../models/DictionaryInformation.js';
+import { parseLocale } from '../models/locale/index.js';
+import type { SuggestionCostMapDef } from '../models/suggestionCostsDef.js';
+import type { ArrayItem } from '../types.js';
+import { isDefined } from '../utils/util.js';
+import type { EditCostsRequired } from './mapCosts.js';
+import { mapEditCosts } from './mapCosts.js';
+import { hunspellInformationToSuggestionCostDef } from './mapHunspellInformation.js';
+import { calcFirstCharacterReplaceDefs, parseAccents, parseAlphabet } from './mapToSuggestionCostDef.js';
 
 export function mapDictionaryInformation(dictInfo: DictionaryInformation): SuggestionCostMapDef[] {
     const _locale = dictInfo.locale;
@@ -30,7 +32,7 @@ export function mapDictionaryInformation(dictInfo: DictionaryInformation): Sugge
 function processAlphabet(
     alphabet: DictionaryInformation['alphabet'],
     locale: string[] | undefined,
-    editCost: EditCostsRequired
+    editCost: EditCostsRequired,
 ): SuggestionCostMapDef[] {
     const csAlphabet = toCharSets(alphabet, 'a-zA-Z', editCost.baseCost);
 
@@ -38,7 +40,7 @@ function processAlphabet(
         ...pipeSync(
             csAlphabet,
             opMap((cs) => parseAlphabet(cs, locale, editCost)),
-            opFlatten()
+            opFlatten(),
         ),
         ...calcFirstCharacterReplaceDefs(csAlphabet, editCost),
     ];
@@ -48,7 +50,7 @@ function toCharSets(
     cs: string | CharacterSetCosts[] | undefined,
     defaultValue: string | undefined,
     cost: number,
-    penalty?: number
+    penalty?: number,
 ): CharacterSetCosts[] {
     cs = cs ?? defaultValue;
     if (!cs) return [];
@@ -71,7 +73,7 @@ function toCharSets(
 
 function processAccents(
     accents: DictionaryInformation['accents'],
-    editCost: EditCostsRequired
+    editCost: EditCostsRequired,
 ): SuggestionCostMapDef[] {
     const cs = toCharSets(accents, '\u0300-\u0341', editCost.accentCosts);
     return cs.map((cs) => parseAccents(cs, editCost)).filter(isDefined);

@@ -1,7 +1,8 @@
-import { strict as assert } from 'assert';
-import { format } from 'util';
-import { GrammarDef, Pattern, PatternList, Repository, PatternRef } from './grammarDefinition';
-import { isPatternBeginEnd, isPatternInclude, isPatternMatch, isPatternPatterns } from './grammarTypesHelpers';
+import { strict as assert } from 'node:assert';
+import { format } from 'node:util';
+
+import type { GrammarDef, Pattern, PatternList, PatternRef, Repository } from './grammarDefinition.js';
+import { isPatternBeginEnd, isPatternInclude, isPatternMatch, isPatternPatterns } from './grammarTypesHelpers.js';
 
 interface GrammarContext {
     grammar: GrammarDef;
@@ -39,11 +40,11 @@ export function validatePattern(pattern: Pattern, context: GrammarContext): asse
             isPatternBeginEnd(pattern) ||
             isPatternInclude(pattern) ||
             isPatternPatterns(pattern),
-        format('Unknown Pattern: %o', pattern)
+        format('Unknown Pattern: %o', pattern),
     );
     assert(
         !(isPatternBeginEnd(pattern) && isPatternMatch(pattern)),
-        format('Pattern must be a Match pattern or a Begin/End pattern, but not both: %o', pattern)
+        format('Pattern must be a Match pattern or a Begin/End pattern, but not both: %o', pattern),
     );
     validatePatternName(pattern, context);
 }
@@ -67,8 +68,8 @@ function validatePatternName(p: Pattern, context: GrammarContext): asserts p {
         format(
             'Pattern name ending must match grammar scope ending. Grammar scope: "%s"; Pattern: %o',
             context.grammar.scopeName,
-            p
-        )
+            p,
+        ),
     );
 }
 

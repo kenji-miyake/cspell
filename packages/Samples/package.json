@@ -1,6 +1,6 @@
 {
-  "name": "cspell-tools-samples",
-  "version": "6.12.0",
+  "name": "@internal/cspell-tools-samples",
+  "version": "8.17.1",
   "description": "Sample files used during unit tests",
   "private": true,
   "scripts": {
@@ -11,6 +11,12 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@cspell/cspell-tools": "workspace:^"
-  }
+    "@cspell/cspell-tools": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/streetsidesoftware/cspell.git",
+    "directory": "packages/Samples"
+  },
+  "homepage": "https://github.com/streetsidesoftware/cspell/tree/main/packages/Samples#readme"
 }

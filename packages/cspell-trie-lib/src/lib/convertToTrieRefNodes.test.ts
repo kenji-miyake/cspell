@@ -1,12 +1,14 @@
-import { createTriFromList } from '.';
 import { genSequence } from 'gensequence';
-import { TrieRefNode } from './trieRef';
-import { convertToTrieRefNodes } from './convertToTrieRefNodes';
-import { consolidate } from './consolidate';
+import { describe, expect, test } from 'vitest';
+
+import { consolidate } from './consolidate.js';
+import { convertToTrieRefNodes } from './convertToTrieRefNodes.js';
+import { createTrieRootFromList } from './TrieNode/trie-util.js';
+import type { TrieRefNode } from './trieRef.js';
 
 describe('Validate convertToTrieRefNodes', () => {
     test('Simple Convert', () => {
-        const trie = consolidate(createTriFromList(sampleWords));
+        const trie = consolidate(createTrieRootFromList(sampleWords));
         const nodes = [...convertToTrieRefNodes(trie)];
         expect(nodes).toHaveLength(96);
         const words = [...walk(nodes)];
@@ -21,7 +23,7 @@ function walk(nodes: TrieRefNode[]): IterableIterator<string> {
         }
         if (node.r) {
             yield* genSequence(node.r).concatMap((a) =>
-                genSequence(w(nodes[a[1]], a[0])).map((suffix) => prefix + suffix)
+                genSequence(w(nodes[a[1]], a[0])).map((suffix) => prefix + suffix),
             );
         }
     }

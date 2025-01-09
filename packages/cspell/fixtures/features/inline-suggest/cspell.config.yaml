@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
+
+ignorePaths:
+  - 'cspell*.{json,yaml}'
+
+dictionaryDefinitions:
+  # cspell:disable
+  - name: suggestions
+    suggestWords:
+      - bluelist->blueList
+      - Bluelist->BlueList
+      - blulist->blueList
+      - Blulist->BlueList
+  # cspell:enable
+
+dictionaries:
+  - suggestions

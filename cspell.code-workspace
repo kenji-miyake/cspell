@@ -5,27 +5,32 @@
             "path": "."
         },
         { "path": "docs" },
+        { "path": "packages/dynamic-import" },
         { "path": "integration-tests" },
         { "path": "packages/cspell-bundled-dicts" },
         { "path": "packages/cspell-config-lib" },
         { "path": "packages/cspell-dictionary" },
-        { "path": "packages/cspell-dynamic-loader" },
         { "path": "packages/cspell-eslint-plugin" },
+        { "path": "packages/cspell-filetypes" },
         { "path": "packages/cspell-gitignore" },
         { "path": "packages/cspell-glob" },
         { "path": "packages/cspell-grammar" },
         { "path": "packages/cspell-io" },
         { "path": "packages/cspell-json-reporter" },
         { "path": "packages/cspell-lib" },
+        { "path": "packages/cspell-normalize-json" },
         { "path": "packages/cspell-pipe" },
+        { "path": "packages/cspell-resolver" },
         { "path": "packages/cspell-service-bus" },
+        { "path": "packages/cspell-strong-weak-map" },
         { "path": "packages/cspell-tools" },
         { "path": "packages/cspell-trie-lib" },
         { "path": "packages/cspell-trie" },
-        { "path": "packages/cspell-trie2-lib" },
         { "path": "packages/cspell-types" },
+        { "path": "packages/cspell-url" },
         { "path": "packages/cspell" },
         { "path": "packages/hunspell-reader" },
+        { "path": "test-packages" },
         { "path": "rfc" },
         { "path": "website" }
     ],
@@ -34,25 +39,24 @@
             {
                 "type": "node",
                 "request": "launch",
-                "name": "Test: Jest current-file",
-
-                "program": "${fileWorkspaceFolder}/node_modules/jest/bin/jest.js",
+                "name": "ViTest: Current Test File",
+                "autoAttachChildProcesses": true,
+                "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+                "program": "${workspaceRoot:cspell-monorepo}/node_modules/vitest/vitest.mjs",
+                "env": {
+                    "NODE_OPTIONS": "--enable-source-maps"
+                },
+                "args": [
+                    "run",
+                    "--testTimeout=600000",
+                    "--hideSkippedTests",
+                    "--reporter=basic",
+                    "--no-file-parallelism",
+                    "${relativeFile}"
+                ],
                 "cwd": "${fileWorkspaceFolder}",
-                "args": ["--runInBand", "${fileBasename}"],
-                "console": "integratedTerminal",
-                "internalConsoleOptions": "neverOpen",
-                "disableOptimisticBPs": true
-            },
-            {
-                "type": "node",
-                "request": "launch",
-                "name": "Test: Jest Entire Folder",
-                "program": "${fileWorkspaceFolder}/node_modules/jest/bin/jest.js",
-                "cwd": "${fileWorkspaceFolder}",
-                "args": ["--runInBand"],
-                "console": "integratedTerminal",
-                "internalConsoleOptions": "neverOpen",
-                "disableOptimisticBPs": true
+                "smartStep": true,
+                "console": "integratedTerminal"
             }
         ],
         "compounds": []
@@ -66,7 +70,8 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "[javascript]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode"
-        }
+        },
+        "editor.formatOnSave": true
     },
     "extensions": {
         "recommendations": ["streetsidesoftware.code-spell-checker", "dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]

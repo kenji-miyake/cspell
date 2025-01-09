@@ -1,5 +1,5 @@
-import { WeightMap } from '..';
-import { CompoundWordsMethod } from './walker';
+import type { WeightMap } from '../distance/index.js';
+import { CompoundWordsMethod } from '../walker/index.js';
 
 export interface GenSuggestionOptionsStrict {
     /**
@@ -54,7 +54,7 @@ export interface SuggestionOptionsStrict extends GenSuggestionOptionsStrict {
     /**
      * Apply weights to improve the suggestions.
      */
-    weightMap?: WeightMap;
+    weightMap?: WeightMap | undefined;
 }
 
 export type SuggestionOptions = Partial<SuggestionOptionsStrict>;

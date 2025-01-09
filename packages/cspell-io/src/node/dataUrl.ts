@@ -1,6 +1,9 @@
-import * as fsPath from 'path';
-import { toURL } from './file/util';
-import { promises as fs } from 'fs';
+/* eslint-disable unicorn/text-encoding-identifier-case */
+import { promises as fs } from 'node:fs';
+import * as fsPath from 'node:path';
+
+import { arrayBufferViewToBuffer } from '../common/arrayBuffers.js';
+import { toFileURL } from './file/url.js';
 
 /**
  * Generates a string of the following format:
@@ -13,19 +16,20 @@ import { promises as fs } from 'fs';
  * @param attributes - Additional attributes
  */
 export function encodeDataUrl(
-    data: string | Buffer,
+    data: string | Buffer | ArrayBufferView,
     mediaType: string,
-    attributes?: Iterable<readonly [string, string]> | undefined
+    attributes?: Iterable<readonly [string, string]> | undefined,
 ): string {
     if (typeof data === 'string') return encodeString(data, mediaType, attributes);
     const attribs = encodeAttributes(attributes || []);
-    return `data:${mediaType}${attribs};base64,${data.toString('base64url')}`;
+    const buf = arrayBufferViewToBuffer(data);
+    return `data:${mediaType}${attribs};base64,${buf.toString('base64url')}`;
 }
 
 export function toDataUrl(
-    data: string | Buffer,
+    data: string | Buffer | ArrayBufferView,
     mediaType: string,
-    attributes?: Iterable<[string, string]> | undefined
+    attributes?: Iterable<[string, string]> | undefined,
 ): URL {
     return new URL(encodeDataUrl(data, mediaType, attributes));
 }
@@ -33,7 +37,7 @@ export function toDataUrl(
 function encodeString(
     data: string,
     mediaType: string | undefined,
-    attributes: Iterable<readonly [string, string]> | undefined
+    attributes: Iterable<readonly [string, string]> | undefined,
 ): string {
     mediaType = mediaType || 'text/plain';
     attributes = attributes || [];
@@ -42,8 +46,8 @@ function encodeString(
     const useBase64 = asBase64.length < asUrlComp.length - 7;
     const encoded = useBase64 ? asBase64 : asUrlComp;
     // Ensure charset is first.
-    const attribMap = new Map([['charset', 'utf8'] as readonly [string, string]].concat([...attributes]));
-    attribMap.set('charset', 'utf8'); // Make sure it is always `utf8`.
+    const attribMap = new Map([['charset', 'utf-8'] as readonly [string, string], ...attributes]);
+    attribMap.set('charset', 'utf-8'); // Make sure it is always `utf-8`.
     const attribs = encodeAttributes(attribMap);
     return `data:${mediaType}${attribs}${useBase64 ? ';base64' : ''},${encoded}`;
 }
@@ -64,9 +68,9 @@ const dataUrlRegExHead = /^data:(?<mediaType>[^;,]*)(?<attributes>(?:;[^=]+=[^;,
 export function decodeDataUrl(url: string | URL): DecodedDataUrl {
     url = url.toString();
     const [head, encodedData] = url.split(',', 2);
-    if (!head || encodedData === undefined) throw Error('Not a data url');
+    if (!head || encodedData === undefined) throw new Error('Not a data url');
     const match = head.match(dataUrlRegExHead);
-    if (!match || !match.groups) throw Error('Not a data url');
+    if (!match || !match.groups) throw new Error('Not a data url');
     const mediaType = match.groups['mediaType'] || '';
     const rawAttributes = (match.groups['attributes'] || '')
         .split(';')
@@ -83,9 +87,9 @@ export function decodeDataUrl(url: string | URL): DecodedDataUrl {
 export async function encodeDataUrlFromFile(
     path: string | URL,
     mediaType?: string,
-    attributes?: Iterable<readonly [string, string]> | undefined
+    attributes?: Iterable<readonly [string, string]> | undefined,
 ): Promise<string> {
-    const url = toURL(path);
+    const url = toFileURL(path);
     const filename = fsPath.basename(url.pathname);
     const guess = guessMimeType(filename);
     mediaType = mediaType || guess?.mimeType || 'text/plain';
@@ -104,6 +108,7 @@ export function guessMimeType(filename: string): GuessMimeTypeResult | undefined
     if (filename.endsWith('.trie')) return { mimeType: 'application/vnd.cspell.dictionary+trie', encoding: 'utf-8' };
     if (filename.endsWith('.trie.gz')) return { mimeType: 'application/vnd.cspell.dictionary+trie.gz' };
     if (filename.endsWith('.txt')) return { mimeType: 'text/plain', encoding: 'utf-8' };
+    if (filename.endsWith('.txt.gz')) return { mimeType: 'application/gzip' };
     if (filename.endsWith('.gz')) return { mimeType: 'application/gzip' };
     if (filename.endsWith('.json')) return { mimeType: 'application/json', encoding: 'utf-8' };
     if (filename.endsWith('.yaml') || filename.endsWith('.yml'))

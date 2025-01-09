@@ -1,6 +1,8 @@
-import { opFlatten } from '.';
-import { toArray } from '../helpers';
-import { pipeAsync, pipeSync } from '../pipe';
+import { describe, expect, test } from 'vitest';
+
+import { toArray } from '../helpers/index.js';
+import { pipeAsync, pipeSync } from '../pipe.js';
+import { opFlatten } from './flatten.js';
 
 describe('Validate flatten', () => {
     test.each`

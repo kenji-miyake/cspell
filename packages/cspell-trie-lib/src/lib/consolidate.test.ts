@@ -1,12 +1,14 @@
-import { createTriFromList } from '.';
-import { consolidate } from './consolidate';
+import { readFile } from 'node:fs/promises';
+import * as path from 'node:path';
+
 import { genSequence } from 'gensequence';
-import { TrieNode } from './TrieNode';
-import { readFile } from 'fs-extra';
-import * as path from 'path';
-import { iteratorTrieWords, countNodes, createTrieRoot } from './trie-util';
-import { buildTrie } from './TrieBuilder';
-import { resolveGlobalSample } from '../test/samples';
+import { describe, expect, test } from 'vitest';
+
+import { resolveGlobalSample } from '../test/samples.js';
+import { consolidate } from './consolidate.js';
+import { buildTrie } from './TrieBuilder.js';
+import { countNodes, createTrieRoot, createTrieRootFromList, iteratorTrieWords } from './TrieNode/trie-util.js';
+import type { TrieNode } from './TrieNode/TrieNode.js';
 
 const samples = resolveGlobalSample('dicts');
 const sampleEnglish = path.join(samples, 'en_US.txt');
@@ -14,7 +16,7 @@ const pSampleEnglishWords = readFile(sampleEnglish, 'utf8').then((a) => a.split(
 
 describe('Validate Consolidate', () => {
     test('consolidate', () => {
-        const trie = createTriFromList(sampleWords);
+        const trie = createTrieRootFromList(sampleWords);
         const origCount = countNodes(trie);
         const trie2 = consolidate(trie);
         const countTrie2 = countNodes(trie2);
@@ -26,7 +28,7 @@ describe('Validate Consolidate', () => {
         const trie3 = consolidate(trie);
         const countTrie3 = countNodes(trie3);
         expect(countTrie3).toBe(countTrie2);
-        expect(countNodes(consolidate(createTriFromList(sampleWords)))).toBe(96);
+        expect(countNodes(consolidate(createTrieRootFromList(sampleWords)))).toBe(96);
     });
 
     test('consolidate empty trie', () => {
@@ -39,7 +41,7 @@ describe('Validate Consolidate', () => {
     test('larger trie', async () => {
         const words = await pSampleEnglishWords;
         words.length = Math.min(words.length, 2000);
-        const trie = consolidate(createTriFromList(words));
+        const trie = consolidate(createTrieRootFromList(words));
         const result = [...iteratorTrieWords(trie)];
         expect(result).toEqual(words);
         const trie2 = consolidate(buildTrie(words).root);
@@ -55,7 +57,9 @@ function walk(root: TrieNode): IterableIterator<string> {
             yield prefix;
         }
         if (node.c) {
-            yield* genSequence(node.c).concatMap((a) => genSequence(w(a[1], a[0])).map((suffix) => prefix + suffix));
+            yield* genSequence(Object.entries(node.c)).concatMap((a) =>
+                genSequence(w(a[1], a[0])).map((suffix) => prefix + suffix),
+            );
         }
     }
     return w(root, '');

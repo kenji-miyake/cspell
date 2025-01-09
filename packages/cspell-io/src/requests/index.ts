@@ -1,6 +1,5 @@
-export { RequestFsReadBinaryFile, RequestFsReadBinaryFileSync } from './RequestFsReadBinaryFile';
-export { RequestFsReadFile } from './RequestFsReadFile';
-export { RequestFsReadFileSync } from './RequestFsReadFileSync';
-export { RequestFsStat, RequestFsStatSync } from './RequestFsStat';
-export { RequestZlibInflate } from './RequestZlibInflate';
-export { RequestFsWriteFile } from './RequestFsWriteFile';
+export { RequestFsReadFile as RequestFsReadFile } from './RequestFsReadFile.js';
+export { RequestFsReadFileTextSync as RequestFsReadFileSync } from './RequestFsReadFileSync.js';
+export { RequestFsStat, RequestFsStatSync } from './RequestFsStat.js';
+export { RequestFsWriteFile } from './RequestFsWriteFile.js';
+export { RequestZlibInflate } from './RequestZlibInflate.js';

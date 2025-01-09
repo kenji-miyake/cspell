@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`app app TypeScript/sample1.ts 1`] = `
+exports[`app > app 'TypeScript/sample1.ts' 1`] = `
 "File: sample1.ts Parser: typescript
 3-4	↩︎	comment.block.documentation.ts code.ts source.ts
 4-32	 * This is some sample code↩︎	comment.block.documentation.ts code.ts source.ts

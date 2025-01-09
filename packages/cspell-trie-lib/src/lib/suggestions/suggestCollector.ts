@@ -1,10 +1,20 @@
-import { editDistanceWeighted, WeightMap } from '..';
-import { addDefToWeightMap } from '../distance/weightedMaps';
-import { RequireOptional } from '../types';
-import { createTimer } from '../utils/timer';
-import { clean, regexQuote, replaceAllFactory } from '../utils/util';
-import { GenSuggestionOptions, GenSuggestionOptionsStrict } from './genSuggestionsOptions';
-import { WORD_SEPARATOR } from './walker';
+import type { WeightMap } from '../distance/index.js';
+import { editDistanceWeighted } from '../distance/index.js';
+import { addDefToWeightMap } from '../distance/weightedMaps.js';
+import type { RequireOptional } from '../types.js';
+import { startTimer } from '../utils/timer.js';
+import { clean, regexQuote, replaceAllFactory } from '../utils/util.js';
+import { WORD_SEPARATOR } from '../walker/index.js';
+import { DEFAULT_COMPOUNDED_WORD_SEPARATOR } from './constants.js';
+import type { GenSuggestionOptions, GenSuggestionOptionsStrict } from './genSuggestionsOptions.js';
+import type {
+    GenerateSuggestionResult,
+    MaxCost,
+    Progress,
+    SuggestionGenerator,
+    SuggestionResult,
+    SuggestionResultBase,
+} from './SuggestionTypes.js';
 
 const defaultMaxNumberSuggestions = 10;
 
@@ -23,62 +33,16 @@ const regexSeparator = new RegExp(`[${regexQuote(WORD_SEPARATOR)}]`, 'g');
 const wordLengthCost = [0, 50, 25, 5, 0];
 const EXTRA_WORD_COST = 5;
 
-export const DEFAULT_COMPOUNDED_WORD_SEPARATOR = '∙';
-
 /** time in ms */
 const DEFAULT_COLLECTOR_TIMEOUT = 1000;
 
-export type Cost = number;
-export type MaxCost = Cost;
-
-export interface SuggestionResultBase {
-    /** The suggested word */
-    word: string;
-
-    /** The edit cost 100 = 1 edit */
-    cost: Cost;
-
-    /**
-     * This suggestion is the preferred suggestion.
-     * Setting this to `true` implies that an auto fix is possible.
-     */
-    isPreferred?: boolean | undefined;
-}
-
-export interface SuggestionResult extends SuggestionResultBase {
-    /** The suggested word with compound marks, generally a `•` */
-    compoundWord?: string | undefined;
-}
-
-export interface Progress {
-    type: 'progress';
-    /** Number of Completed Tasks so far */
-    completed: number;
-    /**
-     * Number of tasks remaining, this number is allowed to increase over time since
-     * completed tasks can generate new tasks.
-     */
-    remaining: number;
-}
-
 const symStopProcessing = Symbol('Collector Stop Processing');
-
-export type GenerateNextParam = MaxCost | symbol | undefined;
-export type GenerateSuggestionResult = SuggestionResultBase | Progress | undefined;
-
-/**
- * Ask for the next result.
- * maxCost - sets the max cost for following suggestions
- * This is used to limit which suggestions are emitted.
- * If the `iterator.next()` returns `undefined`, it is to request a value for maxCost.
- *
- * The SuggestionIterator is generally the
- */
-export type SuggestionGenerator = Generator<GenerateSuggestionResult, void, GenerateNextParam>;
 
 // comparison function for Suggestion Results.
 export function compSuggestionResults(a: SuggestionResultBase, b: SuggestionResultBase): number {
-    return a.cost - b.cost || a.word.length - b.word.length || collator.compare(a.word, b.word);
+    const aPref = (a.isPreferred && -1) || 0;
+    const bPref = (b.isPreferred && -1) || 0;
+    return aPref - bPref || a.cost - b.cost || a.word.length - b.word.length || collator.compare(a.word, b.word);
 }
 
 export type FilterWordFn = (word: string, cost: number) => boolean;
@@ -122,7 +86,7 @@ export interface SuggestionCollectorOptions extends Omit<GenSuggestionOptionsStr
      * I.E. to remove forbidden terms.
      * @default () => true
      */
-    filter?: FilterWordFn;
+    filter?: FilterWordFn | undefined;
 
     /**
      * The number of letters that can be changed when looking for a match
@@ -134,7 +98,7 @@ export interface SuggestionCollectorOptions extends Omit<GenSuggestionOptionsStr
      * Include suggestions with tied cost even if the number is greater than `numSuggestions`.
      * @default true
      */
-    includeTies?: boolean;
+    includeTies?: boolean | undefined;
 
     /**
      * specify if case / accents should be ignored when looking for suggestions.
@@ -176,6 +140,7 @@ export function suggestionCollector(wordToMatch: string, options: SuggestionColl
         weightMap,
         compoundSeparator = defaultSuggestionCollectorOptions.compoundSeparator,
     } = options;
+    // const weightMap: WeightMap | undefined = undefined;
 
     const numSuggestions = Math.max(options.numSuggestions, 0) || 0;
     const numSugToHold = weightMap ? numSuggestions * 2 : numSuggestions;
@@ -218,11 +183,12 @@ export function suggestionCollector(wordToMatch: string, options: SuggestionColl
     }
 
     function adjustCost(sug: SuggestionResultBase): SuggestionResultBase {
+        if (sug.isPreferred) return sug;
         const words = sug.word.split(regexSeparator);
         const extraCost =
             words.map((w) => wordLengthCost[w.length] || 0).reduce((a, b) => a + b, 0) +
             (words.length - 1) * EXTRA_WORD_COST;
-        return { word: sug.word, cost: sug.cost + extraCost, isPreferred: sug.isPreferred };
+        return { word: sug.word, cost: sug.cost + extraCost };
     }
 
     function collectSuggestion(suggestion: SuggestionResultBase): MaxCost {
@@ -253,11 +219,11 @@ export function suggestionCollector(wordToMatch: string, options: SuggestionColl
         timeout = Math.min(timeout, timeRemaining);
         if (timeout < 0) return;
 
-        const timer = createTimer();
+        const timer = startTimer();
 
         let ir: IteratorResult<SuggestionResultBase | Progress | undefined>;
         while (!(ir = src.next(stop || maxCost)).done) {
-            if (timer.elapsed() > timeout) {
+            if (timer() > timeout) {
                 stop = symStopProcessing;
             }
             const { value } = ir;
@@ -270,7 +236,7 @@ export function suggestionCollector(wordToMatch: string, options: SuggestionColl
             }
         }
 
-        timeRemaining -= timer.elapsed();
+        timeRemaining -= timer();
     }
 
     function cleanCompoundResult(sr: SuggestionResultBase): SuggestionResult {
@@ -293,9 +259,9 @@ export function suggestionCollector(wordToMatch: string, options: SuggestionColl
         const nWordToMatch = wordToMatch.normalize(NF);
         const rawValues = [...sugs.values()];
         const values = weightMap
-            ? rawValues.map(({ word, isPreferred }) => ({
+            ? rawValues.map(({ word, cost, isPreferred }) => ({
                   word,
-                  cost: editDistanceWeighted(nWordToMatch, word.normalize(NF), weightMap, 110),
+                  cost: isPreferred ? cost : editDistanceWeighted(nWordToMatch, word.normalize(NF), weightMap, 110),
                   isPreferred,
               }))
             : rawValues;
@@ -357,5 +323,5 @@ export function impersonateCollector(collector: SuggestionCollector, word: strin
 
 export function isSuggestionResult(s: GenerateSuggestionResult): s is SuggestionResult {
     const r = s as Partial<SuggestionResult> | undefined;
-    return r?.cost !== undefined && r.word != undefined;
+    return !!r && typeof r === 'object' && r?.cost !== undefined && r.word != undefined;
 }

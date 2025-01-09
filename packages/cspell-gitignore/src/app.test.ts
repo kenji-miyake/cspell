@@ -1,18 +1,28 @@
-import * as app from './app';
-import * as path from 'path';
+import * as path from 'node:path';
 
-const log = jest.spyOn(console, 'log').mockImplementation();
-const error = jest.spyOn(console, 'error').mockImplementation();
+import type { MockInstance } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import * as app from './app.js';
 
 describe('app', () => {
+    let log: MockInstance<typeof console.log>;
+    let error: MockInstance<typeof console.error>;
+
     beforeEach(() => {
-        jest.resetAllMocks();
+        log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+        error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     test.each`
         params
         ${[path.basename(__dirname) + '/code.ts']}
         ${['../node_modules']}
+        ${['../node_modules/.bin/run.mjs']}
         ${['-r', '.', 'dist']}
         ${['temp']}
         ${['-r', '.', 'temp']}
@@ -24,11 +34,11 @@ describe('app', () => {
         const stderr = error.mock.calls
             .map((c) => c.join(''))
             .join('\n')
-            .replace(/\\/g, '/');
+            .replaceAll('\\', '/');
         const stdout = log.mock.calls
             .map((c) => c.join(''))
             .join('\n')
-            .replace(/\\/g, '/');
+            .replaceAll('\\', '/');
         expect(stdout).toMatchSnapshot();
         expect(stderr).toMatchSnapshot();
     });

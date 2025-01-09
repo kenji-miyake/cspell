@@ -1,6 +1,8 @@
-import { toArray, toAsyncIterable } from '../helpers';
-import { pipeAsync, pipeSync } from '../pipe';
-import { opLast, opLastAsync } from './last';
+import { describe, expect, test } from 'vitest';
+
+import { toArray, toAsyncIterable } from '../helpers/index.js';
+import { pipeAsync, pipeSync } from '../pipe.js';
+import { opLast, opLastAsync } from './last.js';
 
 describe('Validate last', () => {
     test('last', async () => {
@@ -61,11 +63,11 @@ describe('Validate last', () => {
                 4,
                 {},
                 'hello',
-                Promise.resolve(undefined),
+                Promise.resolve(),
                 Promise.resolve(Promise.resolve(Promise.resolve('deep'))),
             ],
             opLastAsync(truthyAsync),
-            opLast(isString)
+            opLast(isString),
         );
 
         expect(await toArray(values)).toEqual(['deep']);

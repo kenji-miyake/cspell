@@ -1,20 +1,20 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Validate the application app --help 1`] = `
+exports[`Validate the application > app --help 1`] = `
 {
   "error": "",
   "log": "",
 }
 `;
 
-exports[`Validate the application app -V 1`] = `
+exports[`Validate the application > app -V 1`] = `
 {
   "error": "",
   "log": "",
 }
 `;
 
-exports[`Validate the application app compile compound 1`] = `
+exports[`Validate the application > app compile compound 1`] = `
 "
 # cspell-tools: keep-case no-split
 
@@ -37,7 +37,7 @@ San Francisco
 "
 `;
 
-exports[`Validate the application app compile merge 1`] = `
+exports[`Validate the application > app compile merge 1`] = `
 "
 # cspell-tools: keep-case no-split
 
@@ -60,22 +60,10 @@ tried
 try
 work
 worked
-~amsterdam
-~angeles
-~city
-~delhi
-~francisco
-~london
-~los
-~mexico
-~new
-~paris
-~san
-~york
 "
 `;
 
-exports[`Validate the application app compile merge legacy 1`] = `
+exports[`Validate the application > app compile merge legacy 1`] = `
 "
 # cspell-tools: keep-case no-split
 
@@ -87,18 +75,12 @@ francisco
 hello
 london
 los
-los angeles
 mexico
-mexico city
 new
-new amsterdam
-new delhi
-new york
 paris
 rework
 reworked
 san
-san francisco
 tried
 try
 work
@@ -107,7 +89,7 @@ york
 "
 `;
 
-exports[`Validate the application app compile merge with defaults --keep-raw-case 1`] = `
+exports[`Validate the application > app compile merge with defaults --keep-raw-case 1`] = `
 "
 # cspell-tools: keep-case no-split
 
@@ -129,7 +111,7 @@ worked
 "
 `;
 
-exports[`Validate the application app compile merge with defaults 1`] = `
+exports[`Validate the application > app compile merge with defaults 1`] = `
 "
 # cspell-tools: keep-case no-split
 
@@ -148,18 +130,10 @@ tried
 try
 work
 worked
-~london
-~los angeles
-~mexico city
-~new amsterdam
-~new delhi
-~new york
-~paris
-~san francisco
 "
 `;
 
-exports[`Validate the application app compile with compression 1`] = `
+exports[`Validate the application > app compile with compression 1`] = `
 "
 # cspell-tools: keep-case no-split
 
@@ -171,18 +145,10 @@ New Delhi
 New York
 Paris
 San Francisco
-~london
-~los angeles
-~mexico city
-~new amsterdam
-~new delhi
-~new york
-~paris
-~san francisco
 "
 `;
 
-exports[`Validate the application app compile-trie compound 1`] = `
+exports[`Validate the application > app compile-trie compound 1`] = `
 "#!/usr/bin/env cspell-trie reader
 TrieXv3
 base=10
@@ -216,9 +182,46 @@ an f#50;<6
 "
 `;
 
-exports[`Validate the application app no args 1`] = `
+exports[`Validate the application > app no args 1`] = `
 {
   "error": "",
   "log": "",
+}
+`;
+
+exports[`Validate the application > app shasum 1`] = `
+{
+  "error": "",
+  "log": "%s,477e8bc9954033392e432fd66f0d4278884bde38  cities.txt",
+}
+`;
+
+exports[`Validate the application > app shasum check failed 1`] = `
+{
+  "error": "",
+  "log": "%s,cities.trie: OK
+cities.trie.gz: OK
+cities.txt: OK
+colors.trie: FAILED
+colors.txt: OK
+sampleCodeDic.txt: OK
+shasum: WARNING: 1 computed checksum did NOT match",
+}
+`;
+
+exports[`Validate the application > app shasum file not found 1`] = `
+{
+  "error": "",
+  "log": "%s,477e8bc9954033392e432fd66f0d4278884bde38  cities.txt
+shasum: unknown.txt: Unable to read file.",
+}
+`;
+
+exports[`Validate the application > app shasum update 1`] = `
+{
+  "error": "",
+  "log": "%s,477e8bc9954033392e432fd66f0d4278884bde38  cities.txt
+3a6b55a089d018878e8b904f8f19391f2e30b66c  colors.txt
+",
 }
 `;

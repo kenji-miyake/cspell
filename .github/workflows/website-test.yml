@@ -3,14 +3,14 @@ name: Website - Build and Test
 on:
   pull_request:
     paths:
-      - "docs/**"
-      - "website/**"
+      - 'docs/**'
+      - 'website/**'
   push:
     branches:
       - main
     paths:
-      - "docs/**"
-      - "website/**"
+      - 'docs/**'
+      - 'website/**'
   # Run on demand
   workflow_dispatch:
 
@@ -22,21 +22,16 @@ jobs:
     name: Build Website
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.2
-
-      - uses: actions/setup-node@v3
+      - name: Setup
+        uses: ./.github/actions/setup
         with:
-          node-version: 16.x
-          cache: pnpm
-
-      - run: |
-          pnpm i
+          node-version: ${{ matrix.node-version }}
 
       - name: Build website
         run: |
+          pnpm build
           pnpm --filter website run build:site
 
       # Ensure the repository is clean after build & test

@@ -1,29 +1,38 @@
-import type { CSpellReporter } from '@cspell/cspell-types';
-import { MessageTypes } from '@cspell/cspell-types';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import { getReporter } from '.';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-const mockWriteFile = jest.spyOn(fs, 'writeFile');
-
-jest.mock('fs', () => ({
+vi.mock('fs', () => ({
     promises: {
         writeFile: async () => undefined,
+        mkdir: async () => undefined,
     },
 }));
-jest.mock('mkdirp', () => jest.fn().mockResolvedValue(undefined));
+
+import { promises as fs } from 'node:fs';
+import * as path from 'node:path';
+
+import type { CSpellReporter } from '@cspell/cspell-types';
+import { MessageTypes } from '@cspell/cspell-types';
+
+import { getReporter } from './index.js';
 
 describe('getReporter', () => {
+    let mockWriteFile = vi.spyOn(fs, 'writeFile');
+
     beforeEach(() => {
-        jest.resetAllMocks();
+        vi.resetAllMocks();
+        mockWriteFile = vi.spyOn(fs, 'writeFile');
+    });
+
+    afterEach(() => {
+        vi.resetAllMocks();
         mockWriteFile.mockReset();
     });
 
-    it('throws for invalid config', () => {
-        expect(() => getReporter({})).toThrowErrorMatchingSnapshot();
+    test('throws for invalid config', () => {
+        expect(() => getReporter({ outFile: {} })).toThrowErrorMatchingSnapshot();
     });
 
-    it('saves json to file', async () => {
+    test('saves json to file', async () => {
         const reporter = getReporter({ outFile: 'out.json' });
         await runReporter(reporter);
         expect(mockWriteFile).toHaveBeenCalledTimes(1);
@@ -32,7 +41,41 @@ describe('getReporter', () => {
         expect(mockWriteFile.mock.calls[0][1]).toMatchSnapshot();
     });
 
-    it('saves additional data', async () => {
+    test.each`
+        settings
+        ${undefined}
+        ${{ outFile: undefined }}
+        ${{ outFile: 'stdout' }}
+        ${{ outFile: 'stderr' }}
+    `('saves json to stdout/stderr $settings', async ({ settings }) => {
+        const stdout = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+        const stderr = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const reporter = getReporter(settings);
+        await runReporter(reporter);
+        expect(joinCalls(stderr.mock.calls)).toMatchSnapshot();
+        expect(joinCalls(stdout.mock.calls)).toMatchSnapshot();
+    });
+
+    test.each`
+        settings
+        ${undefined}
+        ${{ outFile: undefined }}
+        ${{ outFile: 'stdout' }}
+        ${{ outFile: 'stderr' }}
+    `('saves json to console $settings', async ({ settings }) => {
+        const console = {
+            log: vi.fn(),
+            error: vi.fn(),
+            warn: vi.fn(),
+        };
+
+        const reporter = getReporter(settings, { console });
+        await runReporter(reporter);
+        expect(joinCalls(console.error.mock.calls)).toMatchSnapshot();
+        expect(joinCalls(console.log.mock.calls)).toMatchSnapshot();
+    });
+
+    test('saves additional data', async () => {
         const reporter = getReporter({ outFile: 'out.json', verbose: true, debug: true, progress: true });
         await runReporter(reporter);
         expect(fs.writeFile).toHaveBeenCalledTimes(1);
@@ -41,7 +84,11 @@ describe('getReporter', () => {
     });
 });
 
-async function runReporter(reporter: CSpellReporter): Promise<void> {
+function joinCalls(calls: any[][]): string {
+    return calls.map((call) => call.join('<>')).join('\n');
+}
+
+async function runReporter(reporter: Required<CSpellReporter>): Promise<void> {
     reporter.debug('foo');
     reporter.debug('bar');
 
@@ -68,7 +115,7 @@ async function runReporter(reporter: CSpellReporter): Promise<void> {
         fileNum: 1,
         fileCount: 1,
         filename: 'text.txt',
-        elapsedTimeMs: 349.058747,
+        elapsedTimeMs: 349.058_747,
         processed: true,
         numErrors: 2,
     });

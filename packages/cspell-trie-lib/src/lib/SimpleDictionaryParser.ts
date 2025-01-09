@@ -1,15 +1,19 @@
-import { operators } from 'gensequence';
-import { normalizeWord, normalizeWordForCaseInsensitive } from './trie-util';
+import type { Operator } from '@cspell/cspell-pipe/sync';
+import { opCombine as opPipe, opConcatMap, opFilter, opMap } from '@cspell/cspell-pipe/sync';
+
+import { buildITrieFromWords } from './buildITrie.js';
 import {
-    COMPOUND_FIX,
-    OPTIONAL_COMPOUND_FIX,
-    FORBID_PREFIX,
     CASE_INSENSITIVE_PREFIX,
-    LINE_COMMENT,
+    COMPOUND_FIX,
+    FORBID_PREFIX,
     IDENTITY_PREFIX,
-} from './constants';
-import { Trie } from './trie';
-import { buildTrieFast } from './TrieBuilder';
+    LINE_COMMENT,
+    OPTIONAL_COMPOUND_FIX,
+} from './constants.js';
+import type { ITrie } from './ITrie.js';
+import type { Trie } from './trie.js';
+import { buildTrieFast } from './TrieBuilder.js';
+import { normalizeWord, normalizeWordForCaseInsensitive } from './utils/normalizeWord.js';
 
 export interface ParseDictionaryOptions {
     compoundCharacter: string;
@@ -29,11 +33,47 @@ export interface ParseDictionaryOptions {
     keepExactPrefix: string;
 
     /**
-     * Tell the parser to automatically create case / accents insensitive forms.
+     * Tell the parser to automatically create case / accent insensitive forms.
      * @default true
      */
     stripCaseAndAccents: boolean;
+
+    /**
+     * Tell the parser to keep non-case/accent version in both forms.
+     * @default false
+     */
+    stripCaseAndAccentsKeepDuplicate: boolean;
+
+    /**
+     * Tell the parser to keep non-case/accent version in both forms.
+     * @default false
+     */
+    stripCaseAndAccentsOnForbidden: boolean;
+
+    /**
+     * Tell the parser to split into words along spaces.
+     * @default false
+     */
+    split: boolean;
+
+    /**
+     * When splitting tells the parser to output both the split and non-split versions of the line.
+     * @default false
+     */
+    splitKeepBoth: boolean;
+
+    /**
+     * Specify the separator for splitting words.
+     */
+    splitSeparator: RegExp | string;
+
+    /**
+     * Do not normalize the compound character.
+     */
+    keepOptionalCompoundCharacter: boolean;
 }
+
+const RegExpSplit = /[\s,;]/g;
 
 const _defaultOptions: ParseDictionaryOptions = {
     commentCharacter: LINE_COMMENT,
@@ -43,33 +83,45 @@ const _defaultOptions: ParseDictionaryOptions = {
     caseInsensitivePrefix: CASE_INSENSITIVE_PREFIX,
     keepExactPrefix: IDENTITY_PREFIX,
     stripCaseAndAccents: true,
+    stripCaseAndAccentsKeepDuplicate: false,
+    stripCaseAndAccentsOnForbidden: false,
+    split: false,
+    splitKeepBoth: false,
+    splitSeparator: RegExpSplit,
+    keepOptionalCompoundCharacter: false,
 };
 
 export const defaultParseDictionaryOptions: ParseDictionaryOptions = Object.freeze(_defaultOptions);
 
+export const cSpellToolDirective = 'cspell-dictionary:';
+
+export const setOfCSpellDirectiveFlags = ['no-split', 'split', 'generate-alternatives', 'no-generate-alternatives'];
+
 /**
  * Normalizes a dictionary words based upon prefix / suffixes.
  * Case insensitive versions are also generated.
- * @param lines - one word per line
- * @param _options - defines prefixes used when parsing lines.
+ * @param options - defines prefixes used when parsing lines.
  * @returns words that have been normalized.
  */
-export function parseDictionaryLines(
-    lines: Iterable<string>,
-    options?: Partial<ParseDictionaryOptions>
-): Iterable<string> {
-    const _options = mergeOptions(_defaultOptions, options);
+export function createDictionaryLineParserMapper(options?: Partial<ParseDictionaryOptions>): Operator<string> {
+    const _options = options || _defaultOptions;
     const {
-        commentCharacter,
-        optionalCompoundCharacter: optionalCompound,
-        compoundCharacter: compound,
-        caseInsensitivePrefix: ignoreCase,
-        forbiddenPrefix: forbidden,
-        keepExactPrefix: keepCase,
-        stripCaseAndAccents,
+        commentCharacter = _defaultOptions.commentCharacter,
+        optionalCompoundCharacter: optionalCompound = _defaultOptions.optionalCompoundCharacter,
+        compoundCharacter: compound = _defaultOptions.compoundCharacter,
+        caseInsensitivePrefix: ignoreCase = _defaultOptions.caseInsensitivePrefix,
+        forbiddenPrefix: forbidden = _defaultOptions.forbiddenPrefix,
+        keepExactPrefix: keepCase = _defaultOptions.keepExactPrefix,
+        splitSeparator = _defaultOptions.splitSeparator,
+        splitKeepBoth = _defaultOptions.splitKeepBoth,
+        stripCaseAndAccentsKeepDuplicate = _defaultOptions.stripCaseAndAccentsKeepDuplicate,
+        stripCaseAndAccentsOnForbidden = _defaultOptions.stripCaseAndAccentsOnForbidden,
+        keepOptionalCompoundCharacter = _defaultOptions.keepOptionalCompoundCharacter,
     } = _options;
 
-    const regexComment = new RegExp(escapeRegEx(commentCharacter) + '.*', 'g');
+    let { stripCaseAndAccents = _defaultOptions.stripCaseAndAccents, split = _defaultOptions.split } = _options;
+
+    // console.log('options: %o', options);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function isString(line: any | string): line is string {
@@ -81,7 +133,39 @@ export function parseDictionaryLines(
     }
 
     function removeComments(line: string): string {
-        return line.replace(regexComment, '').trim();
+        const idx = line.indexOf(commentCharacter);
+        if (idx < 0) return line;
+
+        const idxDirective = line.indexOf(cSpellToolDirective, idx);
+        if (idxDirective >= 0) {
+            const flags = line
+                .slice(idxDirective)
+                .split(/[\s,;]/g)
+                .map((s) => s.trim())
+                .filter((a) => !!a);
+            for (const flag of flags) {
+                switch (flag) {
+                    case 'split': {
+                        split = true;
+                        break;
+                    }
+                    case 'no-split': {
+                        split = false;
+                        break;
+                    }
+                    case 'no-generate-alternatives': {
+                        stripCaseAndAccents = false;
+                        break;
+                    }
+                    case 'generate-alternatives': {
+                        stripCaseAndAccents = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return line.slice(0, idx).trim();
     }
 
     function filterEmptyLines(line: string): boolean {
@@ -108,14 +192,18 @@ export function parseDictionaryLines(
         }
     }
 
-    const doNotNormalizePrefix = new Set([forbidden, ignoreCase, keepCase, '"']);
+    const doNotNormalizePrefix: Record<string, true | undefined> = Object.create(null);
+    [ignoreCase, keepCase, '"'].forEach((prefix) => (doNotNormalizePrefix[prefix] = true));
+    if (!stripCaseAndAccentsOnForbidden) {
+        doNotNormalizePrefix[forbidden] = true;
+    }
 
     function removeDoublePrefix(w: string): string {
         return w.startsWith(ignoreCase + ignoreCase) ? w.slice(1) : w;
     }
 
     function stripKeepCasePrefixAndQuotes(word: string): string {
-        word = word.replace(/"(.*)"/, '$1');
+        word = word.replaceAll(/"(.*?)"/g, '$1');
         return word[0] === keepCase ? word.slice(1) : word;
     }
 
@@ -127,29 +215,69 @@ export function parseDictionaryLines(
         const nWord = _normalize(word);
         const forms = new Set<string>();
         forms.add(nWord);
-        if (stripCaseAndAccents && !doNotNormalizePrefix.has(word[0])) {
+        if (stripCaseAndAccents && !(word[0] in doNotNormalizePrefix)) {
             for (const n of normalizeWordForCaseInsensitive(nWord)) {
-                if (n !== nWord) forms.add(ignoreCase + n);
+                (stripCaseAndAccentsKeepDuplicate || n !== nWord) && forms.add(ignoreCase + n);
             }
         }
         yield* forms;
     }
 
-    const processLines = operators.pipe(
-        operators.filter(isString),
-        operators.map(removeComments),
-        operators.map(trim),
-        operators.filter(filterEmptyLines),
-        operators.concatMap(mapOptionalPrefix),
-        operators.concatMap(mapOptionalSuffix),
-        operators.concatMap(mapNormalize),
-        operators.map(removeDoublePrefix)
+    function* splitWords(lines: Iterable<string>): Iterable<string> {
+        for (const line of lines) {
+            if (split) {
+                const lineEscaped = line.includes('"')
+                    ? line.replaceAll(/".*?"/g, (quoted) => ' ' + quoted.replaceAll(/(\s)/g, '\\$1') + ' ')
+                    : line;
+
+                const words = splitLine(lineEscaped, splitSeparator);
+                yield* words.map((escaped) => escaped.replaceAll('\\', ''));
+                if (!splitKeepBoth) continue;
+            }
+            yield line;
+        }
+    }
+
+    function* splitLines(paragraphs: Iterable<string>): Iterable<string> {
+        for (const paragraph of paragraphs) {
+            yield* paragraph.split('\n');
+        }
+    }
+
+    const mapCompounds: Operator<string>[] = keepOptionalCompoundCharacter
+        ? []
+        : [opConcatMap(mapOptionalPrefix), opConcatMap(mapOptionalSuffix)];
+
+    const processLines = opPipe(
+        opFilter(isString),
+        splitLines,
+        opMap(removeComments),
+        splitWords,
+        opMap(trim),
+        opFilter(filterEmptyLines),
+        ...mapCompounds,
+        opConcatMap(mapNormalize),
+        opMap(removeDoublePrefix),
     );
 
-    return processLines(lines);
+    return processLines;
 }
 
-export function parseLinesToDictionary(lines: Iterable<string>, options?: Partial<ParseDictionaryOptions>): Trie {
+/**
+ * Normalizes a dictionary words based upon prefix / suffixes.
+ * Case insensitive versions are also generated.
+ * @param lines - one word per line
+ * @param _options - defines prefixes used when parsing lines.
+ * @returns words that have been normalized.
+ */
+export function parseDictionaryLines(
+    lines: Iterable<string> | string,
+    options?: Partial<ParseDictionaryOptions>,
+): Iterable<string> {
+    return createDictionaryLineParserMapper(options)(typeof lines === 'string' ? [lines] : lines);
+}
+
+export function parseLinesToDictionaryLegacy(lines: Iterable<string>, options?: Partial<ParseDictionaryOptions>): Trie {
     const _options = mergeOptions(_defaultOptions, options);
     const dictLines = parseDictionaryLines(lines, _options);
     return buildTrieFast([...new Set(dictLines)].sort(), {
@@ -159,13 +287,27 @@ export function parseLinesToDictionary(lines: Iterable<string>, options?: Partia
     });
 }
 
-export function parseDictionary(text: string, options?: Partial<ParseDictionaryOptions>): Trie {
-    return parseLinesToDictionary(text.split('\n'), options);
+export function parseDictionaryLegacy(text: string | string[], options?: Partial<ParseDictionaryOptions>): Trie {
+    return parseLinesToDictionaryLegacy(typeof text === 'string' ? text.split('\n') : text, options);
 }
 
-function escapeRegEx(s: string) {
-    return s.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&').replace(/-/g, '\\x2d');
+export function parseLinesToDictionary(lines: Iterable<string>, options?: Partial<ParseDictionaryOptions>): ITrie {
+    const _options = mergeOptions(_defaultOptions, options);
+    const dictLines = parseDictionaryLines(lines, _options);
+    return buildITrieFromWords([...new Set(dictLines)].sort(), {
+        compoundCharacter: _options.compoundCharacter,
+        forbiddenWordPrefix: _options.forbiddenPrefix,
+        stripCaseAndAccentsPrefix: _options.caseInsensitivePrefix,
+    });
 }
+
+export function parseDictionary(text: string | Iterable<string>, options?: Partial<ParseDictionaryOptions>): ITrie {
+    return parseLinesToDictionary(typeof text === 'string' ? text.split('\n') : text, options);
+}
+
+// function escapeRegEx(s: string) {
+//     return s.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&').replace(/-/g, '\\x2d');
+// }
 
 function mergeOptions(
     base: ParseDictionaryOptions,
@@ -178,3 +320,24 @@ function mergeOptions(
     }
     return opt;
 }
+
+const RegExpToEncode = /\\([\s,;])/g;
+const RegExpDecode = /<<(%[\da-f]{2})>>/gi;
+
+function encodeLine(line: string): string {
+    return line.replaceAll(RegExpToEncode, (_, v) => '<<' + encodeURIComponent(v) + '>>');
+}
+
+function decodeLine(line: string): string {
+    return line.replaceAll(RegExpDecode, (_, v) => '\\' + decodeURIComponent(v));
+}
+
+function splitLine(line: string, regExp: RegExp | string): string[] {
+    return encodeLine(line)
+        .split(regExp)
+        .map((line) => decodeLine(line));
+}
+
+export const __testing__ = {
+    splitLine,
+};

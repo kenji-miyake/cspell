@@ -1,6 +1,8 @@
-import * as path from 'path';
-import { contains } from '.';
-import { GitIgnoreHierarchy, IsIgnoredExResult, loadGitIgnore } from './GitIgnoreFile';
+import * as path from 'node:path';
+
+import type { IsIgnoredExResult } from './GitIgnoreFile.js';
+import { GitIgnoreHierarchy, loadGitIgnore } from './GitIgnoreFile.js';
+import { contains } from './helpers.js';
 
 /**
  * Class to cache and process `.gitignore` file queries.
@@ -51,6 +53,7 @@ export class GitIgnore {
         this.resolvedGitIgnoreHierarchies.set(directory, found);
         return find;
     }
+
     filterOutIgnored(files: string[]): Promise<string[]>;
     filterOutIgnored(files: Iterable<string>): Promise<string[]>;
     filterOutIgnored(files: AsyncIterable<string>): AsyncIterable<string>;
@@ -87,6 +90,11 @@ export class GitIgnore {
         return this.knownGitIgnoreHierarchies.get(directory);
     }
 
+    async getGlobs(directory: string): Promise<string[]> {
+        const hierarchy = await this.findGitIgnoreHierarchy(directory);
+        return hierarchy.getGlobs(directory);
+    }
+
     private cleanCachedEntries() {
         this.knownGitIgnoreHierarchies.clear();
         this.resolvedGitIgnoreHierarchies.clear();
@@ -101,7 +109,7 @@ export class GitIgnore {
         if (!git) {
             return parentHierarchy || new GitIgnoreHierarchy([]);
         }
-        const chain = parentHierarchy?.gitIgnoreChain.concat([git]) ?? [git];
+        const chain = parentHierarchy ? [...parentHierarchy.gitIgnoreChain, git] : [git];
         return new GitIgnoreHierarchy(chain);
     }
 

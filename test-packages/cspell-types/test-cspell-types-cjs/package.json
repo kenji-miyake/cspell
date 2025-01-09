@@ -1,0 +1,27 @@
+{
+  "name": "test-cspell-types-cjs",
+  "version": "8.17.1",
+  "description": "Pure testing package for @cspell/cspell-types. Its purpose is to verify @cspell/cspell-types dependencies.",
+  "private": true,
+  "type": "commonjs",
+  "bin": "./bin.cjs",
+  "scripts": {
+    "clean": "shx rm -rf dist temp coverage \"*.tsbuildInfo\"",
+    "build": "pnpm run compile",
+    "clean-build": "pnpm run clean && pnpm run build",
+    "compile": "tsc -p .",
+    "test": "pnpm test:unit && pnpm test:smoke",
+    "test:smoke": "node ./bin.cjs",
+    "test:unit": "vitest run"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@cspell/cspell-types": "workspace:*"
+  },
+  "main": "index.js",
+  "keywords": [],
+  "engines": {
+    "node": ">=18"
+  }
+}

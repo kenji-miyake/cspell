@@ -1,23 +1,21 @@
-import { clean, isWordTerminationNode } from '../trie-util';
-import { TrieRoot } from '../TrieNode';
-import { createSuggestionOptions, GenSuggestionOptions, SuggestionOptions } from './genSuggestionsOptions';
-import { visualLetterMaskMap } from './orthography';
-import {
-    MaxCost,
-    suggestionCollector,
-    SuggestionCollectorOptions,
-    SuggestionGenerator,
-    SuggestionResult,
-    SuggestionResultBase,
-} from './suggestCollector';
-import { CompoundWordsMethod, hintedWalker, JOIN_SEPARATOR, WORD_SEPARATOR } from './walker';
+import { isWordTerminationNode } from '../TrieNode/trie-util.js';
+import type { TrieRoot } from '../TrieNode/TrieNode.js';
+import { clean } from '../utils/clean.js';
+import { CompoundWordsMethod, hintedWalker, JOIN_SEPARATOR, WORD_SEPARATOR } from '../walker/index.js';
+import { opCosts } from './constants.js';
+import type { GenSuggestionOptions, SuggestionOptions } from './genSuggestionsOptions.js';
+import { createSuggestionOptions } from './genSuggestionsOptions.js';
+import { visualLetterMaskMap } from './orthography.js';
+import type { SuggestionCollectorOptions } from './suggestCollector.js';
+import { suggestionCollector } from './suggestCollector.js';
+import type { MaxCost, SuggestionGenerator, SuggestionResult, SuggestionResultBase } from './SuggestionTypes.js';
 
-const baseCost = 100;
-const swapCost = 75;
+const baseCost = opCosts.baseCost;
+const swapCost = opCosts.swapCost;
 const postSwapCost = swapCost - baseCost;
 const insertSpaceCost = -1;
-const mapSubCost = 1;
-const maxCostScale = 0.5;
+const mapSubCost = opCosts.visuallySimilar;
+const maxCostScale = opCosts.wordLengthCostFactor;
 const discourageInsertCost = baseCost;
 
 const setOfSeparators = new Set([JOIN_SEPARATOR, WORD_SEPARATOR]);
@@ -25,7 +23,7 @@ const setOfSeparators = new Set([JOIN_SEPARATOR, WORD_SEPARATOR]);
 export function suggest(
     root: TrieRoot | TrieRoot[],
     word: string,
-    options: SuggestionOptions = {}
+    options: SuggestionOptions = {},
 ): SuggestionResult[] {
     const opts = createSuggestionOptions(options);
     const collectorOpts: SuggestionCollectorOptions = clean(opts);
@@ -37,7 +35,7 @@ export function suggest(
 export function* genSuggestions(
     root: TrieRoot | TrieRoot[],
     word: string,
-    options: GenSuggestionOptions = {}
+    options: GenSuggestionOptions = {},
 ): SuggestionGenerator {
     const roots = Array.isArray(root) ? root : [root];
     for (const r of roots) {
@@ -54,7 +52,7 @@ interface Range {
 export function* genCompoundableSuggestions(
     root: TrieRoot,
     word: string,
-    options: GenSuggestionOptions = {}
+    options: GenSuggestionOptions = {},
 ): SuggestionGenerator {
     const { compoundMethod = CompoundWordsMethod.NONE, changeLimit, ignoreCase } = createSuggestionOptions(options);
     type History = SuggestionResultBase;
@@ -87,12 +85,14 @@ export function* genCompoundableSuggestions(
 
     function updateCostLimit(maxCost: number | symbol | undefined) {
         switch (typeof maxCost) {
-            case 'number':
+            case 'number': {
                 costLimit = maxCost;
                 break;
-            case 'symbol':
+            }
+            case 'symbol': {
                 stopNow = true;
                 break;
+            }
         }
     }
 
@@ -118,7 +118,7 @@ export function* genCompoundableSuggestions(
         if (setOfSeparators.has(w)) {
             const mxRange = matrix[depth].slice(a, b + 1);
             const mxMin = Math.min(...mxRange);
-            const tag = [a].concat(mxRange.map((c) => c - mxMin)).join();
+            const tag = [a, ...mxRange.map((c) => c - mxMin)].join(',');
             const ht = historyTags.get(tag);
             if (ht && ht.m <= mxMin) {
                 goDeeper = false;
@@ -173,16 +173,16 @@ export function* genCompoundableSuggestions(
                 w === curLetter
                     ? 0
                     : wG & cG
-                    ? mapSubCost
-                    : curLetter === lastSugLetter
-                    ? w === lastLetter
-                        ? psc
-                        : c
-                    : c;
+                      ? mapSubCost
+                      : curLetter === lastSugLetter
+                        ? w === lastLetter
+                            ? psc
+                            : c
+                        : c;
             const e = Math.min(
                 matrix[d - 1][i - 1] + subCost, // substitute
                 matrix[d - 1][i] + ci, // insert
-                matrix[d][i - 1] + c // delete
+                matrix[d][i - 1] + c, // delete
             );
             min = Math.min(min, e);
             matrix[d][i] = e;
@@ -200,18 +200,18 @@ export function* genCompoundableSuggestions(
                 w === curLetter
                     ? 0
                     : wG & cG
-                    ? mapSubCost
-                    : curLetter === lastSugLetter
-                    ? w === lastLetter
-                        ? psc
-                        : c
-                    : c;
+                      ? mapSubCost
+                      : curLetter === lastSugLetter
+                        ? w === lastLetter
+                            ? psc
+                            : c
+                        : c;
             // if (i - 1) is out of range, use the last value.
             // no need to be exact, the value will be past maxCost.
             const j = Math.min(bb, i - 1);
             const e = Math.min(
                 matrix[d - 1][j] + subCost, // substitute
-                matrix[d][i - 1] + c // delete
+                matrix[d][i - 1] + c, // delete
             );
             min = Math.min(min, e);
             matrix[d][i] = e;

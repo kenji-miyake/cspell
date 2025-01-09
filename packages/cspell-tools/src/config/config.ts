@@ -1,9 +1,14 @@
-export interface RunConfig extends CompileTargetOptions {
+export interface RunConfig extends Partial<CompileRequest> {
+    /**
+     * Url to JSON Schema
+     * @default "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/packages/cspell-tools/cspell-tools.config.schema.json"
+     */
+    $schema?: string;
+
     /**
      * Optional Target Dictionaries to create.
      */
     targets?: Target[];
-
     /**
      * Specify the directory where all relative paths will resolved against.
      * By default, all relative paths are relative to the location of the
@@ -12,7 +17,7 @@ export interface RunConfig extends CompileTargetOptions {
     rootDir?: string;
 }
 
-export interface CompileRequest extends CompileTargetOptions {
+export interface CompileRequest extends CompileTargetOptions, CompileSourceOptions {
     /**
      * Specify the directory where all relative paths will resolved against.
      * By default, all relative paths are relative to the current directory.
@@ -23,33 +28,73 @@ export interface CompileRequest extends CompileTargetOptions {
      * Target Dictionaries to create.
      */
     targets: Target[];
+
+    /**
+     * Path to checksum file. `true` - defaults to `./checksum.txt`.
+     */
+    checksumFile?: string | boolean;
 }
 
-export interface CompileTargetOptions {
+export interface Experimental {
     /**
      * Experimental flags
      */
     experimental?: string[] | undefined;
-
-    // Optional Source Config Defaults
-    /**
-     * Maximum number of nested Hunspell Rules to apply.
-     * This is needed for recursive dictionaries like Hebrew.
-     */
-    maxDepth?: number | undefined;
-    /**
-     * Split lines into words.
-     * @default false
-     */
-    split?: boolean | 'legacy' | undefined;
-    /**
-     * Do not generate lower case / accent free versions of words.
-     * @default false
-     */
-    keepRawCase?: boolean | undefined;
 }
 
-export interface Target {
+export interface CompileTargetOptions {
+    /**
+     * Generate lower case / accent free versions of words.
+     * @default false
+     */
+    generateNonStrict?: boolean | undefined;
+
+    /**
+     * Sort the words in the resulting dictionary.
+     * Does not apply to `trie` based formats.
+     * @default true
+     */
+    sort?: boolean | undefined;
+
+    /**
+     * Words in the `allowedSplitWords` are considered correct and can be used
+     * as a basis for splitting compound words.
+     *
+     * If entries can be split so that all the words in the entry are allowed,
+     * then only the individual words are added, otherwise the entire entry is added.
+     * This is to prevent misspellings in CamelCase words from being introduced into the
+     * dictionary.
+     */
+    allowedSplitWords?: FilePath | FilePath[] | undefined;
+
+    /**
+     * Injects `cspell-dictionary` directives into the dictionary header.
+     *
+     * Example:
+     *
+     * ```ini
+     * # cspell-dictionary: no-generate-alternatives
+     * ```
+     *
+     * Known Directives:
+     * ```yaml
+     * - split # Tell the dictionary loader to split words
+     * - no-split # Tell the dictionary loader to not split words (default)
+     * - generate-alternatives # Tell the dictionary loader to generate alternate spellings (default)
+     * - no-generate-alternatives # Tell the dictionary loader to not generate alternate spellings
+     * ```
+     */
+    dictionaryDirectives?: string[] | undefined;
+
+    /**
+     * Remove duplicate words, favor lower case words over mixed case words.
+     * Combine compound prefixes where possible.
+     * @default false
+     */
+    removeDuplicates?: boolean | undefined;
+}
+
+export interface Target extends CompileTargetOptions {
     /**
      * Name of target, used as the basis of target file name.
      */
@@ -57,14 +102,15 @@ export interface Target {
 
     /**
      * The target directory
+     * @default current directory
      */
-    targetDirectory: FilePath;
+    targetDirectory?: FilePath | undefined;
 
     /**
      * gzip the file?
      * @default: false
      */
-    compress?: boolean;
+    compress?: boolean | undefined;
 
     /**
      * Format of the dictionary.
@@ -77,15 +123,10 @@ export interface Target {
     sources: DictionarySource[];
 
     /**
-     * Sort the words in the resulting dictionary.
-     * Does not apply to `trie` based formats.
-     * @default: true
-     */
-    sort?: boolean | undefined;
-
-    /**
      * Words from the sources that are found in `excludeWordsFrom` files
      * will not be added to the dictionary.
+     *
+     * @since 8.3.2
      */
     excludeWordsFrom?: FilePath[] | undefined;
 
@@ -108,15 +149,15 @@ export type FilePath = string;
 
 export type DictionarySource = FilePath | FileSource | FileListSource;
 
-export interface FileSource extends SourceConfig {
+export interface FileSource extends CompileSourceOptions {
     filename: FilePath;
 }
 
-export interface FileListSource extends SourceConfig {
+export interface FileListSource extends CompileSourceOptions {
     listFile: FilePath;
 }
 
-export interface SourceConfig {
+export interface CompileSourceOptions {
     /**
      * Maximum number of nested Hunspell Rules to apply.
      * This is needed for recursive dictionaries like Hebrew.
@@ -132,4 +173,33 @@ export interface SourceConfig {
      * @default false
      */
     keepRawCase?: boolean | undefined;
+
+    /**
+     * Words in the `allowedSplitWords` are considered correct and can be used
+     * as a basis for splitting compound words.
+     *
+     * If entries can be split so that all the words in the entry are allowed,
+     * then only the individual words are added, otherwise the entire entry is added.
+     * This is to prevent misspellings in CamelCase words from being introduced into the
+     * dictionary.
+     */
+    allowedSplitWords?: FilePath | FilePath[] | undefined;
+
+    /**
+     * Camel case words that have been split using the `allowedSplitWords` are added to the dictionary as compoundable words.
+     * These words are prefixed / suffixed with `*`.
+     * @default false
+     */
+    storeSplitWordsAsCompounds?: boolean | undefined;
+
+    /**
+     * Controls the minimum length of a compound word when storing words using `storeSplitWordsAsCompounds`.
+     * The compound words are prefixed / suffixed with `*`, to allow them to be combined with other compound words.
+     * If the length is too low, then the dictionary will consider many misspelled words as correct.
+     * @default 4
+     */
+    minCompoundLength?: number | undefined;
 }
+
+export const configFileSchemaURL =
+    'https://raw.githubusercontent.com/streetsidesoftware/cspell/main/packages/cspell-tools/cspell-tools.config.schema.json';

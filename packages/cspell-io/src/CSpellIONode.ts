@@ -1,18 +1,29 @@
 import { isServiceResponseSuccess, ServiceBus } from '@cspell/cspell-service-bus';
-import { compareStats } from './common/stat';
-import { CSpellIO } from './CSpellIO';
-import { ErrorNotImplemented } from './errors/ErrorNotImplemented';
-import { registerHandlers } from './handlers/node/file';
-import type { TextFileResource } from './models/FileResource';
-import type { Stats } from './models/Stats';
-import { toURL, urlBasename, urlDirname } from './node/file/util';
+
+import { isFileReference, toFileReference, toFileResourceRequest } from './common/CFileReference.js';
+import { CFileResource } from './common/CFileResource.js';
+import { compareStats } from './common/stat.js';
+import type { CSpellIO, ReadFileOptionsOrEncoding } from './CSpellIO.js';
+import { toReadFileOptions } from './CSpellIO.js';
+import { ErrorNotImplemented } from './errors/errors.js';
+import { registerHandlers } from './handlers/node/file.js';
+import type {
+    BufferEncoding,
+    DirEntry,
+    FileReference,
+    Stats,
+    TextFileResource,
+    UrlOrReference,
+} from './models/index.js';
+import { toFileURL, toURL, urlBasename, urlDirname } from './node/file/url.js';
 import {
     RequestFsReadFile,
     RequestFsReadFileSync,
     RequestFsStat,
     RequestFsStatSync,
     RequestFsWriteFile,
-} from './requests';
+} from './requests/index.js';
+import { RequestFsReadDirectory } from './requests/RequestFsReadDirectory.js';
 
 let defaultCSpellIONode: CSpellIO | undefined = undefined;
 
@@ -21,41 +32,51 @@ export class CSpellIONode implements CSpellIO {
         registerHandlers(serviceBus);
     }
 
-    readFile(uriOrFilename: string | URL, encoding: BufferEncoding = 'utf8'): Promise<TextFileResource> {
-        const url = toURL(uriOrFilename);
-        const res = this.serviceBus.dispatch(RequestFsReadFile.create({ url, encoding }));
+    readFile(urlOrFilename: UrlOrReference, options?: ReadFileOptionsOrEncoding): Promise<TextFileResource> {
+        const readOptions = toReadFileOptions(options);
+        const ref = toFileResourceRequest(urlOrFilename, readOptions?.encoding, readOptions?.signal);
+        const res = this.serviceBus.dispatch(RequestFsReadFile.create(ref));
         if (!isServiceResponseSuccess(res)) {
             throw genError(res.error, 'readFile');
         }
         return res.value;
     }
-    readFileSync(uriOrFilename: string | URL, encoding: BufferEncoding = 'utf8'): TextFileResource {
-        const url = toURL(uriOrFilename);
-        const res = this.serviceBus.dispatch(RequestFsReadFileSync.create({ url, encoding }));
+    readDirectory(urlOrFilename: string | URL): Promise<DirEntry[]> {
+        const ref = toFileReference(urlOrFilename);
+        const res = this.serviceBus.dispatch(RequestFsReadDirectory.create(ref));
+        if (!isServiceResponseSuccess(res)) {
+            throw genError(res.error, 'readDirectory');
+        }
+        return res.value;
+    }
+    readFileSync(urlOrFilename: UrlOrReference, encoding?: BufferEncoding): TextFileResource {
+        const ref = toFileReference(urlOrFilename, encoding);
+        const res = this.serviceBus.dispatch(RequestFsReadFileSync.create(ref));
         if (!isServiceResponseSuccess(res)) {
             throw genError(res.error, 'readFileSync');
         }
         return res.value;
     }
-    writeFile(uriOrFilename: string | URL, content: string): Promise<void> {
-        const url = toURL(uriOrFilename);
-        const res = this.serviceBus.dispatch(RequestFsWriteFile.create({ url, content }));
+    writeFile(urlOrFilename: UrlOrReference, content: string | ArrayBufferView): Promise<FileReference> {
+        const ref = toFileReference(urlOrFilename);
+        const fileResource = CFileResource.from(ref, content);
+        const res = this.serviceBus.dispatch(RequestFsWriteFile.create(fileResource));
         if (!isServiceResponseSuccess(res)) {
             throw genError(res.error, 'writeFile');
         }
         return res.value;
     }
-    getStat(uriOrFilename: string | URL): Promise<Stats> {
-        const url = toURL(uriOrFilename);
-        const res = this.serviceBus.dispatch(RequestFsStat.create({ url }));
+    getStat(urlOrFilename: UrlOrReference): Promise<Stats> {
+        const ref = toFileReference(urlOrFilename);
+        const res = this.serviceBus.dispatch(RequestFsStat.create(ref));
         if (!isServiceResponseSuccess(res)) {
             throw genError(res.error, 'getStat');
         }
         return res.value;
     }
-    getStatSync(uriOrFilename: string | URL): Stats {
-        const url = toURL(uriOrFilename);
-        const res = this.serviceBus.dispatch(RequestFsStatSync.create({ url }));
+    getStatSync(urlOrFilename: UrlOrReference): Stats {
+        const ref = toFileReference(urlOrFilename);
+        const res = this.serviceBus.dispatch(RequestFsStatSync.create(ref));
         if (!isServiceResponseSuccess(res)) {
             throw genError(res.error, 'getStatSync');
         }
@@ -64,14 +85,19 @@ export class CSpellIONode implements CSpellIO {
     compareStats(left: Stats, right: Stats): number {
         return compareStats(left, right);
     }
-    toURL(uriOrFilename: string | URL): URL {
-        return toURL(uriOrFilename);
+    toURL(urlOrFilename: UrlOrReference, relativeTo?: string | URL): URL {
+        if (isFileReference(urlOrFilename)) return urlOrFilename.url;
+        return toURL(urlOrFilename, relativeTo);
     }
-    uriBasename(uriOrFilename: string | URL): string {
-        return urlBasename(uriOrFilename);
+    toFileURL(urlOrFilename: UrlOrReference, relativeTo?: string | URL): URL {
+        if (isFileReference(urlOrFilename)) return urlOrFilename.url;
+        return toFileURL(urlOrFilename, relativeTo);
     }
-    uriDirname(uriOrFilename: string | URL): URL {
-        return urlDirname(uriOrFilename);
+    urlBasename(urlOrFilename: UrlOrReference): string {
+        return urlBasename(this.toURL(urlOrFilename));
+    }
+    urlDirname(urlOrFilename: UrlOrReference): URL {
+        return urlDirname(this.toURL(urlOrFilename));
     }
 }
 

@@ -1,8 +1,10 @@
-module.exports = {
+/** @type {import('jest').Config} */
+const config = {
     roots: ['./src'],
     transform: {
         '^.+\\.tsx?$': 'ts-jest',
     },
+    // verbose: true,
     testRegex: '(/__tests__/.*|\\.(test|spec|perf))\\.[jt]sx?$',
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     coverageReporters: ['html', 'json', ['lcov', { projectRoot: __dirname }], 'text'],
@@ -13,4 +15,7 @@ module.exports = {
             '<rootDir>/src/__mocks__/fileMock.js',
         '\\.(css|less)$': '<rootDir>/src/__mocks__/styleMock.js',
     },
+    maxConcurrency: 1,
 };
+
+module.exports = config;

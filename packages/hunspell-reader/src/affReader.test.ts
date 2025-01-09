@@ -1,7 +1,10 @@
-import assert from 'assert';
-import * as aff from './affReader';
-import { testing } from './affReader';
-import * as path from 'path';
+import assert from 'node:assert';
+import * as path from 'node:path';
+
+import { describe, expect, it, test } from 'vitest';
+
+import * as affReader from './affReader.js';
+import { testing } from './affReader.js';
 
 const dictionaryPath = path.resolve(__dirname, '../dictionaries');
 
@@ -13,7 +16,7 @@ describe('parse an aff file', () => {
     const filename = dictPath('nl.aff');
 
     it('reads an aff file', async () => {
-        await expect(aff.parseAffFile(filename)).resolves.toBeDefined();
+        await expect(affReader.parseAffFile(filename)).resolves.toBeDefined();
     });
 
     it('tests parseAffixRule', () => {
@@ -62,7 +65,7 @@ describe('Validate parsing aff files', () => {
         ${'en_US.aff'}
     `('Read aff $affFile', async ({ affFile }) => {
         const affFileName = dictPath(affFile);
-        const affInfo = await aff.parseAffFile(affFileName);
+        const affInfo = await affReader.parseAffFile(affFileName);
         expect(affInfo).toMatchSnapshot();
     });
 });

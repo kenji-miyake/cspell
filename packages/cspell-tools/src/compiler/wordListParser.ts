@@ -1,95 +1,31 @@
-import { opFilter, pipe } from '@cspell/cspell-pipe/sync';
-import * as Trie from 'cspell-trie-lib';
-import { genSequence } from 'gensequence';
-import { uniqueFilter } from 'hunspell-reader/dist/util';
-import { CompileOptions } from './CompileOptions';
-import { extractInlineSettings, InlineSettings } from './inlineSettings';
-import * as Text from './text';
+import { opCombine, opCombine as opPipe, type Operator, opFilter, opMap } from '@cspell/cspell-pipe/sync';
+import { createDictionaryLineParser } from 'cspell-trie-lib';
+import { uniqueFilter } from 'hunspell-reader';
 
-const regNonWordOrSpace = /[^\p{L}\p{M}' ]+/giu;
-const regNonWordOrDigit = /[^\p{L}\p{M}'\w-]+/giu;
-const regExpSpaceOrDash = /[- ]+/g;
-const regExpRepeatChars = /(.)\1{4,}/i;
+import { defaultCompileSourceOptions } from '../config/configDefaults.js';
+import type { CompileOptions } from './CompileOptions.js';
+import { legacyLineToWords } from './legacyLineToWords.js';
+import { splitCamelCaseIfAllowed } from './splitCamelCaseIfAllowed.js';
+import type { AllowedSplitWordsCollection } from './WordsCollection.js';
 
-type Normalizer = (lines: Iterable<string>) => Iterable<string>;
-type LineProcessor = (line: string) => Iterable<string>;
-type WordMapper = (word: string) => Iterable<string>;
-
-export function legacyLineToWords(line: string): Iterable<string> {
-    // Remove punctuation and non-letters.
-    const filteredLine = line.replace(regNonWordOrSpace, '|');
-    const wordGroups = filteredLine.split('|');
-
-    const words = genSequence(wordGroups)
-        .concatMap((a) => [a, ...a.split(regExpSpaceOrDash)])
-        .concatMap((a) => splitCamelCase(a))
-        .map((a) => a.trim())
-        .filter((a) => !!a)
-        .filter((s) => !regExpRepeatChars.test(s))
-        .map((a) => a.toLowerCase());
-
-    return words;
+export function normalizeTargetWords(options: CompileOptions): Operator<string> {
+    const lineParser = createDictionaryLineParser({
+        stripCaseAndAccents: options.generateNonStrict,
+        stripCaseAndAccentsOnForbidden: true,
+        keepOptionalCompoundCharacter: true,
+    });
+    const operations: Operator<string>[] = [
+        opFilter<string>((a) => !!a),
+        lineParser,
+        options.sort ? createInlineBufferedSort(10_000) : undefined,
+        opFilter<string>(uniqueFilter(10_000)),
+        options.filter ? opFilter<string>(options.filter) : undefined,
+    ].filter(isDefined);
+    return opCombine(...operations);
 }
 
-function splitCamelCase(word: string): Iterable<string> {
-    const splitWords = Text.splitCamelCaseWord(word);
-    // We only want to preserve this: "New York" and not "Namespace DNSLookup"
-    if (splitWords.length > 1 && regExpSpaceOrDash.test(word)) {
-        return genSequence(splitWords).concatMap((w) => w.split(regExpSpaceOrDash));
-    }
-    return splitWords;
-}
-
-export function createNormalizer(options: CompileOptions): Normalizer {
-    const { skipNormalization = false, splitWords, keepRawCase, legacy } = options;
-    if (skipNormalization) {
-        return (lines: Iterable<string>) => lines;
-    }
-    const lineProcessor = legacy ? legacyLineToWords : splitWords ? splitLine : noSplit;
-    const wordMapper = keepRawCase ? mapWordIdentity : mapWordToDictionaryEntries;
-
-    const initialState: CompilerState = {
-        inlineSettings: {},
-        lineProcessor,
-        wordMapper,
-    };
-
-    const fnNormalizeLines = (lines: Iterable<string>) =>
-        pipe(
-            normalizeWordListGen(lines, initialState),
-            opFilter((a) => !!a),
-            createInlineBufferedSort(),
-            opFilter(uniqueFilter(10000))
-        );
-
-    return fnNormalizeLines;
-}
-
-function mapWordToDictionaryEntries(w: string): Iterable<string> {
-    return Trie.parseDictionaryLines([w]);
-}
-
-function mapWordIdentity(w: string): string[] {
-    return [w];
-}
-interface CompilerState {
-    inlineSettings: InlineSettings;
-    lineProcessor: LineProcessor;
-    wordMapper: WordMapper;
-}
-
-function* normalizeWordListGen(lines: Iterable<string>, initialState: CompilerState): Iterable<string> {
-    let state = initialState;
-
-    for (let line of lines) {
-        line = line.normalize('NFC');
-        state = adjustState(state, line);
-        for (const word of state.lineProcessor(line)) {
-            const w = word.trim();
-            if (!w) continue;
-            yield* state.wordMapper(w);
-        }
-    }
+function isDefined<T>(v: T | undefined): v is T {
+    return v !== undefined;
 }
 
 function createInlineBufferedSort(bufferSize = 1000): (lines: Iterable<string>) => Iterable<string> {
@@ -112,61 +48,229 @@ function createInlineBufferedSort(bufferSize = 1000): (lines: Iterable<string>) 
     return inlineBufferedSort;
 }
 
-function adjustState(state: CompilerState, line: string): CompilerState {
-    const inlineSettings = extractInlineSettings(line);
-    if (!inlineSettings) return state;
-    const r = { ...state };
-    r.inlineSettings = { ...r.inlineSettings, ...inlineSettings };
-    r.wordMapper =
-        inlineSettings.keepRawCase === undefined
-            ? r.wordMapper
-            : inlineSettings.keepRawCase
-            ? mapWordIdentity
-            : mapWordToDictionaryEntries;
-    r.lineProcessor = inlineSettings.split === undefined ? r.lineProcessor : inlineSettings.split ? splitLine : noSplit;
-    return r;
+export interface ParseFileOptions {
+    /**
+     * Preserve case
+     * @default true
+     */
+    keepCase?: boolean;
+
+    /**
+     * Tell the parser to split into words along spaces.
+     * @default false
+     */
+    split?: boolean | undefined;
+
+    /**
+     * When splitting tells the parser to output both the split and non-split versions of the line.
+     * @default false
+     */
+    splitKeepBoth?: boolean | undefined;
+
+    // /**
+    //  * Specify the separator for splitting words.
+    //  */
+    // splitSeparator?: RegExp | string | undefined;
+
+    /**
+     * Use legacy splitting.
+     * @default false
+     */
+    legacy?: boolean;
+
+    allowedSplitWords: AllowedSplitWordsCollection;
+
+    /**
+     * Words that have been split using the `allowedSplitWords` are added to the dictionary as compoundable words.
+     * These words are prefixed / suffixed with `*`.
+     * @default undefined
+     */
+    storeSplitWordsAsCompounds: boolean | undefined;
+
+    /**
+     * Controls the minimum length of a compound word when storing words using `storeSplitWordsAsCompounds`.
+     * The compound words are prefixed / suffixed with `*`, to allow them to be combined with other compound words.
+     * If the length is too low, then the dictionary will consider many misspelled words as correct.
+     * @default 4
+     */
+    minCompoundLength: number | undefined;
+}
+
+type ParseFileOptionsRequired = Required<ParseFileOptions>;
+
+const commentCharacter = '#';
+
+const _defaultOptions = {
+    keepCase: true,
+    legacy: false,
+    split: false,
+    splitKeepBoth: false,
+    // splitSeparator: regExpSplit,
+    allowedSplitWords: { has: () => true, size: 0 },
+    storeSplitWordsAsCompounds: defaultCompileSourceOptions.storeSplitWordsAsCompounds,
+    minCompoundLength: defaultCompileSourceOptions.minCompoundLength,
+} as const satisfies ParseFileOptionsRequired;
+
+export const defaultParseDictionaryOptions: ParseFileOptionsRequired = Object.freeze(_defaultOptions);
+
+export const cSpellToolDirective = 'cspell-tools:';
+
+export const setOfCSpellDirectiveFlags = ['no-split', 'split', 'keep-case', 'no-keep-case', 'legacy'];
+
+/**
+ * Normalizes a dictionary words based upon prefix / suffixes.
+ * Case insensitive versions are also generated.
+ * @param options - defines prefixes used when parsing lines.
+ * @returns words that have been normalized.
+ */
+export function createParseFileLineMapper(options?: Partial<ParseFileOptions>): Operator<string> {
+    const _options = options || _defaultOptions;
+    const {
+        splitKeepBoth = _defaultOptions.splitKeepBoth,
+        allowedSplitWords = _defaultOptions.allowedSplitWords,
+        storeSplitWordsAsCompounds,
+        minCompoundLength = _defaultOptions.minCompoundLength,
+    } = _options;
+
+    let { legacy = _defaultOptions.legacy } = _options;
+
+    let { split = _defaultOptions.split, keepCase = legacy ? false : _defaultOptions.keepCase } = _options;
+    const compoundFix = storeSplitWordsAsCompounds ? '+' : '';
+
+    function isString(line: unknown | string): line is string {
+        return typeof line === 'string';
+    }
+
+    function trim(line: string): string {
+        return line.trim();
+    }
+
+    function removeComments(line: string): string {
+        const idx = line.indexOf(commentCharacter);
+        if (idx < 0) return line;
+
+        const idxDirective = line.indexOf(cSpellToolDirective, idx);
+        if (idxDirective >= 0) {
+            const flags = line
+                .slice(idxDirective)
+                .split(/[\s,;]/g)
+                .map((s) => s.trim())
+                .filter((a) => !!a);
+            for (const flag of flags) {
+                switch (flag) {
+                    case 'split': {
+                        split = true;
+                        break;
+                    }
+                    case 'no-split': {
+                        split = false;
+                        break;
+                    }
+                    case 'keep-case': {
+                        keepCase = true;
+                        legacy = false;
+                        break;
+                    }
+                    case 'no-keep-case': {
+                        keepCase = false;
+                        break;
+                    }
+                    case 'legacy': {
+                        keepCase = false;
+                        legacy = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return line.slice(0, idx).trim();
+    }
+
+    function filterEmptyLines(line: string): boolean {
+        return !!line;
+    }
+
+    const regNonWordOrDigit = /[^\p{L}\p{M}'\w-]+/giu;
+
+    function splitLine(line: string): string[] {
+        line = line.replace(/#.*/, ''); // remove comment
+        line = line.trim();
+        line = line.replaceAll(/\bU\+[0-9A-F]{4}\b/gi, '|'); // Remove Unicode Definitions
+        line = line.replaceAll(/\\U[0-9A-F]{4}/gi, '|'); // Remove Unicode Definitions
+        line = line.replaceAll(regNonWordOrDigit, '|');
+        line = line.replaceAll(/'(?=\|)/g, ''); // remove trailing '
+        line = line.replace(/'$/, ''); // remove trailing '
+        line = line.replaceAll(/(?<=\|)'/g, ''); // remove leading '
+        line = line.replace(/^'/, ''); // remove leading '
+        line = line.replaceAll(/\s*\|\s*/g, '|'); // remove spaces around |
+        line = line.replaceAll(/[|]+/g, '|'); // reduce repeated |
+        line = line.replace(/^\|/, ''); // remove leading |
+        line = line.replace(/\|$/, ''); // remove trailing |
+        const lines = line
+            .split('|')
+            .map((a) => a.trim())
+            .filter((a) => !!a)
+            .filter((a) => !/^[0-9_-]+$/.test(a)) // pure numbers and symbols
+            .filter((a) => !/^0[xo][0-9A-F]+$/i.test(a)); // c-style hex/octal digits
+
+        return lines;
+    }
+
+    function splitWordIntoWords(word: string): string[] {
+        return splitCamelCaseIfAllowed(word, allowedSplitWords, keepCase, compoundFix, minCompoundLength);
+    }
+
+    function* splitWords(lines: Iterable<string>): Iterable<string> {
+        for (const line of lines) {
+            if (legacy) {
+                yield* legacyLineToWords(line, keepCase, allowedSplitWords);
+                continue;
+            }
+            if (split) {
+                const words = splitLine(line);
+                yield* !allowedSplitWords.size ? words : words.flatMap((word) => splitWordIntoWords(word));
+                if (!splitKeepBoth) continue;
+            }
+            yield line.replaceAll(/["]/g, '');
+        }
+    }
+
+    function* unique(lines: Iterable<string>): Iterable<string> {
+        const known = new Set<string>();
+        for (const line of lines) {
+            if (known.has(line)) continue;
+            known.add(line);
+            yield line;
+        }
+    }
+
+    function* splitLines(paragraphs: Iterable<string>): Iterable<string> {
+        for (const paragraph of paragraphs) {
+            yield* paragraph.split('\n');
+        }
+    }
+
+    const processLines = opPipe(
+        opFilter(isString),
+        splitLines,
+        opMap(removeComments),
+        splitWords,
+        opMap(trim),
+        opFilter(filterEmptyLines),
+        unique,
+    );
+
+    return processLines;
 }
 
 /**
- * Splits a line of text into words, but does not split words.
- * @param line text line to split.
- * @returns array of words
- * @example `readline.clearLine(stream, dir)` => ['readline', 'clearLine', 'stream', 'dir']
- * @example `New York` => ['New', 'York']
- * @example `don't` => [`don't`]
- * @example `Event: 'SIGCONT'` => ['Event', 'SIGCONT']
+ * Normalizes a dictionary words based upon prefix / suffixes.
+ * Case insensitive versions are also generated.
+ * @param lines - one word per line
+ * @param _options - defines prefixes used when parsing lines.
+ * @returns words that have been normalized.
  */
-function splitLine(line: string): string[] {
-    line = line.replace(/#.*/, ''); // remove comment
-    line = line.trim();
-    line = line.replace(/\bU\+[0-9A-F]+\b/gi, '|'); // Remove Unicode Definitions
-    line = line.replace(regNonWordOrDigit, '|');
-    line = line.replace(/'(?=\|)/g, ''); // remove trailing '
-    line = line.replace(/'$/, ''); // remove trailing '
-    line = line.replace(/(?<=\|)'/g, ''); // remove leading '
-    line = line.replace(/^'/, ''); // remove leading '
-    line = line.replace(/\s*\|\s*/g, '|'); // remove spaces around |
-    line = line.replace(/[|]+/g, '|'); // reduce repeated |
-    line = line.replace(/^\|/, ''); // remove leading |
-    line = line.replace(/\|$/, ''); // remove trailing |
-    const lines = line
-        .split('|')
-        .map((a) => a.trim())
-        .filter((a) => !!a)
-        .filter((a) => !a.match(/^[0-9_-]+$/)) // pure numbers and symbols
-        .filter((a) => !a.match(/^[ux][0-9A-F]*$/i)) // hex digits
-        .filter((a) => !a.match(/^0[xo][0-9A-F]*$/i)); // c-style hex/octal digits
-
-    return lines;
+export function parseFileLines(lines: Iterable<string> | string, options: ParseFileOptions): Iterable<string> {
+    return createParseFileLineMapper(options)(typeof lines === 'string' ? [lines] : lines);
 }
-
-function noSplit(line: string): string[] {
-    line = line.replace(/#.*/, ''); // remove comment
-    line = line.trim();
-    return !line ? [] : [line];
-}
-
-export const __testing__ = {
-    splitLine,
-    legacyLineToWords,
-};

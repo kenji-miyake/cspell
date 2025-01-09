@@ -1,4 +1,19 @@
-import { TextDocumentOffset, TextOffset } from './TextOffset';
+import type { TextDocumentOffset, TextOffset } from './TextOffset.js';
+
+export interface Suggestion {
+    /**
+     * Word to suggest.
+     */
+    word: string;
+    /**
+     * The suggested word adjusted to match the original case.
+     */
+    wordAdjustedToMatchCase?: string;
+    /**
+     * `true` - if this suggestion can be an automatic fix.
+     */
+    isPreferred?: boolean;
+}
 
 export interface Issue extends Omit<TextDocumentOffset, 'doc'> {
     /** text surrounding the issue text */
@@ -11,6 +26,10 @@ export interface Issue extends Omit<TextDocumentOffset, 'doc'> {
      * An optional array of replacement strings.
      */
     suggestions?: string[];
+    /**
+     * An optional array of suggestions.
+     */
+    suggestionsEx?: Suggestion[];
     /**
      * Issues are spelling issues unless otherwise specified.
      */
@@ -95,14 +114,76 @@ export interface RunResult {
 export type ResultEmitter = (result: RunResult) => void | Promise<void>;
 
 export interface CSpellReporter {
-    issue: SpellingErrorEmitter;
-    info: MessageEmitter;
-    debug: DebugEmitter;
-    error: ErrorEmitter;
-    progress: ProgressEmitter;
-    result: ResultEmitter;
+    issue?: SpellingErrorEmitter;
+    info?: MessageEmitter;
+    debug?: DebugEmitter;
+    error?: ErrorEmitter;
+    progress?: ProgressEmitter;
+    result?: ResultEmitter;
 }
 
+export interface ReporterConfigurationBase {
+    /**
+     * The maximum number of problems to report in a file.
+     *
+     * @default 10000
+     */
+    maxNumberOfProblems?: number;
+
+    /**
+     * The maximum number of times the same word can be flagged as an error in a file.
+     *
+     * @default 5
+     */
+    maxDuplicateProblems?: number;
+
+    /**
+     * The minimum length of a word before checking it against a dictionary.
+     *
+     * @default 4
+     */
+    minWordLength?: number;
+
+    /**
+     * Ignore sequences of characters that look like random strings.
+     *
+     * @default true
+     */
+    ignoreRandomStrings?: boolean;
+
+    /**
+     * The minimum length of a random string to be ignored.
+     *
+     * @default 40
+     */
+    minRandomLength?: number;
+}
+
+interface ReporterCommandLineOptions {
+    /**
+     * Display verbose information
+     */
+    verbose?: boolean;
+    /**
+     * Show extensive output.
+     */
+    debug?: boolean;
+    /**
+     * Only report the words, no line numbers or file names.
+     */
+    wordsOnly?: boolean;
+    /**
+     * unique errors per file only.
+     */
+    unique?: boolean;
+    /**
+     * root directory, defaults to `cwd`
+     */
+    root?: string;
+}
+
+export interface ReporterConfiguration extends ReporterCommandLineOptions, ReporterConfigurationBase {}
+
 export interface CSpellReporterModule {
-    getReporter: (settings: unknown) => CSpellReporter;
+    getReporter: (settings: unknown, config: ReporterConfiguration) => CSpellReporter;
 }

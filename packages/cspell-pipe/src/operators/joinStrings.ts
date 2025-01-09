@@ -1,8 +1,8 @@
-import { toArray } from '../helpers';
-import { toPipeFn } from '../helpers/util';
+import { toArray } from '../helpers/toArray.js';
+import { toPipeFn } from '../helpers/util.js';
 
 export function opJoinStringsAsync(
-    joinCharacter = ','
+    joinCharacter = ',',
 ): (iter: AsyncIterable<AsyncIterable<string> | Iterable<string>>) => AsyncIterable<string> {
     async function* fn(iter: Iterable<Iterable<string>> | AsyncIterable<AsyncIterable<string> | Iterable<string>>) {
         for await (const v of iter) {

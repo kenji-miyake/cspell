@@ -1,8 +1,11 @@
-import { TrieNode, FLAG_WORD, ChildMap, TrieRoot } from '../TrieNode';
-import { TrieRefNode } from '../trieRef';
-import { Sequence, genSequence } from 'gensequence';
-import { convertToTrieRefNodes } from '../convertToTrieRefNodes';
-import { trieNodeToRoot } from '../trie-util';
+import type { Sequence } from 'gensequence';
+import { genSequence } from 'gensequence';
+
+import { convertToTrieRefNodes } from '../convertToTrieRefNodes.js';
+import { trieNodeToRoot } from '../TrieNode/trie-util.js';
+import type { TrieNode, TrieRoot } from '../TrieNode/TrieNode.js';
+import { FLAG_WORD } from '../TrieNode/TrieNode.js';
+import type { TrieRefNode } from '../trieRef.js';
 
 const EOW = '*';
 export const DATA = EOW;
@@ -15,7 +18,7 @@ const regExpEscapeChars = /([[\]\\,:{}*])/g;
 const regExTrailingComma = /,(\}|\n)/g;
 
 function escapeChar(char: string): string {
-    return char.replace(regExpEscapeChars, '\\$1'); // lgtm[js/incomplete-sanitization]
+    return char.replaceAll(regExpEscapeChars, '\\$1'); // lgtm[js/incomplete-sanitization]
 }
 
 function trieToExportString(node: TrieNode, base: number): Sequence<string> {
@@ -37,9 +40,11 @@ function trieToExportString(node: TrieNode, base: number): Sequence<string> {
 }
 
 function generateHeader(base: number, comment: string): Sequence<string> {
-    const header = ['#!/usr/bin/env cspell-trie reader', 'TrieXv1', 'base=' + base]
-        .concat(comment ? comment.split('\n').map((a) => '# ' + a) : [])
-        .concat(['# Data:']);
+    const header = [
+        ...['#!/usr/bin/env cspell-trie reader', 'TrieXv1', 'base=' + base],
+        ...(comment ? comment.split('\n').map((a) => '# ' + a) : []),
+        ...['# Data:'],
+    ];
     return genSequence(header).map((a) => a + '\n');
 }
 
@@ -59,10 +64,11 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
     const { base = 16, comment = '' } = options;
     const radix = base > 36 ? 36 : base < 10 ? 10 : base;
     const rows = toReferences(root).map((node) => {
-        const row = [...trieToExportString(node, radix), '\n'].join('').replace(regExTrailingComma, '$1');
+        const row = [...trieToExportString(node, radix), '\n'].join('').replaceAll(regExTrailingComma, '$1');
         return row;
     });
 
+    // eslint-disable-next-line unicorn/prefer-spread
     return generateHeader(radix, comment).concat(rows);
 }
 
@@ -85,7 +91,7 @@ export function importTrie(linesX: Iterable<string> | IterableIterator<string>):
 
     function readHeader(iter: Iterator<string>) {
         const headerRows: string[] = [];
-        // eslint-disable-next-line no-constant-condition
+
         while (true) {
             const next = iter.next();
             if (next.done) {
@@ -117,9 +123,9 @@ export function importTrie(linesX: Iterable<string> | IterableIterator<string>):
     function splitLine(line: string) {
         const pattern = '$1__COMMA__';
         return line
-            .replace(regNotEscapedCommas, pattern)
+            .replaceAll(regNotEscapedCommas, pattern)
             .split(regUnescapeCommas)
-            .map((a) => a.replace(regUnescape, '$1'));
+            .map((a) => a.replaceAll(regUnescape, '$1'));
     }
 
     function decodeLine(line: string, nodes: TrieNode[]): TrieNode {
@@ -130,13 +136,14 @@ export function importTrie(linesX: Iterable<string> | IterableIterator<string>):
             .filter((a) => !!a)
             .map<[string, number]>((a) => [a[0], Number.parseInt(a.slice(1) || '0', radix)])
             .map<[string, TrieNode]>(([k, i]) => [k, nodes[i]]);
-        const cNode = children.length ? { c: new ChildMap(children) } : {};
+        const cNode = children.length ? { c: Object.fromEntries(children) } : {};
         return { ...cNode, ...flags };
     }
 
     readHeader(iter);
 
     const n = genSequence([DATA])
+        // eslint-disable-next-line unicorn/prefer-spread
         .concat(iter)
         .map((a) => a.replace(/\r?\n/, ''))
         .filter((a) => !!a)
@@ -147,7 +154,7 @@ export function importTrie(linesX: Iterable<string> | IterableIterator<string>):
                 nodes[lines] = root;
                 return { lines: lines + 1, root, nodes };
             },
-            { lines: 0, nodes: [], root: {} }
+            { lines: 0, nodes: [], root: {} },
         );
-    return trieNodeToRoot(n.root, {});
+    return trieNodeToRoot(n.root, { isCaseAware: false });
 }

@@ -1,25 +1,51 @@
-import * as Shell from 'shelljs';
-import * as Path from 'path';
-import { readConfig, resolveArgs } from './config';
-import { Repository } from './configDef';
-import { execAsync } from './sh';
-import { addRepository, checkoutRepositoryAsync, repositoryDir } from './repositoryHelper';
-import { checkAgainstSnapshot } from './snapshots';
-import { shouldCheckRepo } from './shouldCheckRepo';
-import Chalk from 'chalk';
-import { formatExecOutput } from './outputHelper';
-import { PrefixLogger } from './PrefixLogger';
-import { Logger } from './types';
+import * as Path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import type { ChalkInstance } from 'chalk';
+import chalk from 'chalk';
+import Shell from 'shelljs';
+
+import { readConfig, resolveArgs, resolveRepArgs } from './config.js';
+import type { Repository } from './configDef.js';
+import { formatExecOutput } from './outputHelper.js';
+import { PrefixLogger } from './PrefixLogger.js';
+import { addRepository, checkoutRepositoryAsync, repositoryDir } from './repositoryHelper.js';
+import { execAsync } from './sh.js';
+import { shouldCheckRepo } from './shouldCheckRepo.js';
+import {
+    checkAgainstReportSnapshot,
+    checkAgainstSnapshot,
+    readReportSnapshot,
+    writeReportSnapshot,
+} from './snapshots.js';
+import type { Logger } from './types.js';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 const config = readConfig();
-const cspellArgs = '-u --no-progress --relative --show-context --gitignore --gitignore-root=. ';
-const jsCspell = JSON.stringify(Path.resolve(__dirname, '..', '..', 'bin.js'));
+const cspellArgs =
+    '--no-progress --relative --show-context --gitignore --gitignore-root=. --reporter=default --reporter=${pathReporter}';
+const cspellArgsListAllFiles =
+    '--no-progress --relative --show-context --gitignore --gitignore-root=. --reporter=default --reporter=${pathReporterListAll}';
+const jsCspell = JSON.stringify(Path.resolve(__dirname, '../../bin.mjs'));
 
-const cspellCommand = `node ${jsCspell} ${cspellArgs}`;
+const envVariables: string[] = [
+    'CSPELL_ENABLE_DICTIONARY_LOGGING',
+    'CSPELL_ENABLE_DICTIONARY_LOG_FILE',
+    'CSPELL_ENABLE_DICTIONARY_LOG_FIELDS',
+    'CSPELL_GLOB_ROOT',
+];
 
 let checkCount = 0;
 
-const colors = [Chalk.green, Chalk.blue, Chalk.yellow, Chalk.cyan, Chalk.magenta, Chalk.rgb(255, 192, 64)];
+const colors = [
+    tfn(chalk.green),
+    tfn(chalk.blue),
+    tfn(chalk.yellow),
+    tfn(chalk.cyan),
+    tfn(chalk.magenta),
+    tfn(chalk.rgb(255, 192, 64)),
+];
 
 interface Result {
     stdout: string;
@@ -29,14 +55,16 @@ interface Result {
 }
 
 interface CheckContext {
-    color: Chalk.Chalk;
+    color: (strings: string | TemplateStringsArray, ...rest: unknown[]) => string;
     logger: Logger;
     rep: Repository;
+    cpuProf: boolean;
 }
 
 interface CheckAndUpdateOptions {
     update: boolean;
     updateSnapshots: boolean;
+    cpuProf: boolean;
 }
 
 async function execCheckAndUpdate(rep: Repository, options: CheckAndUpdateOptions): Promise<CheckResult> {
@@ -58,10 +86,10 @@ async function execCheckAndUpdate(rep: Repository, options: CheckAndUpdateOption
         const oldCommit = rep.commit;
         try {
             const updatedRep = mustBeDefined(await addRepository(logger, rep.url, rep.branch));
-            rep = resolveArgs(updatedRep);
-        } catch (e) {
+            rep = resolveRepArgs(updatedRep);
+        } catch {
             log(color`******** fail ********`);
-            return Promise.resolve({ success: false, rep, elapsedTime: 0 });
+            return { success: false, rep, elapsedTime: 0 };
         }
         log(color`******** Updating Repo Complete ********`);
         if (rep.commit !== oldCommit) {
@@ -76,6 +104,7 @@ async function execCheckAndUpdate(rep: Repository, options: CheckAndUpdateOption
         color,
         logger,
         rep,
+        cpuProf: options.cpuProf,
     };
 
     return execCheck(context, options.update || options.updateSnapshots);
@@ -85,7 +114,12 @@ async function execCheck(context: CheckContext, update: boolean): Promise<CheckR
     const { rep, logger, color } = context;
     const name = rep.path;
     const path = Path.join(repositoryDir, rep.path);
+    const nodeArgs = context.cpuProf ? ['--cpu-prof', '--cpu-prof-dir="../../../.."'] : [];
+    const uniqueArgs = rep.uniqueOnly !== false ? ['--unique'] : [];
+    const cmdArgs = rep.listAllFiles ? cspellArgsListAllFiles : cspellArgs;
+    const cmdToExec = resolveArgs(rep.path, [genLaunchCSpellCommand(nodeArgs), cmdArgs, ...uniqueArgs]).join(' ');
     const { log } = logger;
+    const env = getEnvVariables();
     ++checkCount;
 
     log('');
@@ -94,17 +128,18 @@ async function execCheck(context: CheckContext, update: boolean): Promise<CheckR
     log(color`*    '${name}'`);
     log(color`**********************************************\n`);
     log(time());
+    const originalReport = await readReportSnapshot(rep);
     if (!(await checkoutRepositoryAsync(logger, rep.url, rep.path, rep.commit, rep.branch))) {
         logger.log('******** fail ********');
-        return Promise.resolve({ success: false, rep, elapsedTime: 0 });
+        return { success: false, rep, elapsedTime: 0 };
     }
     log(time());
     if (!(await execPostCheckoutSteps(context))) {
         logger.log('******** fail ********');
-        return Promise.resolve({ success: false, rep, elapsedTime: 0 });
+        return { success: false, rep, elapsedTime: 0 };
     }
     log(time());
-    const cspellResult = await execCommand(logger, path, cspellCommand, rep.args);
+    const cspellResult = await execCommand({ logger, path, command: cmdToExec, args: rep.args, env });
     log(resultReport(cspellResult));
     log(time());
     log(color`\n************ Checking Results ************`);
@@ -112,11 +147,15 @@ async function execCheck(context: CheckContext, update: boolean): Promise<CheckR
     if (update) {
         log(color`************ Update Snapshot *************`);
     }
-    const r = checkResult(rep, cspellResult, update);
+    const r = await checkResult(rep, cspellResult, originalReport, update);
     log(time());
     if (r.diff) {
         log(r.diff);
         log('');
+    }
+    if (!update) {
+        // Restore the original report.
+        await writeReportSnapshot(rep, originalReport);
     }
     log(color`\n************ Done: ${name} ************\n`);
     return { success: r.match, rep, elapsedTime: cspellResult.elapsedTime };
@@ -126,13 +165,21 @@ function time() {
     return new Date().toISOString();
 }
 
-async function execCommand(logger: Logger, path: string, command: string, args: string[]): Promise<Result> {
+interface ExecCommandOptions {
+    logger: Logger;
+    path: string;
+    command: string;
+    args: string[];
+    env?: Record<string, string> | undefined;
+}
+
+async function execCommand({ logger, path, command, args, env }: ExecCommandOptions): Promise<Result> {
     const start = Date.now();
     const argv = args.map((a) => JSON.stringify(a)).join(' ');
     const fullCommand = command + ' ' + argv;
     Shell.pushd('-q', path);
     logger.log(`Execute: '${fullCommand}'`);
-    const pResult = execAsync(fullCommand);
+    const pResult = execAsync(fullCommand, { env });
     Shell.popd('-q', '+0');
     const result = await pResult;
     const { stdout, stderr, code } = result;
@@ -151,7 +198,7 @@ async function execPostCheckoutSteps(context: CheckContext) {
     const steps = rep.postCheckoutSteps || [];
     for (const step of steps) {
         logger.log(`Step: %j`, step);
-        const r = await execCommand(logger, path, step, []);
+        const r = await execCommand({ logger, path, command: step, args: [] });
         if (r.code !== 0) {
             logger.error(r.stderr);
             return false;
@@ -170,8 +217,11 @@ function assembleOutput(result: Result) {
     return `${stdout} ${stderr} exit code: ${code}`;
 }
 
-function checkResult(rep: Repository, result: Result, update: boolean) {
-    return checkAgainstSnapshot(rep, assembleOutput(result), update);
+async function checkResult(rep: Repository, result: Result, originalReport: string, update: boolean) {
+    const snapDiff = await checkAgainstSnapshot(rep, assembleOutput(result), update);
+    if (update) return snapDiff;
+    const reportDiff = await checkAgainstReportSnapshot(rep, originalReport);
+    return reportDiff.match ? snapDiff : reportDiff;
 }
 
 function cleanResult(result: Result): Result {
@@ -185,6 +235,7 @@ function cleanResult(result: Result): Result {
 
 function cleanOutput(out: string): string {
     const parent = Path.resolve(Path.join(__dirname, '..', '..'));
+    out = out.replaceAll(/\(node:\d+\)/g, '(node:0000)');
     return out
         .split('\n')
         .map((line) => line.replace(repositoryDir, '.'))
@@ -202,9 +253,9 @@ function report(reposChecked: Repository[], results: CheckResult[]) {
     const resultsByRep = new Map(results.map((r) => [r.rep, r]));
     const w = Math.max(...reposChecked.map((r) => r.path.length));
     const r = sorted.map((r) => {
-        const { success = undefined, elapsedTime = 0 } = resultsByRep.get(r) || {};
+        const { success, elapsedTime = 0 } = resultsByRep.get(r) || {};
         const mark = success === undefined ? '🛑' : success === false ? '❌' : '✅';
-        const time = Chalk.gray(rightJustify(elapsedTime ? `${(elapsedTime / 1000).toFixed(3)}s` : '', 9));
+        const time = chalk.gray(rightJustify(elapsedTime ? `${(elapsedTime / 1000).toFixed(3)}s` : '', 9));
         const padding = ' '.repeat(w - r.path.length);
         return `\t ${mark}  ${r.path} ${padding} ${time}`;
     });
@@ -222,6 +273,8 @@ export interface CheckOptions {
     fail: boolean;
     /** Max number of parallel processes */
     parallelLimit: number;
+    /** Turn on NodeJS --cpu-prof */
+    cpuProf: boolean;
 }
 
 type PendingState = 'pending' | 'rejected' | 'resolved';
@@ -252,7 +305,7 @@ function asPendingPromise<T>(promise: Promise<T>): PendingPromise<T> {
 async function* asyncBuffer<T, U>(
     values: Iterable<T> | AsyncIterable<T>,
     mapFn: (v: T, i: number) => Promise<U>,
-    limit: number
+    limit: number,
 ): AsyncIterable<U> {
     let pending: PendingPromise<U>[] = [];
     let index = 0;
@@ -289,7 +342,9 @@ function tf(v: boolean | undefined): 'true' | 'false' {
 
 export async function check(patterns: string[], options: CheckOptions): Promise<void> {
     const { exclude, update, updateSnapshots, fail, parallelLimit } = options;
-    const matching = config.repositories.filter((rep) => shouldCheckRepo(rep, { patterns, exclude })).map(resolveArgs);
+    const matching = config.repositories
+        .filter((rep) => shouldCheckRepo(rep, { patterns, exclude }))
+        .map(resolveRepArgs);
 
     console.log(`
 Check
@@ -305,8 +360,8 @@ Stop on fail:   ${tf(fail)}
 
     const buffered = asyncBuffer(
         matching,
-        async (rep) => execCheckAndUpdate(rep, { update, updateSnapshots }),
-        parallelLimit
+        async (rep) => execCheckAndUpdate(rep, { update, updateSnapshots, cpuProf: options.cpuProf }),
+        parallelLimit,
     );
 
     for await (const r of buffered) {
@@ -321,7 +376,7 @@ Stop on fail:   ${tf(fail)}
     const success = results.length === matching.length && !failed.length;
     console.log();
     console.log(
-        failed.length ? 'Some checks failed:' : !matching.length ? 'No Repositories Found' : 'All checks passed:'
+        failed.length ? 'Some checks failed:' : !matching.length ? 'No Repositories Found' : 'All checks passed:',
     );
     console.log(report(matching, results));
 
@@ -337,4 +392,35 @@ function mustBeDefined<T>(t: T | undefined): T {
         throw new Error('Must not be undefined.');
     }
     return t;
+}
+
+function tfn(colorFn: ChalkInstance): (strings: string | TemplateStringsArray, ...rest: unknown[]) => string {
+    return (strings, ...rest) => {
+        if (typeof strings === 'string') return colorFn(strings);
+
+        const parts: string[] = [];
+        let i = 0;
+        for (; i < strings.length - 1; ++i) {
+            parts.push(strings[i], rest[i] as string);
+        }
+        if (i < strings.length) {
+            parts.push(strings[i]);
+        }
+        return colorFn(parts.join(''));
+    };
+}
+
+function genLaunchCSpellCommand(nodeArgs: string[]) {
+    return `node ${nodeArgs.join(' ')} ${jsCspell}`;
+}
+
+function getEnvVariables(): Record<string, string> | undefined {
+    const env: Record<string, string> = {};
+    for (const key of envVariables) {
+        const value = process.env[key];
+        if (value) {
+            env[key] = value;
+        }
+    }
+    return Object.keys(env).length ? env : undefined;
 }

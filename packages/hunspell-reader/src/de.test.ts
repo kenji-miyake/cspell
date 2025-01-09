@@ -1,12 +1,14 @@
-import { IterableHunspellReader } from './IterableHunspellReader';
-import * as AffReader from './affReader';
-import * as Aff from './aff';
+import { describe, expect, it } from 'vitest';
+
+import * as Aff from './affLegacy.js';
+import * as AffReader from './affReader.js';
+import { IterableHunspellReaderLegacy } from './IterableHunspellReaderLegacy.js';
 
 describe('HunspellReader DE', function () {
     it('tests transforming `Arbeit/A-`', () => {
         const affInfo = AffReader.parseAff(deAff());
         const aff = new Aff.Aff(affInfo);
-        const reader = new IterableHunspellReader({ aff, dic: ['Arbeit/A-'] });
+        const reader = new IterableHunspellReaderLegacy({ aff, dic: ['Arbeit/A-'] });
         const words = [...reader.seqWords()];
         expect(words).toEqual(['-Arbeit', '-Arbeits', 'Arbeit', 'Arbeits', 'arbeit', 'arbeits']);
     });
@@ -14,7 +16,7 @@ describe('HunspellReader DE', function () {
     it('tests transforming some entries', () => {
         const affInfo = AffReader.parseAff(deAff());
         const aff = new Aff.Aff(affInfo);
-        const reader = new IterableHunspellReader({ aff, dic: deDic() });
+        const reader = new IterableHunspellReaderLegacy({ aff, dic: deDic() });
         const words = [...reader];
         expect(words).toEqual(['-Arbeit', 'Arbeit', '-Computer', '-Computern', 'Computer', 'Computern', '-']);
     });
@@ -22,7 +24,7 @@ describe('HunspellReader DE', function () {
     it('tests transforming a small dictionary', () => {
         const affInfo = AffReader.parseAff(deAff());
         const aff = new Aff.Aff(affInfo);
-        const reader = new IterableHunspellReader({ aff, dic: deDic() });
+        const reader = new IterableHunspellReaderLegacy({ aff, dic: deDic() });
         const words = [...reader.seqAffWords()].map((w) => Aff.debug.signature(w));
         // cspell:ignore CEO BCO BCMO CMO CEMO
         expect(words).toEqual([

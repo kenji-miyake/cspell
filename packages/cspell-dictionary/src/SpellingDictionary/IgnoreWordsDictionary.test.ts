@@ -1,6 +1,8 @@
-import { createIgnoreWordsDictionary } from './IgnoreWordsDictionary';
+import { describe, expect, test } from 'vitest';
 
-// const oc = expect.objectContaining;
+import { createIgnoreWordsDictionary } from './IgnoreWordsDictionary.js';
+
+// const oc = <T>(obj: T) => expect.objectContaining(obj);
 
 // cspell:ignore êphone îphone geschäft
 

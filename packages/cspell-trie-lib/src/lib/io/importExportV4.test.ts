@@ -1,15 +1,25 @@
-import { readFile, writeFile } from 'fs-extra';
-import { genSequence } from 'gensequence';
-import * as Trie from '..';
-import { resolveSample as resolveSamplePath } from '../../test/samples';
-import { consolidate } from '../consolidate';
-import { TrieNode } from '../TrieNode';
-import { importTrie, serializeTrie, __testing__ } from './importExportV4';
-import * as v3 from './importExportV3';
+import { readFile, writeFile } from 'node:fs/promises';
+
+import { beforeAll, describe, expect, test } from 'vitest';
+
+import { resolveSample as resolveSamplePath } from '../../test/samples.js';
+import { consolidate } from '../consolidate.js';
+import * as Trie from '../index.js';
+import type { TrieNode } from '../TrieNode/TrieNode.js';
+import * as v3 from './importExportV3.js';
+import { __testing__, importTrie, serializeTrie } from './importExportV4.js';
+import { sampleWords, smallSample, specialCharacters } from './test/sampleData.js';
 
 const sampleFile = resolveSamplePath('sampleV4.trie');
+const updateSampleFile = false;
 
 describe('Import/Export', () => {
+    beforeAll(async () => {
+        if (updateSampleFile) {
+            await createSampleFile();
+        }
+    });
+
     test('tests serialize / deserialize small sample', () => {
         const trie = Trie.buildTrie(smallSample).root;
         const expected = toTree(trie);
@@ -40,7 +50,7 @@ describe('Import/Export', () => {
         const root = importTrie(data);
         const words = [...Trie.iteratorTrieWords(root)];
         expect(words).toEqual([...sampleWords].sort());
-        await writeFile(sampleFile, data);
+        // await writeFile(sampleFile, data);
     });
 
     test('tests deserialize from file', async () => {
@@ -52,7 +62,16 @@ describe('Import/Export', () => {
 
     test('tests serialize / deserialize trie', () => {
         const trie = Trie.buildTrie(sampleWords).root;
-        const data = serializeTrie(trie, 10);
+        const data = serializeTrie(trie, 16);
+        const root = importTrie(data);
+        const words = [...Trie.iteratorTrieWords(root)];
+        expect(words).toEqual([...sampleWords].sort());
+    });
+
+    test('serialize / deserialize trie DAWG', () => {
+        const trie = Trie.buildTrie(sampleWords).root;
+        const trieDawg = consolidate(trie);
+        const data = serializeTrie(trieDawg, 16);
         const root = importTrie(data);
         const words = [...Trie.iteratorTrieWords(root)];
         expect(words).toEqual([...sampleWords].sort());
@@ -65,7 +84,7 @@ describe('Import/Export', () => {
         ${{ base: 10, optimizeSimpleReferences: true }}
         ${{ base: 10, optimizeSimpleReferences: false }}
     `('serialize DAWG $options', ({ options }) => {
-        const trie = Trie.createTriFromList(sampleWords);
+        const trie = Trie.createTrieRootFromList(sampleWords);
         const trieDawg = consolidate(trie);
         const data = [...serializeTrie(trieDawg, options)];
         const root = importTrie(data);
@@ -82,7 +101,7 @@ describe('Import/Export', () => {
         ${'sample2.txt'} | ${{}}
     `('Read sample and ensure results match $sampleWordList $options', async ({ sampleWordList, options }) => {
         const path = resolveSamplePath(sampleWordList);
-        const content = await readFile(path, 'utf-8');
+        const content = await readFile(path, 'utf8');
         const wordList = content
             .split('\n')
             .map((a) => a.trim())
@@ -108,7 +127,7 @@ describe('Import/Export', () => {
         ${{ base: 16, optimizeSimpleReferences: true }}
         ${{ base: 16, optimizeSimpleReferences: false }}
     `('serialize with V3 DAWG $options', ({ options }) => {
-        const trie = Trie.createTriFromList(sampleWords);
+        const trie = Trie.createTrieRootFromList(sampleWords);
         const trieDawg = consolidate(trie);
         const data = [...v3.serializeTrie(trieDawg, options)];
         const root = importTrie(data);
@@ -117,7 +136,7 @@ describe('Import/Export', () => {
     });
 
     test('buildReferenceMap', () => {
-        const trie = Trie.createTriFromList(sampleWords);
+        const trie = Trie.createTrieRootFromList(sampleWords);
         const trieDawg = consolidate(trie);
         const refMap = __testing__.buildReferenceMap(trieDawg, 10);
         const counts = refMap.refCounts.map(([_, count]) => count);
@@ -129,7 +148,7 @@ function toTree(root: TrieNode): string {
     function* walk(n: TrieNode, prefix: string): Generator<string> {
         const nextPrefix = '.'.repeat(prefix.length);
         if (n.c) {
-            for (const c of [...n.c].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+            for (const c of Object.entries(n.c).sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
                 yield* walk(c[1], prefix + c[0]);
                 prefix = nextPrefix;
             }
@@ -142,67 +161,13 @@ function toTree(root: TrieNode): string {
     return ['\n', ...walk(root, '')].join('');
 }
 
-const specialCharacters = [
-    'arrow <',
-    'escape \\',
-    'eol \n',
-    'eow $',
-    'ref #',
-    'Numbers 0123456789',
-    'Braces: {}[]()',
-    'slash /',
-    'a/b',
-    'a/c',
-];
-
-const smallSample = genSequence(['lift', 'talk', 'walk', 'turn', 'burn', 'chalk', 'churn'])
-    .concatMap(applyEndings)
-    .toArray();
-
-const sampleWords = [
-    'journal',
-    'journalism',
-    'journalist',
-    'journalistic',
-    'journals',
-    'journey',
-    'journeyer',
-    'journeyman',
-    'journeymen',
-    'joust',
-    'jouster',
-    'jousting',
-    'jovial',
-    'joviality',
-    'jowl',
-    'jowly',
-    'joy',
-    'joyful',
-    'joyfuller',
-    'joyfullest',
-    'joyfulness',
-    'joyless',
-    'joylessness',
-    'joyous',
-    'joyousness',
-    'joyridden',
-    'joyride',
-    'joyrider',
-    'joyriding',
-    'joyrode',
-    'joystick',
-    'Big Apple',
-    'New York',
-    'apple',
-    'big apple',
-    'fun journey',
-    'long walk',
-    'fun walk',
-]
-    .concat(specialCharacters)
-    .concat(smallSample);
-
-function applyEndings(s: string): string[] {
-    const endings = ['', 'ed', 'er', 'ing', 's'];
-    return endings.map((e) => s + e);
+async function createSampleFile() {
+    const trie = Trie.buildTrie(sampleWords).root;
+    const data = [
+        ...serializeTrie(consolidate(trie), {
+            base: 10,
+            comment: 'Sample Words',
+        }),
+    ].join('');
+    await writeFile(sampleFile, data);
 }

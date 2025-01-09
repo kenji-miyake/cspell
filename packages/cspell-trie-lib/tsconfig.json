@@ -1,9 +1,10 @@
 {
-    "extends": "../../tsconfig.json",
+    "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
-        "outDir": "dist"
+        "noEmit": true,
+        "rootDir": "src",
+        "outDir": "dist",
+        "types": ["node"]
     },
-    "include": [
-        "src"
-    ]
+    "include": ["src"]
 }

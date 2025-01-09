@@ -1,8 +1,6 @@
 {
-    "ignoreWords": [
-        "tsbuildinfo"
-    ],
-    "import": [
-        "./cspell-default.json"
-    ]
+    "ignoreWords": ["tsbuildinfo"],
+    "ignorePaths": ["CHANGELOG.md"],
+    "import": ["./cspell-default.json"],
+    "words": ["monkeyc"]
 }

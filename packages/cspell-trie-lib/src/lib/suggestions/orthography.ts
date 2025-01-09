@@ -14,7 +14,7 @@ export const visualLetterGroups = [
     forms('ċČčcĉçCÇćĊСсς'),
     forms('ḎḋḏḑďđḍDd'),
     forms('ēëÈÊËềéèếệĕeEĒėęěêəɛёЁеʒ'),
-    forms('fḟF'),
+    forms('fḟFﬀ'),
     forms('ġĠĞǧĝģGgɣ'),
     forms('ħĦĥḥHhḤȟн'),
     forms('IįïİÎÍīiÌìíîıɪɨїΊΙ'),
@@ -39,8 +39,8 @@ export const visualLetterGroups = [
 ];
 
 function forms(letters: string): string {
-    const n = letters.normalize('NFC').replace(/\p{M}/gu, '');
-    const na = n.normalize('NFD').replace(/\p{M}/gu, '');
+    const n = letters.normalize('NFC').replaceAll(/\p{M}/gu, '');
+    const na = n.normalize('NFD').replaceAll(/\p{M}/gu, '');
     const s = new Set(n + n.toLowerCase() + n.toUpperCase() + na + na.toLowerCase() + na.toUpperCase());
     return [...s].join('');
 }

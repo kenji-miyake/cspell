@@ -1,10 +1,12 @@
-import { readTrie } from '../test/dictionaries.test.helper';
+import { describe, expect, test } from 'vitest';
+
+import { readTrieFromConfig } from '../test/dictionaries.test.helper.js';
 
 function getTrie() {
-    return readTrie('@cspell/dict-en_us/cspell-ext.json');
+    return readTrieFromConfig('@cspell/dict-en_us/cspell-ext.json');
 }
 
-const timeout = 10000;
+const timeout = 10_000;
 
 describe('Validate English Trie', () => {
     const pTrie = getTrie();
@@ -26,6 +28,6 @@ describe('Validate English Trie', () => {
             const trie = await pTrie;
             expect(trie.has(word, useCompound)).toBe(expected);
         },
-        timeout
+        timeout,
     );
 });

@@ -1,13 +1,9 @@
 {
-    "extends": "../../tsconfig.json",
+    "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
-        "skipLibCheck": true,
-        "exactOptionalPropertyTypes": true, // make this true
-        "strictFunctionTypes": false,
-        "outDir": "dist"
+        "rootDir": "src",
+        "outDir": "dist",
+        "types": ["node"]
     },
-    "include": [
-        "src/**/*.ts",
-        "src/**/*.test.ts"
-    ]
+    "include": ["src"]
 }

@@ -1,6 +1,22 @@
-export { createReaderWriter } from './createReaderWriter';
-export type { CSpellConfigFile } from './CSpellConfigFile';
-export type { CSpellConfigFileReaderWriter } from './CSpellConfigFileReaderWriter';
-export type { Deserializer, DeserializerNext, DeserializerParams } from './Deserializer';
-export type { IO } from './IO';
-export type { Serializer } from './Serializer';
+export { createReaderWriter } from './createReaderWriter.js';
+export type { ICSpellConfigFile } from './CSpellConfigFile.js';
+export { CSpellConfigFile, satisfiesCSpellConfigFile } from './CSpellConfigFile.js';
+export {
+    CSpellConfigFileInMemory,
+    CSpellConfigFileJavaScript,
+    CSpellConfigFileJson,
+    CSpellConfigFilePackageJson,
+    CSpellConfigFileYaml,
+} from './CSpellConfigFile/index.js';
+export type { CSpellConfigFileReaderWriter } from './CSpellConfigFileReaderWriter.js';
+export type { IO } from './IO.js';
+export type {
+    DeserializerNext,
+    DeserializerParams,
+    DeserializerReducer,
+    SerializerMiddleware,
+    SerializerNext,
+    SerializerReducer,
+    SerializeSettingsFn,
+} from './Serializer.js';
+export type { TextFile, TextFileRef } from './TextFile.js';

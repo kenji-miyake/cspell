@@ -1,15 +1,18 @@
 import { opFilter, opMap, pipe } from '@cspell/cspell-pipe/sync';
-import { CompoundWordsMethod, parseDictionaryLines, SuggestionResult } from 'cspell-trie-lib';
-import {
+import type { CompoundWordsMethod, SuggestionResult } from 'cspell-trie-lib';
+import { parseDictionaryLines } from 'cspell-trie-lib';
+
+import { createAutoResolveWeakCache } from '../util/AutoResolve.js';
+import { createSpellingDictionary } from './createSpellingDictionary.js';
+import * as Defaults from './defaults.js';
+import type {
     FindResult,
     HasOptions,
     SearchOptions,
     SpellingDictionary,
     SpellingDictionaryOptions,
-    SuggestOptions,
-} from './SpellingDictionary';
-import * as Defaults from './defaults';
-import { createSpellingDictionary } from './createSpellingDictionary';
+} from './SpellingDictionary.js';
+import type { SuggestOptions } from './SuggestOptions.js';
 
 const NormalizeForm = 'NFC' as const;
 
@@ -18,15 +21,19 @@ class IgnoreWordsDictionary implements SpellingDictionary {
     private dictNonStrict: Set<string>;
     readonly containsNoSuggestWords = true;
     readonly options: SpellingDictionaryOptions = {};
-    readonly type = 'forbidden';
-    constructor(readonly name: string, readonly source: string, words: Iterable<string>) {
+    readonly type = 'ignore';
+    constructor(
+        readonly name: string,
+        readonly source: string,
+        words: Iterable<string>,
+    ) {
         this.dict = new Set(words);
         this.dictNonStrict = new Set(
             pipe(
                 this.dict,
                 opFilter((w) => w.startsWith('~')),
-                opMap((w) => w.slice(1))
-            )
+                opMap((w) => w.slice(1)),
+            ),
         );
     }
 
@@ -60,7 +67,7 @@ class IgnoreWordsDictionary implements SpellingDictionary {
         return (this.dictNonStrict.has(lcWord) && { found: lcWord, forbidden: false, noSuggest: true }) || undefined;
     }
 
-    isForbidden(_word: string): boolean {
+    isForbidden(_word: string, _ignoreCase?: boolean): boolean {
         return false;
     }
 
@@ -73,7 +80,7 @@ class IgnoreWordsDictionary implements SpellingDictionary {
         numSuggestions?: number,
         compoundMethod?: CompoundWordsMethod,
         numChanges?: number,
-        ignoreCase?: boolean
+        ignoreCase?: boolean,
     ): SuggestionResult[];
     suggest(word: string, suggestOptions: SuggestOptions): SuggestionResult[];
     suggest() {
@@ -94,6 +101,8 @@ class IgnoreWordsDictionary implements SpellingDictionary {
     }
 }
 
+const createCache = createAutoResolveWeakCache<readonly string[], SpellingDictionary>();
+
 /**
  * Create a dictionary where all words are to be ignored.
  * Ignored words override forbidden words.
@@ -105,24 +114,26 @@ class IgnoreWordsDictionary implements SpellingDictionary {
 export function createIgnoreWordsDictionary(
     wordList: readonly string[],
     name: string,
-    source: string
+    source: string,
 ): SpellingDictionary {
-    const testSpecialCharacters = /[*+]/;
+    return createCache.get(wordList, () => {
+        const testSpecialCharacters = /[*+]/;
 
-    const words = [...parseDictionaryLines(wordList, { stripCaseAndAccents: true })].map((w) =>
-        w.normalize(NormalizeForm)
-    );
+        const words = [...parseDictionaryLines(wordList, { stripCaseAndAccents: true })].map((w) =>
+            w.normalize(NormalizeForm),
+        );
 
-    const hasSpecial = words.findIndex((word) => testSpecialCharacters.test(word)) >= 0;
+        const hasSpecial = words.some((word) => testSpecialCharacters.test(word));
 
-    if (hasSpecial) {
-        return createSpellingDictionary(words, name, source, {
-            caseSensitive: true,
-            noSuggest: true,
-            weightMap: undefined,
-            supportNonStrictSearches: true,
-        });
-    }
+        if (hasSpecial) {
+            return createSpellingDictionary(words, name, source, {
+                caseSensitive: true,
+                noSuggest: true,
+                weightMap: undefined,
+                supportNonStrictSearches: true,
+            });
+        }
 
-    return new IgnoreWordsDictionary(name, source, words);
+        return new IgnoreWordsDictionary(name, source, words);
+    });
 }

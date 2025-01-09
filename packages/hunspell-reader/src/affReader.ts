@@ -1,9 +1,16 @@
-import assert from 'assert';
-import { readFile } from 'fs-extra';
-import { decode } from 'iconv-lite';
-import { Aff } from './aff';
-import type { AffInfo, Fx, Rep, SubstitutionSet } from './affDef';
-import { cleanObject, isDefined } from './util';
+/* eslint-disable unicorn/text-encoding-identifier-case */
+import assert from 'node:assert';
+import { readFile } from 'node:fs/promises';
+
+import { decode as decodeHtmlEntities } from 'html-entities';
+import pkgIconvLite from 'iconv-lite';
+
+import { Aff } from './aff.js';
+import type { AffInfo, Fx, Rep, Substitution, SubstitutionsForRegExp } from './affDef.js';
+import { Aff as AffLegacy } from './affLegacy.js';
+import { cleanObject, insertItemIntoGroupByField, isDefined } from './util.js';
+
+const { decode } = pkgIconvLite;
 
 const fixRegex = {
     SFX: { m: /$/, r: '$' },
@@ -128,18 +135,24 @@ function tablePfxOrSfx(fieldValue: Afx | undefined, line: AffLine): Afx {
         substitutionSets.set(ruleAsString, {
             match: rule.condition,
             substitutions: [],
+            substitutionsGroupedByRemove: new Map(),
         });
     }
     const substitutionSet = substitutionSets.get(ruleAsString);
     assert(substitutionSet);
     const [attachText, attachRules] = rule.affix.split('/', 2);
-    substitutionSet.substitutions.push({
+    const substitution: Substitution = {
+        type: rule.type === 'SFX' ? 'S' : 'P',
         remove: rule.stripping,
         replace: rule.replace,
         attach: attachText,
         attachRules,
         extra: rule.extra,
-    });
+    };
+    substitutionSet.substitutions.push(substitution);
+    insertItemIntoGroupByField(substitutionSet.substitutionsGroupedByRemove, 'replace', substitution);
+
+    fixRuleSet.substitutionsForRegExps = [...substitutionSets.values()];
 
     return fieldValue;
 }
@@ -152,11 +165,12 @@ function parseAffixCreation(line: AffLine): Fx {
     const [flag, combinable, count, ...extra] = (line.value || '').split(spaceRegex);
     const fx: Fx = {
         id: flag,
-        type: line.option,
-        combinable: !!combinable.match(yesRegex),
+        type: line.option === 'SFX' ? 'SFX' : 'PFX',
+        combinable: !!yesRegex.test(combinable),
         count,
         extra,
-        substitutionSets: new Map<string, SubstitutionSet>(),
+        substitutionSets: new Map<string, SubstitutionsForRegExp>(),
+        substitutionsForRegExps: [],
     };
     return fx;
 }
@@ -206,15 +220,22 @@ function cleanAffixAttach(affix: string): string {
     return attach + (rules ? '/' + rules : '');
 }
 
+const regexpCache = new Map<string, RegExp>();
+
 function fixMatch(type: AffixRule['type'], match: string): RegExp {
+    const key = type + ':' + match;
+    const cached = regexpCache.get(key);
+    if (cached) return cached;
     const exp = affixMatchToRegExpString(match);
     const fix = fixRegex[type];
-    return new RegExp(exp.replace(fix.m, fix.r));
+    const regexp = new RegExp(exp.replace(fix.m, fix.r));
+    regexpCache.set(key, regexp);
+    return regexp;
 }
 
 function affixMatchToRegExpString(match: string): string {
     if (match === '0') return '';
-    return match.replace(/([\\\-?*])/g, '\\$1');
+    return match.replaceAll(/([\\\-?*])/g, '\\$1');
 }
 
 function collectFx(): Collector<Afx> {
@@ -232,8 +253,8 @@ const asPfx = collectFx;
 const asSfx = collectFx;
 
 const asString = () => collectPrimitive<string>((v) => v, '');
-const asBoolean = () => collectPrimitive<boolean>((v) => !!parseInt(v), '1');
-const asNumber = () => collectPrimitive<number>(parseInt, '0');
+const asBoolean = () => collectPrimitive<boolean>((v) => !!Number.parseInt(v), '1');
+const asNumber = () => collectPrimitive<number>(Number.parseInt, '0');
 
 function collectPrimitive<T>(map: (line: string) => T, defaultValue = ''): Collector<T> {
     let primitive: T | undefined;
@@ -370,8 +391,12 @@ function collectionToAffInfo(affFieldCollectionTable: AffFieldCollectorTable, en
     return cleanObject(result);
 }
 
+let htmlEntitiesFound = 0;
+let currentAffFilename = '';
+
 export async function parseAffFile(filename: string, encoding: string = UTF8) {
     const buffer = await readFile(filename);
+    currentAffFilename = filename;
     const file = decode(buffer, encoding);
     const affInfo = parseAff(file, encoding);
     if (affInfo.SET && affInfo.SET.toLowerCase() !== encoding.toLowerCase()) {
@@ -380,13 +405,37 @@ export async function parseAffFile(filename: string, encoding: string = UTF8) {
     return affInfo;
 }
 
+function convertHtmlEntities(line: string, index: number): string {
+    if (!line.includes('&')) return line;
+    const fixed = decodeHtmlEntities(line);
+    if (fixed !== line) {
+        if (htmlEntitiesFound < 10) {
+            const foundInFile = currentAffFilename;
+            console.error(
+                'HTML Entities found in aff file at line %s:%i\n\t%o replaced with:\n\t%o',
+                foundInFile,
+                index + 1,
+                line,
+                fixed,
+            );
+        }
+        if (htmlEntitiesFound === 10) {
+            console.error('HTML Entities found in aff...');
+        }
+        ++htmlEntitiesFound;
+    }
+    return fixed;
+}
+
 export function parseAff(affFileContent: string, encoding: string = UTF8): AffInfo {
+    htmlEntitiesFound = 0;
     const lines = affFileContent.split(/\r?\n/g);
     const affFieldCollectionTable = createAffFieldTable();
     affFieldCollectionTable.SET.addLine({ option: 'SET', value: encoding });
     lines
         .map((line) => line.trimStart())
         .map((line) => line.replace(commentRegex, ''))
+        .map(convertHtmlEntities)
         .filter((line) => line.trim() !== '')
         .map(parseLine)
         .forEach((line: AffLine) => {
@@ -396,8 +445,16 @@ export function parseAff(affFileContent: string, encoding: string = UTF8): AffIn
     return collectionToAffInfo(affFieldCollectionTable, encoding);
 }
 
-export function parseAffFileToAff(filename: string, encoding?: string) {
-    return parseAffFile(filename, encoding).then((affInfo) => new Aff(affInfo));
+export function parseAffFileToAff(filename: string, encoding?: string): Promise<Aff> {
+    return parseAffFile(filename, encoding).then((affInfo) => {
+        return new Aff(affInfo, filename);
+    });
+}
+
+export function parseAffFileToAffLegacy(filename: string, encoding?: string): Promise<AffLegacy> {
+    return parseAffFile(filename, encoding).then((affInfo) => {
+        return new AffLegacy(affInfo, filename);
+    });
 }
 
 function parseLine(line: string): AffLine {

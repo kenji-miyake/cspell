@@ -28,8 +28,7 @@ permissions:
 
 env:
   RUNS_ON: ubuntu-latest
-  NODE_VERSION: "16.x"
-  NPM_VERSION: "8"
+  NODE_VERSION: '22.x'
 
 jobs:
   load:
@@ -51,18 +50,18 @@ jobs:
           echo "dirty: $DIRTY"
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ env.REF_BRANCH }}
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.2
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - run: pnpm -v
 

@@ -1,19 +1,14 @@
-import {
-    createWeightedMap,
-    editDistance,
-    impersonateCollector,
-    mapDictionaryInformationToWeightMap,
-    SuggestionResult,
-    WeightMap,
-} from '..';
-import { formattedDistance } from '../distance/formatResultEx';
-import { clean } from '../utils/util';
-import {
-    DEFAULT_COMPOUNDED_WORD_SEPARATOR,
-    suggestionCollector,
-    SuggestionCollectorOptions,
-    SuggestionGenerator,
-} from './suggestCollector';
+import { describe, expect, test } from 'vitest';
+
+import { formattedDistance } from '../distance/formatResultEx.js';
+import type { WeightMap } from '../distance/index.js';
+import { createWeightedMap, editDistance } from '../distance/index.js';
+import { mapDictionaryInformationToWeightMap } from '../mappers/mapDictionaryInfoToWeightMap.js';
+import { clean } from '../utils/util.js';
+import { DEFAULT_COMPOUNDED_WORD_SEPARATOR } from './constants.js';
+import type { SuggestionCollectorOptions } from './suggestCollector.js';
+import { impersonateCollector, suggestionCollector } from './suggestCollector.js';
+import type { SuggestionGenerator, SuggestionResult } from './SuggestionTypes.js';
 
 const defaultOptions: SuggestionCollectorOptions = {
     numSuggestions: 10,
@@ -26,7 +21,7 @@ describe('Validate suggestCollector', () => {
     test('Tests the collector with filter', () => {
         const collector = suggestionCollector(
             'joyfully',
-            sugOpts({ numSuggestions: 3, filter: (word) => word !== 'joyfully' })
+            sugOpts({ numSuggestions: 3, filter: (word) => word !== 'joyfully' }),
         );
         collector.add({ word: 'joyfully', cost: 100 }).add({ word: 'joyful', cost: 100 });
         expect(collector.suggestions).toHaveLength(1);
@@ -35,7 +30,7 @@ describe('Validate suggestCollector', () => {
     test('Tests the collector with duplicate words of different costs', () => {
         const collector = suggestionCollector(
             'joyfully',
-            sugOpts({ numSuggestions: 3, filter: (word) => word !== 'joyfully' })
+            sugOpts({ numSuggestions: 3, filter: (word) => word !== 'joyfully' }),
         );
         collector.add({ word: 'joyful', cost: 100 });
         expect(collector.suggestions.length).toBe(1);
@@ -71,7 +66,7 @@ describe('Validate suggestCollector', () => {
 
         const collector = suggestionCollector(
             'joyfully',
-            sugOpts({ numSuggestions: 3, filter: (word) => word !== 'joyfully' })
+            sugOpts({ numSuggestions: 3, filter: (word) => word !== 'joyfully' }),
         );
         collector.collect(emit());
         expect(collector.suggestions.length).toBe(3);
@@ -114,7 +109,7 @@ describe('Validate suggestCollector', () => {
         const weightMap = sampleWeightMapNoDefaultWeights();
         const collector = suggestionCollector(
             word,
-            sugOpts({ numSuggestions: 3, changeLimit: 5, includeTies: true, weightMap })
+            sugOpts({ numSuggestions: 3, changeLimit: 5, includeTies: true, weightMap }),
         );
         const sugs = sampleSuggestions().map((sugWord) => ({ word: sugWord, cost: editDistance(word, sugWord) }));
         sugs.forEach((sug) => collector.add(sug));
@@ -123,7 +118,7 @@ describe('Validate suggestCollector', () => {
         expect(
             suggestions
                 .map((a) => a.word)
-                .map((wordB) => formattedDistance(word.normalize('NFD'), wordB.normalize('NFD'), weightMap, 110))
+                .map((wordB) => formattedDistance(word.normalize('NFD'), wordB.normalize('NFD'), weightMap, 110)),
         ).toMatchSnapshot();
 
         expect(suggestions).toEqual(expected);
@@ -143,7 +138,7 @@ describe('Validate suggestCollector', () => {
     `('collect weighted suggestions for "$word"', ({ word, expected }) => {
         const collector = suggestionCollector(
             word,
-            sugOpts({ numSuggestions: 3, changeLimit: 5, includeTies: true, weightMap: sampleWeightMapDi() })
+            sugOpts({ numSuggestions: 3, changeLimit: 5, includeTies: true, weightMap: sampleWeightMapDi() }),
         );
         const sugs = sampleSuggestions().map((sugWord) => ({ word: sugWord, cost: editDistance(word, sugWord) }));
         sugs.forEach((sug) => collector.add(sug));
@@ -174,16 +169,18 @@ function sugOpts(opts: Partial<SuggestionCollectorOptions>): SuggestionCollector
 }
 
 function sampleSuggestions(): string[] {
-    return ['']
-        .concat(['joy', 'joyful', 'joyfully', 'joyous', 'enjoy', 'enjoyment', 'joyfulness', 'joyless', 'enjoys'])
-        .concat(['one', 'two', 'concat', 'string', 'function', 'return', 'partial', 'values', 'value', 'collector'])
-        .concat(['color', 'word', 'words', 'would', "wouldn't", "won't", 'water', 'walk', 'walking', 'cost'])
-        .concat(['calculate', 'suggest', 'suggestion', 'supplement', 'apple', 'apples', 'walked', 'walker'])
-        .concat(['yo-yo', 'the', 'saw', 'raw', 'paw', 'this', 'these', 'those', 'work', 'works', 'working'])
-        .concat(['workable', 'worked', 'cafe', 'café', 'resume', 'résumé', 'cafés'])
-        .concat(['run|time', 'coffee|shop', 'run', 'time', 'coffee', 'shop', 'street|wise'])
-        .concat([])
-        .map((a) => a.replace(/[|]/g, DEFAULT_COMPOUNDED_WORD_SEPARATOR));
+    const words = [
+        [''],
+        ['joy', 'joyful', 'joyfully', 'joyous', 'enjoy', 'enjoyment', 'joyfulness', 'joyless', 'enjoys'],
+        ['one', 'two', 'concat', 'string', 'function', 'return', 'partial', 'values', 'value', 'collector'],
+        ['color', 'word', 'words', 'would', "wouldn't", "won't", 'water', 'walk', 'walking', 'cost'],
+        ['calculate', 'suggest', 'suggestion', 'supplement', 'apple', 'apples', 'walked', 'walker'],
+        ['yo-yo', 'the', 'saw', 'raw', 'paw', 'this', 'these', 'those', 'work', 'works', 'working'],
+        ['workable', 'worked', 'cafe', 'café', 'resume', 'résumé', 'cafés'],
+        ['run|time', 'coffee|shop', 'run', 'time', 'coffee', 'shop', 'street|wise'],
+        [],
+    ].flat(1);
+    return words.map((a) => a.replaceAll(/[|]/g, DEFAULT_COMPOUNDED_WORD_SEPARATOR));
 }
 
 function dictInfo() {

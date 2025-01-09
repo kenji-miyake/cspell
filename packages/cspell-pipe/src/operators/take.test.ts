@@ -1,6 +1,8 @@
-import { pipeAsync, pipeSync, toArray, opTap } from '..';
-import { fibonacci } from '../test/fibonacci';
-import { opTake } from './take';
+import { describe, expect, test } from 'vitest';
+
+import { opTap, pipeAsync, pipeSync, toArray } from '../index.js';
+import { fibonacci } from '../test/fibonacci.js';
+import { opTake } from './take.js';
 
 describe('take', () => {
     test.each`
@@ -16,7 +18,7 @@ describe('take', () => {
             ...pipeSync(
                 iter,
                 opTap(() => callCount++),
-                opTake(count)
+                opTake(count),
             ),
         ]).toEqual(expected);
         expect(callCount).toBe(Math.max(0, count));
@@ -36,9 +38,9 @@ describe('take', () => {
                 pipeAsync(
                     iter,
                     opTap(() => callCount++),
-                    opTake(count)
-                )
-            )
+                    opTake(count),
+                ),
+            ),
         ).toEqual(expected);
         expect(callCount).toBe(Math.max(0, count));
     });

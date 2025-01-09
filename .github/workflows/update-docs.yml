@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "packages/cspell-types/**/*.ts"
+      - 'packages/cspell-types/**/*.ts'
   workflow_dispatch:
 
 permissions:
@@ -16,48 +16,22 @@ jobs:
     if: github.repository_owner == 'streetsidesoftware'
     runs-on: ubuntu-latest
     env:
-      NEW_BRANCH: "update-docs"
+      NEW_BRANCH: 'update-docs'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.2
+      - name: Setup
+        uses: ./.github/actions/setup
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install
       - name: Build Docs
         run: |
           pnpm run build-cspell-types-docs
-      - name: Has changes
-        run: |
-          git --no-pager diff --compact-summary  --exit-code && echo "git_status=clean" >> $GITHUB_ENV || echo "git_status=dirty" >> $GITHUB_ENV
-          git --no-pager diff --compact-summary
-      - name: Gen Body
-        run: |
-          echo 'git_body<<DIFF' >> $GITHUB_ENV
-          git --no-pager diff --compact-summary >> $GITHUB_ENV
-          echo 'DIFF' >> $GITHUB_ENV
-      - name: Echo git_status
-        run: echo "${{ env.git_status }}"
-      - uses: tibdex/github-app-token@f717b5ecd4534d3c4df4ce9b5c1c2214f0f7cd06 # v1.5 # cspell:ignore tibdex
-        if: env.git_status == 'dirty'
-        id: generate-token
+
+      - name: PR
+        uses: ./.github/actions/pr
         with:
-          app_id: ${{ secrets.AUTOMATION_APP_ID }}
-          private_key: ${{ secrets.AUTOMATION_PRIVATE_KEY }}
-      - name: Create Pull Request
-        if: env.git_status == 'dirty'
-        uses: peter-evans/create-pull-request@671dc9c9e0c2d73f07fa45a3eb0220e1622f0c5f # v4
-        with:
-          commit-message: "ci: Workflow Bot -- Build Docs"
+          commit-message: 'ci: Workflow Bot -- Build Docs'
           branch: ${{ env.NEW_BRANCH }}
-          title: "ci: Workflow Bot -- Build Docs"
-          token: ${{ steps.generate-token.outputs.token }}
-          body: ${{ env.git_body }}
-          delete-branch: true
+          app_id: ${{ secrets.AUTOMATION_APP_ID }}
+          app_private_key: ${{ secrets.AUTOMATION_PRIVATE_KEY }}

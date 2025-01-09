@@ -1,12 +1,13 @@
-import { assert } from './assert';
-import { createServiceBus, ServiceBus } from './bus';
-import { Dispatcher } from './Dispatcher';
-import { Handler, HandleRequest, HandleRequestFn, HandlerNext } from './handlers';
-import { createRequestHandler } from './createRequestHandler';
-import { createResponse, RequestResponseType, ServiceRequest } from './request';
-import { ServiceRequestFactory, ServiceRequestFactoryRequestType } from './ServiceRequestFactory';
-import { requestFactory } from './requestFactory';
-import { ErrorDuplicateSubsystem } from './errors';
+import { assert } from './assert.js';
+import { createServiceBus, ServiceBus } from './bus.js';
+import { createRequestHandler } from './createRequestHandler.js';
+import type { Dispatcher } from './Dispatcher.js';
+import { ErrorDuplicateSubsystem } from './errors.js';
+import type { Handler, HandleRequest, HandleRequestFn, HandlerNext } from './handlers.js';
+import type { RequestResponseType, ServiceRequest } from './request.js';
+import { createResponse } from './request.js';
+import { requestFactory } from './requestFactory.js';
+import type { ServiceRequestFactory, ServiceRequestFactoryRequestType } from './ServiceRequestFactory.js';
 
 export interface SystemServiceBus extends Dispatcher {
     registerHandler(requestPrefix: string, handler: Handler): this;
@@ -14,7 +15,7 @@ export interface SystemServiceBus extends Dispatcher {
         requestDef: ServiceRequestFactory<T>,
         fn: HandleRequestFn<T>,
         name?: string | undefined,
-        description?: string | undefined
+        description?: string | undefined,
     ): this;
     createSubsystem(name: string, requestPattern: string | RegExp): SubsystemServiceBus;
     readonly subsystems: Map<string, SubsystemServiceBus>;
@@ -41,7 +42,7 @@ class SystemServiceBusImpl implements SystemServiceBus {
                 this._subsystems.set(name, sub);
                 this.serviceBus.addHandler(sub.handler);
                 return createResponse(sub);
-            })
+            }),
         );
     }
 
@@ -65,7 +66,7 @@ class SystemServiceBusImpl implements SystemServiceBus {
         requestDef: ServiceRequestFactory<T>,
         fn: HandleRequestFn<T>,
         name?: string | undefined,
-        description?: string | undefined
+        description?: string | undefined,
     ): this {
         this.registerHandler(requestDef.type, createRequestHandler(requestDef, fn, name, description));
         return this;
@@ -103,7 +104,10 @@ interface SubsystemServiceBus extends Dispatcher {
 class SubsystemServiceBusImpl extends ServiceBus implements SubsystemServiceBus {
     readonly handler: Handler;
     private canHandleType: (requestType: string) => boolean;
-    constructor(readonly name: string, readonly requestPattern: string | RegExp) {
+    constructor(
+        readonly name: string,
+        readonly requestPattern: string | RegExp,
+    ) {
         super();
 
         this.canHandleType =
@@ -115,7 +119,7 @@ class SubsystemServiceBusImpl extends ServiceBus implements SubsystemServiceBus 
             RequestRegisterHandlerFactory,
             (req, next) => this.handleRegistrationReq(req, next),
             'Subsystem Register Handlers for ' + name,
-            `Matches against: <${requestPattern.toString()}>`
+            `Matches against: <${requestPattern.toString()}>`,
         );
 
         this.addHandler(handleRegistration);
@@ -128,7 +132,7 @@ class SubsystemServiceBusImpl extends ServiceBus implements SubsystemServiceBus 
 
     handleRegistrationReq(
         request: ServiceRequestFactoryRequestType<typeof RequestRegisterHandlerFactory>,
-        next: HandleRequest
+        next: HandleRequest,
     ) {
         // console.log(`${this.name}.handleRegistrationReq %o`, request);
         if (!this.canHandleType(request.params.requestPrefix)) {

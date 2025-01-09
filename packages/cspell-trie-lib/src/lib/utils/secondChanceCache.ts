@@ -1,16 +1,12 @@
 export class SecondChanceCache<Key, Value> {
-    private map0: Map<Key, Value>;
-    private map1: Map<Key, Value>;
+    private map0 = new Map<Key, Value>();
+    private map1 = new Map<Key, Value>();
 
-    constructor(readonly maxL0Size: number) {
-        this.map0 = new Map<Key, Value>();
-        this.map1 = new Map<Key, Value>();
-    }
+    constructor(readonly maxL0Size: number) {}
 
     public has(key: Key) {
         if (this.map0.has(key)) return true;
         if (this.map1.has(key)) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             this.set(key, this.get1(key)!);
             return true;
         }
@@ -24,7 +20,7 @@ export class SecondChanceCache<Key, Value> {
     public set(key: Key, value: Value): this {
         if (this.map0.size >= this.maxL0Size && !this.map0.has(key)) {
             this.map1 = this.map0;
-            this.map0 = new Map<Key, Value>();
+            this.map0 = new Map();
         }
         this.map0.set(key, value);
         return this;
@@ -50,10 +46,9 @@ export class SecondChanceCache<Key, Value> {
 
     private get1(key: Key): Value | undefined {
         if (this.map1.has(key)) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const v = this.map1.get(key)!;
             this.map1.delete(key);
-            this.set(key, v);
+            this.map0.set(key, v);
             return v;
         }
         return undefined;

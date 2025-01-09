@@ -1,16 +1,18 @@
 import { opFilter, opFlatten, opMap, pipe } from '@cspell/cspell-pipe/sync';
-import type { HunspellCosts, HunspellInformation } from '../models/DictionaryInformation';
-import { Locale } from '../models/locale';
-import type { SuggestionCostMapDef } from '../models/suggestionCostsDef';
-import { caseForms } from '../utils/text';
-import { isDefined, unique as uniqueU } from '../utils/util';
-import { mapHunspellCosts } from './mapCosts';
+
+import type { HunspellCosts, HunspellInformation } from '../models/DictionaryInformation.js';
+import type { Locale } from '../models/locale/index.js';
+import type { SuggestionCostMapDef } from '../models/suggestionCostsDef.js';
+import { caseForms } from '../utils/text.js';
+import { isDefined, unique as uniqueU } from '../utils/util.js';
+import { joinLetters } from './joinLetters.js';
+import { mapHunspellCosts } from './mapCosts.js';
 import {
     calcCostsForAccentedLetters,
     calcFirstCharacterReplace,
     parseAlphabet,
     splitMap,
-} from './mapToSuggestionCostDef';
+} from './mapToSuggestionCostDef.js';
 
 interface Costs extends Required<HunspellCosts> {
     locale?: string[] | undefined;
@@ -18,7 +20,7 @@ interface Costs extends Required<HunspellCosts> {
 
 export function hunspellInformationToSuggestionCostDef(
     hunInfo: HunspellInformation,
-    locales: Locale[] | undefined
+    locales: Locale[] | undefined,
 ): SuggestionCostMapDef[] {
     const costs = calcCosts(hunInfo.costs, locales);
 
@@ -54,11 +56,11 @@ export function hunspellInformationToSuggestionCostDef(
                     operations,
                     opMap((fn) => fn(line, costs)),
                     opMap(asArrayOf),
-                    opFlatten()
-                )
+                    opFlatten(),
+                ),
             ),
             opFlatten(),
-            opFilter(isDefined)
+            opFilter(isDefined),
         );
 
         return [...defs];
@@ -111,7 +113,7 @@ function affTry(line: string, costs: Costs): SuggestionCostMapDef[] | undefined 
             cost,
         },
         costs.locale,
-        costs
+        costs,
     );
 }
 
@@ -128,7 +130,7 @@ function affTryFirstCharacterReplace(line: string, costs: Costs): SuggestionCost
             characters,
             cost,
         },
-        costs
+        costs,
     );
 }
 
@@ -188,7 +190,7 @@ function affKey(line: string, costs: Costs): SuggestionCostMapDef | undefined {
 
     const pairsUpper = pairs.map((p) => p.toLocaleUpperCase(costs.locale));
 
-    const map = uniqueU(pairs.concat(pairsUpper)).join('|');
+    const map = uniqueU([...pairs, ...pairsUpper]).join('|');
     const cost = costs.keyboardCost;
 
     return {
@@ -239,17 +241,6 @@ function parseCaps(value: string, costs: Costs): SuggestionCostMapDef | undefine
         map,
         replace: cost,
     };
-}
-
-/**
- * Bring letters / strings together.
- * - `['a', 'b'] => 'ab'`
- * - `['a', 'bc'] => 'a(bc)'`
- * @param letters - letters to join
- */
-export function joinLetters(letters: string[]): string {
-    const v = [...letters];
-    return v.map((a) => (a.length > 1 || !a.length ? `(${a})` : a)).join('');
 }
 
 function reducer<T, U = T>(fn: (acc: U, val: T, i: number) => U, initialVal: U) {

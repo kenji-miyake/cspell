@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`TypeScript Parser parse TypeScript/escape-codes.ts 1`] = `
+exports[`TypeScript Parser > parse 'TypeScript/escape-codes.ts' 1`] = `
 "filename: TypeScript/escape-codes.ts
 parsed:
 6-12 "places" identifier code.ts source.ts
@@ -21,7 +21,7 @@ parsed:
 "
 `;
 
-exports[`TypeScript Parser parse TypeScript/sample1.ts 1`] = `
+exports[`TypeScript Parser > parse 'TypeScript/sample1.ts' 1`] = `
 "filename: TypeScript/sample1.ts
 parsed:
 3-4 "\\n" comment.block.documentation.ts code.ts source.ts

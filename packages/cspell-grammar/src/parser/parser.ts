@@ -1,9 +1,10 @@
-import { NGrammar } from './grammarNormalized';
-import { tokenizeText, tokenizeTextIterable } from './tokenizeLine';
-import type { TokenizedLine, TokenizedLineResult } from './types';
-import { pipe, opFlatten, opMap, opFilter } from '@cspell/cspell-pipe/sync';
+import { opFilter, opFlatten, opMap, pipe } from '@cspell/cspell-pipe/sync';
 import type { Parser, ParseResult } from '@cspell/cspell-types/Parser';
-import { Grammar } from './grammar';
+
+import type { Grammar } from './grammar.js';
+import type { NGrammar } from './grammarNormalized.js';
+import { tokenizeText, tokenizeTextIterable } from './tokenizeLine.js';
+import type { TokenizedLine, TokenizedLineResult } from './types.js';
 
 export interface DocumentParser {
     parse: (firstLine: string) => TokenizedLineResult;
@@ -13,21 +14,21 @@ export function parseDocument(
     grammar: NGrammar,
     _filename: string,
     content: string,
-    emitter: (line: string) => void = (line) => console.log(line)
+    emitter: (line: string) => void = (line) => console.log(line),
 ): void {
     const r = tokenizeText(content, grammar);
     const tokens = pipe(
         r,
         opMap((tl) => tl.tokens.map((t) => ({ t, l: tl.line }))),
         opFlatten(),
-        opFilter((t) => !t.t.scope.value.startsWith('punctuation'))
+        opFilter((t) => !t.t.scope.value.startsWith('punctuation')),
     );
 
     for (const { t: token, l: line } of tokens) {
         emitter(
             `${(token.range[2] ?? line.lineNumber) + 1}:${token.range[0] + 1}\t ${JSON.stringify(
-                token.text
-            )}\t ${token.scope.toString()}`
+                token.text,
+            )}\t ${token.scope.toString()}`,
         );
     }
 }

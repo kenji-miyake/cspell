@@ -1,0 +1,44 @@
+{
+  "name": "test-dict-software-terms",
+  "version": "8.17.1",
+  "private": true,
+  "description": "Software terms dictionary for cspell.",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "exports": {
+    ".": "./cspell-ext.json",
+    "./cspell": "./cspell-ext.json",
+    "./cspell-ext.json": "./cspell-ext.json"
+  },
+  "scripts": {
+    "build": "cspell-tools-cli build",
+    "test": "cspell -c ./cspell-ext.json \"--local=*\" \"--languageId=*\" src/*.txt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streetsidesoftware/cspell-dicts.git"
+  },
+  "keywords": [
+    "cspell",
+    "software-terms",
+    "software terms",
+    "dictionary",
+    "spelling"
+  ],
+  "author": "Jason Dent",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/streetsidesoftware/cspell-dicts/issues"
+  },
+  "homepage": "https://github.com/streetsidesoftware/cspell-dicts/blob/main/dictionaries/software-terms#readme",
+  "devDependencies": {
+    "@cspell/cspell-tools": "workspace:*",
+    "cspell": "workspace:*"
+  },
+  "files": [
+    "dict/*",
+    "cspell-ext.json"
+  ]
+}

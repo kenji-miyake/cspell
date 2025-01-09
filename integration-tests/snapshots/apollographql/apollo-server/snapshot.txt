@@ -3,7 +3,6 @@ Repository: apollographql/apollo-server
 Url: "https://github.com/apollographql/apollo-server.git"
 Args: ["**"]
 Lines:
- CSpell: Files checked: 300, Issues found: 5 in 4 files
+ CSpell: Files checked: 250, Issues found: 1 in 1 file.
  exit code: 1
-./docs/source/performance/apq.md:49:56     - Unknown word (concat)     -- ersistedQueryLink({ sha256 }).concat(
-./package.json:94:13     - Unknown word (whatwg)     -- "@types/whatwg-mimetype": "3.0.0",
+CHANGELOG_historical.md:578:682   - Unknown word (desireable) -- full), which may be desireable for network cache stores

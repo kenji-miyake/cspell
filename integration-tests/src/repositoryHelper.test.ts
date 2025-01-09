@@ -1,19 +1,18 @@
-import { checkoutRepositoryAsync, repositoryDir, addRepository } from './repositoryHelper';
-import { CaptureLogger } from './CaptureLogger';
-import rimraf from 'rimraf';
-import { join } from 'path';
-import { promisify } from 'util';
-import { addRepository as configAddRepository } from './config';
+import { promises as fs } from 'node:fs';
+import { join } from 'node:path';
 
-const rm = promisify(rimraf);
-const defaultTimeout = 60000;
+import type { Mock } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-jest.mock('./config');
+import { CaptureLogger } from './CaptureLogger.js';
+import { addRepository as configAddRepository } from './config.js';
+import { addRepository, checkoutRepositoryAsync, repositoryDir } from './repositoryHelper.js';
 
-const mockAddRepository = configAddRepository as jest.Mock<
-    ReturnType<typeof configAddRepository>,
-    Parameters<typeof configAddRepository>
->;
+const defaultTimeout = 60_000;
+
+vi.mock('./config.js');
+
+const mockAddRepository = configAddRepository as Mock<typeof configAddRepository>;
 
 describe('Validate repository helper', () => {
     interface TestCase {
@@ -25,7 +24,7 @@ describe('Validate repository helper', () => {
     }
 
     beforeEach(() => {
-        jest.resetAllMocks();
+        vi.resetAllMocks();
         mockAddRepository.mockImplementation((path, url) => ({
             path,
             url,
@@ -45,13 +44,13 @@ describe('Validate repository helper', () => {
         'checkoutRepositoryAsync $msg $repo $path $commit',
         async ({ repo, path, commit, expected }: TestCase) => {
             const logger = new CaptureLogger();
-            await rm(join(repositoryDir, path));
+            await fs.rm(join(repositoryDir, path), { recursive: true, force: true });
             commit = commit || 'main';
             expect(await checkoutRepositoryAsync(logger, repo, path, commit, undefined)).toBe(expected);
             // console.log(logger.logs);
             // console.log(logger.errors);
         },
-        defaultTimeout
+        defaultTimeout,
     );
 
     test.each`
@@ -65,6 +64,6 @@ describe('Validate repository helper', () => {
             expect(await addRepository(logger, repo, undefined)).toEqual(expect.objectContaining({ path, url: repo }));
             expect(mockAddRepository).toHaveBeenCalledWith(path, repo, expect.any(String), undefined);
         },
-        defaultTimeout
+        defaultTimeout,
     );
 });

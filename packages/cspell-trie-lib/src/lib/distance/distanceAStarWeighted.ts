@@ -1,6 +1,8 @@
-import assert from 'assert';
-import { PairingHeap } from '../utils/PairingHeap';
-import { WeightMap } from './weightedMaps';
+import assert from 'node:assert';
+
+import { PairingHeap } from '../utils/PairingHeap.js';
+import type { WeightCostCalculator, WeightMap } from './weightedMaps.js';
+import { createWeightCostCalculator } from './weightedMaps.js';
 
 /**
  * Calculate the edit distance between two words using an A* algorithm.
@@ -8,8 +10,9 @@ import { WeightMap } from './weightedMaps';
  * Using basic weights, this algorithm has the same results as the Damerau-Levenshtein algorithm.
  */
 export function distanceAStarWeighted(wordA: string, wordB: string, map: WeightMap, cost = 100): number {
-    const best = _distanceAStarWeightedEx(wordA, wordB, map, cost);
-    const penalty = map.calcAdjustment(wordB);
+    const calc = createWeightCostCalculator(map);
+    const best = _distanceAStarWeightedEx(wordA, wordB, calc, cost);
+    const penalty = calc.calcAdjustment(wordB);
     return best.c + best.p + penalty;
 }
 
@@ -26,7 +29,7 @@ export interface ExResult {
     }[];
 }
 
-export function distanceAStarWeightedEx(wordA: string, wordB: string, map: WeightMap, cost = 100): ExResult {
+export function distanceAStarWeightedEx(wordA: string, wordB: string, map: WeightCostCalculator, cost = 100): ExResult {
     const best = _distanceAStarWeightedEx(wordA, wordB, map, cost);
 
     const aa = '^' + wordA + '$';
@@ -56,7 +59,7 @@ export function distanceAStarWeightedEx(wordA: string, wordB: string, map: Weigh
     return result;
 }
 
-function _distanceAStarWeightedEx(wordA: string, wordB: string, map: WeightMap, cost = 100): Node {
+function _distanceAStarWeightedEx(wordA: string, wordB: string, map: WeightCostCalculator, cost = 100): Node {
     // Add ^ and $ for begin/end detection.
     const a = '^' + wordA + '$';
     const b = '^' + wordB + '$';
@@ -131,7 +134,10 @@ class CandidatePool {
     readonly pool = new PairingHeap(compare);
     readonly grid: Node[] = [];
 
-    constructor(readonly aN: number, readonly bN: number) {}
+    constructor(
+        readonly aN: number,
+        readonly bN: number,
+    ) {}
 
     next(): Node | undefined {
         let n: Node | undefined;

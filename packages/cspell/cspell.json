@@ -9,13 +9,19 @@
     "ignorePaths": [
         "*.snap",
         "node_modules",
+        "__snapshots__",
         "package-lock.json",
         "coverage/**",
         "dist/**",
+        "dist.*/**",
+        "temp/**",
+        "CHANGELOG.md",
         "package.json",
         ".cspell.json",
+        "cspell.json",
         ".vscode/**"
     ],
+    "flagWords": ["blacklist: denylist", "blackList: denyList", "whitelist: allowlist"],
     "dictionaryDefinitions": [
         {
             "name": "workspace",
@@ -23,8 +29,7 @@
             "description": "Custom Workspace Dictionary"
         }
     ],
-    "dictionaries": [
-        "workspace"
-    ],
+    "dictionaries": ["workspace"],
+    "noConfigSearch": true,
     "ignoreWords": []
 }

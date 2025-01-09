@@ -1,15 +1,18 @@
-import { readFile } from 'fs-extra';
-import * as Trie from '..';
-import { resolveSample } from '../../test/samples';
-import { consolidate } from '../consolidate';
-import { iteratorTrieWords } from '../trie-util';
-import { importTrie, serializeTrie } from './importExportV1';
+import { readFile } from 'node:fs/promises';
+
+import { describe, expect, test } from 'vitest';
+
+import { resolveSample } from '../../test/samples.js';
+import { consolidate } from '../consolidate.js';
+import * as Trie from '../index.js';
+import { iteratorTrieWords } from '../TrieNode/trie-util.js';
+import { importTrie, serializeTrie } from './importExportV1.js';
 
 describe('Import/Export', () => {
     test('tests serialize / deserialize', async () => {
-        const trie = consolidate(Trie.createTriFromList(sampleWords));
+        const trie = consolidate(Trie.createTrieRootFromList(sampleWords));
         const data = [...serializeTrie(trie, 10)];
-        const sample = (await readFile(resolveSample('sampleV1.trie'), 'utf8')).replace(/\r/g, '');
+        const sample = (await readFile(resolveSample('sampleV1.trie'), 'utf8')).replaceAll('\r', '');
         const rawData = data.join('');
         expect(rawData.length).toBeLessThanOrEqual(sample.length);
         const sampleRoot = importTrie(sample.split('\n'));

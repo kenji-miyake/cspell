@@ -1,4 +1,4 @@
-import type { CSpellUserSettings } from './CSpellSettingsDef';
+import type { CSpellUserSettings } from './CSpellSettingsDef.js';
 
 export type ConfigKeys = Exclude<keyof CSpellUserSettings, '$schema' | 'version' | 'id'>;
 
@@ -16,6 +16,7 @@ export const ConfigFields: CSpellUserSettingsFields = {
     enabled: 'enabled',
     enabledLanguageIds: 'enabledLanguageIds',
     enableFiletypes: 'enableFiletypes',
+    enabledFileTypes: 'enabledFileTypes',
     enableGlobDot: 'enableGlobDot',
     failFast: 'failFast',
     features: 'features',
@@ -26,6 +27,7 @@ export const ConfigFields: CSpellUserSettingsFields = {
     ignorePaths: 'ignorePaths',
     ignoreRegExpList: 'ignoreRegExpList',
     ignoreWords: 'ignoreWords',
+    ignoreRandomStrings: 'ignoreRandomStrings',
     import: 'import',
     includeRegExpList: 'includeRegExpList',
     language: 'language',
@@ -35,6 +37,7 @@ export const ConfigFields: CSpellUserSettingsFields = {
     maxDuplicateProblems: 'maxDuplicateProblems',
     maxNumberOfProblems: 'maxNumberOfProblems',
     minWordLength: 'minWordLength',
+    minRandomLength: 'minRandomLength',
     name: 'name',
     noConfigSearch: 'noConfigSearch',
     noSuggestDictionaries: 'noSuggestDictionaries',
@@ -48,6 +51,7 @@ export const ConfigFields: CSpellUserSettingsFields = {
     spellCheckDelayMs: 'spellCheckDelayMs',
     suggestionNumChanges: 'suggestionNumChanges',
     suggestionsTimeout: 'suggestionsTimeout',
+    suggestWords: 'suggestWords',
     useGitignore: 'useGitignore',
     usePnP: 'usePnP',
     userWords: 'userWords',

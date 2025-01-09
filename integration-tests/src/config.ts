@@ -1,10 +1,22 @@
-import { Config, Repository } from './configDef';
-import * as fs from 'fs';
-import * as Path from 'path';
+import assert from 'node:assert';
+import * as fs from 'node:fs';
+import * as Path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import type { Config, Repository } from './configDef.js';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 const configLocation = Path.resolve(Path.join(__dirname, '..', 'config'));
 const configFile = Path.join(configLocation, 'config.json');
 const repoConfigs = 'config/repositories';
+const pathRoot = '../../../..';
+const pathRepoConfig = Path.join(pathRoot, repoConfigs);
+const pathCommonRepoRoot = Path.join(pathRoot, 'repositories');
+const pathCommonRepoCSpellConfig = Path.join(pathCommonRepoRoot, 'cspell.yaml');
+const pathCommonRepoBase = Path.join(pathCommonRepoRoot, 'temp');
+const pathReporter = Path.join(pathRoot, 'custom-reporter.js');
+const pathReporterListAll = Path.join(pathRoot, 'custom-reporter-list-all.js');
 
 const defaultConfig: Config = {
     repositories: [],
@@ -12,18 +24,45 @@ const defaultConfig: Config = {
 
 export function readConfig(): Config {
     try {
-        const file = fs.readFileSync(configFile, 'utf-8');
+        const file = fs.readFileSync(configFile, 'utf8');
         const cfg = JSON.parse(file);
         return cfg;
-    } catch (e) {
+    } catch {
         return JSON.parse(JSON.stringify(defaultConfig));
     }
 }
 
-export function resolveArgs(rep: Repository): Repository {
-    const repoConfigLocation = Path.join('..', '..', '..', '..', repoConfigs, rep.path);
-    const args = rep.args.map((a) => a.replace('${repoConfig}', repoConfigLocation));
+function fixPlaceHolders(text: string, placeHolderReplacements: Record<string, string>): string {
+    for (const [key, value] of Object.entries(placeHolderReplacements)) {
+        assert(key.startsWith('${'), 'Placeholder must start with "${"');
+        assert(key.endsWith('}'), 'Placeholder must end with "}"');
+        text = text.replace(key, value);
+    }
+
+    assert(!text.includes('${'), `Still contains placeholder ${text}`);
+
+    return text;
+}
+
+export function resolveRepArgs(rep: Repository): Repository {
+    const args = resolveArgs(rep.path, rep.args);
     return { ...rep, args };
+}
+
+export function resolveArgs(repPath: string, args: string[]): string[] {
+    const repoConfigLocation = Path.join(pathRepoConfig, repPath);
+
+    const placeHolderReplacements = {
+        '${repoConfig}': repoConfigLocation,
+        '${commonRoot}': pathCommonRepoRoot,
+        '${commonBase}': pathCommonRepoBase,
+        '${commonConfig}': pathCommonRepoCSpellConfig,
+        '${pathReporter}': pathReporter,
+        '${pathReporterListAll}': pathReporterListAll,
+        '${repoPath}': repPath,
+    };
+
+    return args.map((a) => fixPlaceHolders(a, placeHolderReplacements));
 }
 
 export function writeConfig(config: Config): void {

@@ -1,11 +1,11 @@
-import { RequestResponseType, ServiceRequest } from './request';
-import { ServiceRequestFactory, ServiceRequestFactoryRequestType } from './ServiceRequestFactory';
-import { Dispatcher } from './Dispatcher';
+import type { Dispatcher } from './Dispatcher.js';
+import type { RequestResponseType, ServiceRequest } from './request.js';
+import type { ServiceRequestFactory, ServiceRequestFactoryRequestType } from './ServiceRequestFactory.js';
 
 export type HandleRequestFn<R extends ServiceRequest> = (
     request: R,
     next: HandleRequest,
-    dispatch: Dispatcher
+    dispatch: Dispatcher,
 ) => RequestResponseType<R>;
 
 export interface HandleRequest {
@@ -19,7 +19,7 @@ export interface HandleRequestKnown<R extends ServiceRequest> {
 
 export type FactoryRequestHandler<
     T extends ServiceRequestFactory<ServiceRequest>,
-    R extends ServiceRequest = ServiceRequestFactoryRequestType<T>
+    R extends ServiceRequest = ServiceRequestFactoryRequestType<T>,
 > = HandleRequestKnown<R>;
 
 export interface HandlerNext {

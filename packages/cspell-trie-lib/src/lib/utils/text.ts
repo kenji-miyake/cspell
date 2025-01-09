@@ -21,12 +21,10 @@ export function expandCharacterSet(line: string, rangeChar = '-'): Set<string> {
             expandRange(prev, char).forEach((a) => charSet.add(a));
             mode = 0;
         }
-        if (char === rangeChar) {
+        if (char === rangeChar && prev) {
             // store the `-` if there isn't a previous value.
-            if (prev) {
-                mode = 1;
-                continue;
-            }
+            mode = 1;
+            continue;
         }
         charSet.add(char);
         prev = char;
@@ -101,7 +99,7 @@ export function accentForms(letter: string): Iterable<string> {
  * @returns characters with accents removed (if it was possible)
  */
 export function stripAccents(characters: string): string {
-    return characters.normalize('NFD').replace(/\p{M}/gu, '');
+    return characters.normalize('NFD').replaceAll(/\p{M}/gu, '');
 }
 
 /**
@@ -110,5 +108,41 @@ export function stripAccents(characters: string): string {
  * @returns - only the accents.
  */
 export function stripNonAccents(characters: string): string {
-    return characters.normalize('NFD').replace(/[^\p{M}]/gu, '');
+    return characters.normalize('NFD').replaceAll(/[^\p{M}]/gu, '');
+}
+
+export function isValidUtf16Character(char: string): boolean {
+    const len = char.length;
+    // eslint-disable-next-line unicorn/prefer-code-point
+    const code = char.charCodeAt(0) & 0xfc00;
+    const valid =
+        (len === 1 && (code & 0xf800) !== 0xd800) ||
+        // eslint-disable-next-line unicorn/prefer-code-point
+        (len === 2 && (code & 0xfc00) === 0xd800 && (char.charCodeAt(1) & 0xfc00) === 0xdc00);
+    return valid;
+}
+
+export function assertValidUtf16Character(char: string): void {
+    if (!isValidUtf16Character(char)) {
+        const len = char.length;
+        const codes = toCharCodes(char.slice(0, 2)).map((c) => '0x' + ('0000' + c.toString(16)).slice(-4));
+        let message: string;
+        if (len == 1) {
+            message = `Invalid utf16 character, lone surrogate: ${codes[0]}`;
+        } else if (len == 2) {
+            message = `Invalid utf16 character, not a valid surrogate pair: [${codes.join(', ')}]`;
+        } else {
+            message = `Invalid utf16 character, must be a single character, found: ${len}`;
+        }
+        throw new Error(message);
+    }
+}
+
+function toCharCodes(s: string): number[] {
+    const values: number[] = [];
+    for (let i = 0; i < s.length; ++i) {
+        // eslint-disable-next-line unicorn/prefer-code-point
+        values.push(s.charCodeAt(i));
+    }
+    return values;
 }

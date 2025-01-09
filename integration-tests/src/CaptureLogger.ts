@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Logger } from './types';
-import { format } from 'util';
+import { format } from 'node:util';
+
+import type { Logger } from './types.js';
 
 export class CaptureLogger implements Logger {
     readonly logs: string[] = [];

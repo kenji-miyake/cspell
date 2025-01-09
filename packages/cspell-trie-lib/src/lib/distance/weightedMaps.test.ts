@@ -1,19 +1,21 @@
-import type { SuggestionCostMapDef } from '../models/suggestionCostsDef';
-import { DEFAULT_COMPOUNDED_WORD_SEPARATOR } from '../suggestions/suggestCollector';
+import { describe, expect, test } from 'vitest';
+
+import type { SuggestionCostMapDef } from '../models/suggestionCostsDef.js';
+import { DEFAULT_COMPOUNDED_WORD_SEPARATOR } from '../suggestions/constants.js';
+import type { CostPosition, PenaltyAdjustment } from './weightedMaps.js';
 import {
+    __testing__,
     addAdjustment,
     addDefToWeightMap,
-    CostPosition,
+    createWeightCostCalculator,
     createWeightMap,
     lookupReplaceCost,
-    PenaltyAdjustment,
     prettyPrintWeightMap,
-    __testing__,
-} from './weightedMaps';
+} from './weightedMaps.js';
 
 const { splitMapSubstrings, splitMap, findTrieCostPrefixes, normalizeDef } = __testing__;
 
-const oc = expect.objectContaining;
+const oc = <T>(obj: T) => expect.objectContaining(obj);
 
 // const u = undefined;  cspell:
 
@@ -21,7 +23,7 @@ describe('Validate weightedMaps', () => {
     test.each`
         map             | expected
         ${''}           | ${[]}
-        ${'abc'}        | ${'abc'.split('')}
+        ${'abc'}        | ${[...'abc']}
         ${'f(ph)(gh)v'} | ${['f', 'ph', 'gh', 'v']}
     `('splitMapSubstrings "$map"', ({ map, expected }) => {
         expect(splitMapSubstrings(map)).toEqual(expected);
@@ -31,8 +33,8 @@ describe('Validate weightedMaps', () => {
         map                 | expected
         ${''}               | ${[]}
         ${'||'}             | ${[]}
-        ${'abc'}            | ${['abc'.split('')]}
-        ${'abc|'}           | ${['abc'.split('')]}
+        ${'abc'}            | ${[[...'abc']]}
+        ${'abc|'}           | ${[[...'abc']]}
         ${'f(ph)(gh)v|eé'}  | ${[['f', 'ph', 'gh', 'v'], ['e', 'é', 'é'.normalize('NFD')]]}
         ${'f(ph)(😁)🤣|eé'} | ${[['f', 'ph', '😁', '🤣'], ['e', 'é', 'é'.normalize('NFD')]]}
     `('splitMap "$map"', ({ map, expected }) => {
@@ -104,14 +106,14 @@ describe('Validate weightedMaps', () => {
             bi: number;
             expected: CostPosition[];
         }) => {
-            const map = createWeightMap(...defs);
-            const results = [...map.calcInsDelCosts({ a: wordA, b: wordB, ai, bi, c: 1000, p: 1000 })];
+            const calc = createWeightCostCalculator(createWeightMap(...defs));
+            const results = [...calc.calcInsDelCosts({ a: wordA, b: wordB, ai, bi, c: 1000, p: 1000 })];
             expected.forEach((p) => {
                 (p.a = p.a ?? wordA), (p.b = p.b ?? wordB);
             });
             expect(results).toEqual(expect.arrayContaining(expected));
             expect(results).toHaveLength(expected.length);
-        }
+        },
     );
 
     test.each`
@@ -140,14 +142,14 @@ describe('Validate weightedMaps', () => {
             bi: number;
             expected: CostPosition[];
         }) => {
-            const map = createWeightMap(...defs);
-            const results = [...map.calcReplaceCosts({ a: wordA, b: wordB, ai, bi, c: 1000, p: 1000 })];
+            const calc = createWeightCostCalculator(createWeightMap(...defs));
+            const results = [...calc.calcReplaceCosts({ a: wordA, b: wordB, ai, bi, c: 1000, p: 1000 })];
             expected.forEach((p) => {
                 (p.a = p.a ?? wordA), (p.b = p.b ?? wordB);
             });
             expect(results).toEqual(expect.arrayContaining(expected));
             expect(results).toHaveLength(expected.length);
-        }
+        },
     );
 
     test.each`
@@ -172,14 +174,14 @@ describe('Validate weightedMaps', () => {
             bi: number;
             expected: CostPosition[];
         }) => {
-            const map = createWeightMap(...defs);
-            const results = [...map.calcSwapCosts({ a: wordA, b: wordB, ai, bi, c: 1000, p: 1000 })];
+            const calc = createWeightCostCalculator(createWeightMap(...defs));
+            const results = [...calc.calcSwapCosts({ a: wordA, b: wordB, ai, bi, c: 1000, p: 1000 })];
             expected.forEach((p) => {
                 (p.a = p.a ?? wordA), (p.b = p.b ?? wordB);
             });
             expect(results).toEqual(expect.arrayContaining(expected));
             expect(results).toHaveLength(expected.length);
-        }
+        },
     );
 
     test.each`
@@ -212,12 +214,13 @@ describe('Validate weightedMaps', () => {
     `('calcAdjustment $adjustments $word', ({ adjustments, word, expected }) => {
         const w = createWeightMap();
         addAdjustment(w, ...adjustments);
-        expect(w.calcAdjustment(word)).toEqual(expected);
+        const calc = createWeightCostCalculator(w);
+        expect(calc.calcAdjustment(word)).toEqual(expected);
     });
 });
 
 function sep(s: string): string {
-    return s.replace(/[|+]/g, DEFAULT_COMPOUNDED_WORD_SEPARATOR);
+    return s.replaceAll(/[|+]/g, DEFAULT_COMPOUNDED_WORD_SEPARATOR);
 }
 
 // function mo(...opts: Partial<SuggestionCostMapDef>[]): Partial<SuggestionCostMapDef> {

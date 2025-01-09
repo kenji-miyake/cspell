@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
+
+dictionaryDefinitions:
+  - name: cities
+    words:
+      - Amsterdam
+      - Angles
+      - cities
+      - City
+      - Configuration
+      - Default
+      - define
+      - Definitions
+      - Delhi
+      - dictionaries
+      - dictionary
+      - 'false'
+      - file
+      - Francisco
+      - fully
+      - Inline
+      - Las
+      - load
+      - London
+      - Mexico
+      - name
+      - New
+      - Paris
+      - possible
+      - San
+      - words
+      - York
+
+dictionaries:
+  - cities
+loadDefaultConfiguration: false

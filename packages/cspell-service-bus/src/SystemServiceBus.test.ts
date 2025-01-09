@@ -1,27 +1,24 @@
-import { assert } from './assert';
-import {
-    createResponse,
-    createResponseFail,
-    isServiceResponseFailure,
-    isServiceResponseSuccess,
-    RequestResponseType,
-} from './request';
-import { ServiceRequestFactory } from './ServiceRequestFactory';
-import { requestFactory } from './requestFactory';
+import { describe, expect, test } from 'vitest';
+
+import { assert } from './assert.js';
+import type { RequestResponseType } from './request.js';
+import { createResponse, createResponseFail, isServiceResponseFailure, isServiceResponseSuccess } from './request.js';
+import { requestFactory } from './requestFactory.js';
+import type { ServiceRequestFactory } from './ServiceRequestFactory.js';
 import {
     createSystemServiceBus,
     RequestCreateSubsystemFactory,
     RequestRegisterHandlerFactory,
-} from './SystemServiceBus';
+} from './SystemServiceBus.js';
 
 const TypeRequestFsReadFile = 'fs:readFile' as const;
 const RequestFsReadFile = requestFactory<typeof TypeRequestFsReadFile, { readonly uri: string }, string>(
-    TypeRequestFsReadFile
+    TypeRequestFsReadFile,
 );
 
 const TypeRequestZlibInflate = 'zlib:inflate' as const;
 const RequestZlibInflate = requestFactory<typeof TypeRequestZlibInflate, { readonly data: string }, string>(
-    TypeRequestZlibInflate
+    TypeRequestZlibInflate,
 );
 
 const knownRequestTypes = {
@@ -41,7 +38,6 @@ describe('SystemServiceBus', () => {
     });
 
     test('ServiceRequestFactory Compliance', () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const knownRequests: [string, ServiceRequestFactory<any>][] = Object.entries(knownRequestTypes);
         expect(knownRequests.map(([name, def]) => [name, def.type])).toMatchSnapshot();
     });
@@ -54,7 +50,7 @@ describe('SystemServiceBus Behavior', () => {
     serviceBus.createSubsystem('Path', 'path:');
     serviceBus.registerRequestHandler(RequestFsReadFile, (req) => createResponse(`read file: ${req.params.uri}`));
     serviceBus.registerRequestHandler(RequestFsReadFile, (req, next) =>
-        /https?:/.test(req.params.uri) ? createResponse(`fetch http: ${req.params.uri}`) : next(req)
+        /https?:/.test(req.params.uri) ? createResponse(`fetch http: ${req.params.uri}`) : next(req),
     );
     serviceBus.registerRequestHandler(
         RequestFsReadFile,
@@ -71,7 +67,7 @@ describe('SystemServiceBus Behavior', () => {
             assert(decompressRes.value);
             return createResponse(decompressRes.value);
         },
-        RequestFsReadFile.type + '/zip'
+        RequestFsReadFile.type + '/zip',
     );
     serviceBus.registerRequestHandler(RequestZlibInflate, (req) => createResponse(`Inflate: ${req.params.data}`));
 
@@ -80,7 +76,7 @@ describe('SystemServiceBus Behavior', () => {
         ${RequestFsReadFile.create({ uri: 'file://my_file.txt' })}                      | ${{ value: 'read file: file://my_file.txt' }}
         ${RequestFsReadFile.create({ uri: 'https://www.example.com/my_file.txt' })}     | ${{ value: 'fetch http: https://www.example.com/my_file.txt' }}
         ${RequestFsReadFile.create({ uri: 'https://www.example.com/my_dict.trie.gz' })} | ${{ value: 'Inflate: fetch http: https://www.example.com/my_dict.trie.gz' }}
-        ${{ type: 'zlib:compress' }}                                                    | ${{ error: Error('Unhandled Request: zlib:compress') }}
+        ${{ type: 'zlib:compress' }}                                                    | ${{ error: new Error('Unhandled Request: zlib:compress') }}
     `('dispatch requests', ({ request, expected }) => {
         expect(serviceBus.dispatch(request)).toEqual(expected);
     });

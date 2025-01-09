@@ -1,28 +1,45 @@
-import type { Report } from './reportGenerator';
+import { stringify as stringifyYaml } from 'yaml';
+
+import type { Report } from './reportGenerator.js';
 
 export function stringify(report: Report): string {
-    return header(report) + 'issues: ' + toYamlArray(report.fileIssues, '  ');
-}
-
-function header(report: Report): string {
     const { summary: s, errors, repository } = report;
-    const h = `---
-Repository: ${repository?.path}
-Url: ${repository?.url}
-Args: ${JSON.stringify(repository?.args || [])}
-Summary:
-  files: ${s.files}
-  filesWithIssues: ${s.filesWithIssues}
-  issues: ${s.issues}
-  errors: ${s.errors}
-Errors: ${toYamlArray(errors, '  ')}
-`;
-    return h;
-}
+    const data = {
+        Repository: repository?.path,
+        Url: repository?.url,
+        Args: JSON.stringify(repository?.args || []),
+        Summary: {
+            files: s.files,
+            filesWithIssues: s.filesWithIssues,
+            issues: s.issues,
+            errors: s.errors,
+        },
+        Errors: errors,
+    };
+    const header = stringifyYaml(data, {
+        directives: true,
+    });
 
-function toYamlArray(lines: string[], indent: string): string {
-    if (!lines.length) return '[]\n';
-    const escapedLines = lines.map((a) => JSON.stringify(a)).map((a) => a.replace(/(?<!\\)\\t/g, '\t'));
-    const pfx = '\n' + indent + '- ';
-    return pfx + escapedLines.join(pfx) + '\n';
+    const issuesData = {
+        issues: report.fileIssues,
+    };
+    const issues = stringifyYaml(issuesData, {
+        lineWidth: 200,
+        defaultStringType: 'QUOTE_DOUBLE',
+        defaultKeyType: 'PLAIN',
+        doubleQuotedAsJSON: true,
+    });
+
+    const issuesSummary = report.issuesSummary?.length
+        ? stringifyYaml(
+              {
+                  issuesSummary: report.issuesSummary.map((issue) =>
+                      stringifyYaml(issue).replaceAll('\n', ', ').replaceAll(/\s+/g, ' ').trim(),
+                  ),
+              },
+              { lineWidth: 200 },
+          )
+        : '';
+
+    return [header, issues, issuesSummary].filter((a) => !!a).join('\n');
 }

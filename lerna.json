@@ -3,10 +3,10 @@
   "packages": [
     "./packages/*",
     "./rfc/*",
-    "./test-packages/*",
+    "./test-packages/*/*",
     "./integration-tests"
   ],
-  "version": "6.12.0",
+  "version": "8.17.1",
   "command": {
     "version": {
       "allowBranch": "main",

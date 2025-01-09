@@ -21,29 +21,34 @@
  * ```
  */
 
-import { opConcatMap, opFilter, pipe } from '@cspell/cspell-pipe/sync';
-import { genSequence, Sequence } from 'gensequence';
-import { trieNodeToRoot } from '../trie-util';
-import { FLAG_WORD, TrieNode, TrieRoot } from '../TrieNode';
-import { bufferLines } from '../utils/bufferLines';
+import { opAppend, opConcatMap, opFilter, pipe, reduce } from '@cspell/cspell-pipe/sync';
 
-const EOW = '$'; // End of word
-const BACK = '<'; // Move up the tree
-const EOL = '\n'; // End of Line (ignored)
-const LF = '\r'; // Line Feed (ignored)
-const REF = '#'; // Start absolute of Reference
-const REF_REL = '@'; // Start indexed of Reference
-const EOR = ';'; // End of Reference
-const ESCAPE = '\\';
+import { trieNodeToRoot } from '../TrieNode/trie-util.js';
+import type { TrieNode, TrieRoot } from '../TrieNode/TrieNode.js';
+import { FLAG_WORD } from '../TrieNode/TrieNode.js';
+import { bufferLines } from '../utils/bufferLines.js';
+import { BACK, EOL, EOR, EOW, ESCAPE, LF, REF, REF_REL } from './constants.js';
+
 const REF_INDEX_BEGIN = '[';
 const REF_INDEX_END = ']';
 const INLINE_DATA_COMMENT_LINE = '/';
 
 const specialCharacters = stringToCharSet(
-    [EOW, BACK, EOL, REF, REF_REL, EOR, ESCAPE, LF, REF_INDEX_BEGIN, REF_INDEX_END, INLINE_DATA_COMMENT_LINE]
-        .concat('0123456789'.split(''))
-        .concat('`~!@#$%^&*()_-+=[]{};:\'"<>,./?\\|'.split(''))
-        .join('')
+    [
+        EOW,
+        BACK,
+        EOL,
+        REF,
+        REF_REL,
+        EOR,
+        ESCAPE,
+        LF,
+        REF_INDEX_BEGIN,
+        REF_INDEX_END,
+        INLINE_DATA_COMMENT_LINE,
+        ...'0123456789',
+        ...'`~!@#$%^&*()_-+=[]{};:\'"<>,./?\\|',
+    ].join(''),
 );
 
 const SPECIAL_CHARACTERS_MAP = [
@@ -90,7 +95,7 @@ export interface ExportOptions {
 /**
  * Serialize a TrieRoot.
  */
-export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 16): Sequence<string> {
+export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 16): Iterable<string> {
     options = typeof options === 'number' ? { base: options } : options;
     const { base = 10, comment = '' } = options;
     const radix = base > 36 ? 36 : base < 10 ? 10 : base;
@@ -126,19 +131,22 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
 
     function* emit(s: string): Generator<string> {
         switch (s) {
-            case EOW:
+            case EOW: {
                 yield* flush();
                 backBuffer.last = EOW;
                 backBuffer.count = 0;
                 backBuffer.words++;
                 break;
-            case BACK:
+            }
+            case BACK: {
                 backBuffer.count++;
                 break;
-            case EOL:
+            }
+            case EOL: {
                 backBuffer.eol = true;
                 break;
-            default:
+            }
+            default: {
                 if (backBuffer.words >= WORDS_PER_LINE) {
                     backBuffer.eol = true;
                 }
@@ -147,6 +155,7 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
                     backBuffer.words++;
                 }
                 yield s;
+            }
         }
     }
 
@@ -166,7 +175,7 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
                 yield* emit(comment_begin + chars + comment_end);
             }
             cache.set(node, count++);
-            const c = [...node.c].sort((a, b) => (a[0] < b[0] ? -1 : 1));
+            const c = Object.entries(node.c).sort((a, b) => (a[0] < b[0] ? -1 : 1));
             for (const [s, n] of c) {
                 wordChars[depth] = s;
                 yield* emit(escape(s));
@@ -201,10 +210,10 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
         resolvedReferences
             .map((n) => n.toString(radix))
             .join(',')
-            .replace(/.{110,130}[,]/g, '$&\n') +
+            .replaceAll(/.{110,130}[,]/g, '$&\n') +
         '\n]\n';
 
-    return genSequence([generateHeader(radix, comment), reference]).concat(lines);
+    return pipe([generateHeader(radix, comment), reference], opAppend(lines));
 }
 
 interface ReferenceMap {
@@ -232,7 +241,7 @@ function buildReferenceMap(root: TrieRoot, base: number): ReferenceMap {
         }
         refCount.set(node, { c: 1, n: nodeCount++ });
         if (!node.c) return;
-        for (const child of node.c.values()) {
+        for (const child of Object.values(node.c)) {
             walk(child);
         }
     }
@@ -242,7 +251,7 @@ function buildReferenceMap(root: TrieRoot, base: number): ReferenceMap {
     const refCountAndNode = [
         ...pipe(
             refCount,
-            opFilter(([_, ref]) => ref.c >= 2)
+            opFilter(([_, ref]) => ref.c >= 2),
         ),
     ].sort((a, b) => b[1].c - a[1].c || a[1].n - b[1].n);
 
@@ -278,14 +287,14 @@ interface ReduceResults {
 type Reducer = (acc: ReduceResults, s: string) => ReduceResults;
 
 export function importTrie(linesX: Iterable<string> | string): TrieRoot {
-    linesX = typeof linesX === 'string' ? linesX.split(/(?<=\n)/) : linesX;
+    linesX = typeof linesX === 'string' ? linesX.split(/^/m) : linesX;
     let radix = 10;
     const comment = /^\s*#/;
     const iter = tapIterable(
         pipe(
             linesX,
-            opConcatMap((a) => a.split(/(?<=\n)(?!$)/))
-        )
+            opConcatMap((a) => a.split(/^/m)),
+        ),
     );
 
     function parseHeaderRows(headerRows: string[]) {
@@ -327,11 +336,11 @@ function parseStream(radix: number, iter: Iterable<string>): TrieRoot {
         function parser(acc: ReduceResults, s: string): ReduceResults {
             if (s === EOR || (radix === 10 && !(s in numbersSet))) {
                 const { root, nodes, stack } = acc;
-                const r = parseInt(ref, radix);
+                const r = Number.parseInt(ref, radix);
                 const top = stack[stack.length - 1];
                 const p = stack[stack.length - 2].node;
                 const n = isIndexRef ? refIndex[r] : r;
-                p.c?.set(top.s, nodes[n]);
+                p.c && (p.c[top.s] = nodes[n]);
                 const rr = { root, nodes, stack, parser: undefined };
                 return s === EOR ? rr : parserMain(rr, s);
             }
@@ -386,9 +395,10 @@ function parseStream(radix: number, iter: Iterable<string>): TrieRoot {
         const { root, nodes, stack } = acc;
         const top = stack[stack.length - 1];
         const node = top.node;
-        node.c = node.c ?? new Map<string, TrieNode>();
+        const c = node.c ?? Object.create(null);
         const n = { f: undefined, c: undefined, n: nodes.length };
-        node.c.set(s, n);
+        c[s] = n;
+        node.c = c;
         stack.push({ node: n, s });
         nodes.push(n);
         return { root, nodes, stack, parser };
@@ -403,7 +413,7 @@ function parseStream(radix: number, iter: Iterable<string>): TrieRoot {
         if (!node.c) {
             top.node = eow;
             const p = stack[stack.length - 2].node;
-            p.c?.set(top.s, eow);
+            p.c && (p.c[top.s] = eow);
             nodes.pop();
         }
         stack.pop();
@@ -415,7 +425,7 @@ function parseStream(radix: number, iter: Iterable<string>): TrieRoot {
         if (!(s in charactersBack)) {
             return parserMain({ ...acc, parser: undefined }, s);
         }
-        let n = s === BACK ? 1 : parseInt(s, 10) - 1;
+        let n = s === BACK ? 1 : Number.parseInt(s, 10) - 1;
         const { stack } = acc;
         while (n-- > 0) {
             stack.pop();
@@ -463,7 +473,10 @@ function parseStream(radix: number, iter: Iterable<string>): TrieRoot {
         function parser(acc: ReduceResults, s: string): ReduceResults {
             json = json + s;
             if (s === REF_INDEX_END) {
-                refIndex = JSON.parse(json) as number[];
+                refIndex = json
+                    .replaceAll(/[\s[\]]/g, '')
+                    .split(',')
+                    .map((n) => Number.parseInt(n, radix));
                 return { ...acc, parser: undefined };
             }
             return acc;
@@ -471,14 +484,19 @@ function parseStream(radix: number, iter: Iterable<string>): TrieRoot {
         return parserStart({ ...acc, parser: parserStart }, s);
     }
 
-    genSequence(iter)
-        .concatMap((a) => a.split(''))
-        .reduce(parserMain, {
+    reduce(
+        pipe(
+            iter,
+            opConcatMap((a) => [...a]),
+        ),
+        parserMain,
+        {
             nodes: [root],
             root,
             stack: [{ node: root, s: '' }],
             parser: parseReferenceIndex,
-        });
+        },
+    );
 
     return root;
 }
