@@ -1,22 +1,13 @@
-import { GenSuggestionOptions, SuggestionOptions } from './genSuggestionsOptions';
-import { parseDictionary } from '../SimpleDictionaryParser';
-import { Trie } from '../trie';
-import { cleanCopy } from '../utils/util';
-import * as Walker from './walker';
-import { genCompoundableSuggestions, genSuggestions, suggest } from './suggest';
-import {
-    compSuggestionResults,
-    isSuggestionResult,
-    suggestionCollector,
-    SuggestionCollectorOptions,
-} from './suggestCollector';
+import { describe, expect, test } from 'vitest';
 
-const defaultOptions: SuggestionCollectorOptions = {
-    numSuggestions: 10,
-    ignoreCase: undefined,
-    changeLimit: undefined,
-    timeout: undefined,
-};
+import { parseDictionaryLegacy } from '../SimpleDictionaryParser.js';
+import { Trie } from '../trie.js';
+import { cleanCopy } from '../utils/util.js';
+import * as Walker from '../walker/index.js';
+import type { GenSuggestionOptions, SuggestionOptions } from './genSuggestionsOptions.js';
+import { genCompoundableSuggestions, genSuggestions, suggest } from './suggest.js';
+import type { SuggestionCollectorOptions } from './suggestCollector.js';
+import { compSuggestionResults, isSuggestionResult, suggestionCollector } from './suggestCollector.js';
 
 describe('Validate Suggest', () => {
     const SEPARATE_WORDS: GenSuggestionOptions = { compoundMethod: Walker.CompoundWordsMethod.SEPARATE_WORDS };
@@ -37,6 +28,7 @@ describe('Validate Suggest', () => {
         const trie = Trie.create(sampleWords);
         // cspell:ignore tallk
         const results = suggest(trie.root, 'tallk');
+        // console.warn('%o', results);
         const suggestions = results.map((s) => s.word);
         expect(suggestions).toEqual(expect.arrayContaining(['talks']));
         expect(suggestions).toEqual(expect.arrayContaining(['talk']));
@@ -98,7 +90,7 @@ describe('Validate Suggest', () => {
             sugOpts({
                 numSuggestions: 3,
                 filter: (word) => word !== 'joyfully',
-            })
+            }),
         );
         collector.collect(genSuggestions(trie.root, collector.word));
         const suggestions = collector.suggestions.map((s) => s.word);
@@ -154,7 +146,7 @@ describe('Validate Suggest', () => {
     test('Tests the collector with filter', () => {
         const collector = suggestionCollector(
             'joyfull',
-            sugOpts({ numSuggestions: 3, filter: (word) => word !== 'joyfully' })
+            sugOpts({ numSuggestions: 3, filter: (word) => word !== 'joyfully' }),
         );
         collector.add({ word: 'joyfully', cost: 100 }).add({ word: 'joyful', cost: 100 });
         expect(collector.suggestions).toHaveLength(1);
@@ -163,7 +155,7 @@ describe('Validate Suggest', () => {
     test('Tests the collector with duplicate words of different costs', () => {
         const collector = suggestionCollector(
             'joyfull',
-            sugOpts({ numSuggestions: 3, filter: (word) => word !== 'joyfully' })
+            sugOpts({ numSuggestions: 3, filter: (word) => word !== 'joyfully' }),
         );
         collector.add({ word: 'joyful', cost: 100 });
         expect(collector.suggestions.length).toBe(1);
@@ -209,10 +201,10 @@ describe('Validate Suggest', () => {
         ${'Runningpod'}   | ${undefined} | ${5}           | ${1}         | ${[sr('Runningpod', 0), sr('runningpod', 1), sr('RunningPod', 1), sr('runningPod', 2)]}
         ${'runningpod'}   | ${undefined} | ${2}           | ${undefined} | ${[sr('runningpod', 0), sr('runningPod', 1)]}
         ${'walkingstick'} | ${undefined} | ${2}           | ${undefined} | ${[sr('walkingstick', 0), sr('talkingstick', 99)]}
-        ${'walkingtree'}  | ${undefined} | ${2}           | ${undefined} | ${[sr('talkingtree', 99), sr('walkingstick', 359)]}
+        ${'walkingtree'}  | ${undefined} | ${5}           | ${undefined} | ${[sr('talkingtree', 99), sr('walkingstick', 359), sr('walkingpod', 363), sr('walkingPod', 363), sr('walking', 372)]}
         ${'running'}      | ${undefined} | ${2}           | ${undefined} | ${[sr('running', 0), sr('Running', 1)]}
     `('suggestion results $word', ({ word, ignoreCase, numSuggestions, changeLimit, expected }) => {
-        const trie = parseDictionary(`
+        const trie = parseDictionaryLegacy(`
             walk
             Running*
             walking*
@@ -242,7 +234,7 @@ describe('Validate Suggest', () => {
         ${'free'}         | ${undefined} | ${2}           | ${2}        | ${[sr('tree', 99)]}
         ${'stock'}        | ${undefined} | ${2}           | ${2}        | ${[sr('stick', 97)]}
     `('suggestWithCost results $word', ({ word, ignoreCase, numSuggestions, changeLimit, expected }) => {
-        const trie = parseDictionary(`
+        const trie = parseDictionaryLegacy(`
             walk
             Running*
             walking*
@@ -273,7 +265,7 @@ describe('Validate Suggest', () => {
         ${'stock'}        | ${undefined} | ${2}           | ${2}        | ${[sr('stick', 97)]}
         ${'stretwise'}    | ${undefined} | ${2}           | ${2}        | ${[sr('streetwise', 95), sr('street•wise', 95)]}
     `('suggestWithCost and separator $word', ({ word, ignoreCase, numSuggestions, changeLimit, expected }) => {
-        const trie = parseDictionary(`
+        const trie = parseDictionaryLegacy(`
             walk
             Running*
             walking*
@@ -293,7 +285,7 @@ describe('Validate Suggest', () => {
             ignoreCase,
             changeLimit,
             compoundSeparator: '•',
-            timeout: 1000000,
+            timeout: 1_000_000,
         });
         expect(r).toEqual(expected);
     });
@@ -302,6 +294,13 @@ describe('Validate Suggest', () => {
 function numSugs(numSuggestions: number): SuggestionOptions {
     return { numSuggestions };
 }
+
+const defaultOptions: SuggestionCollectorOptions = {
+    numSuggestions: 10,
+    ignoreCase: undefined,
+    changeLimit: undefined,
+    timeout: undefined,
+};
 
 function sugOpts(opts: Partial<SuggestionCollectorOptions>): SuggestionCollectorOptions {
     return {

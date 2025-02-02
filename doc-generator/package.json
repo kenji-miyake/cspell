@@ -4,17 +4,17 @@
   "version": "1.0.0",
   "description": "Document Generation Tools and Scripts",
   "scripts": {
-    "build-cspell-types-docs": "rimraf ../docs/types/cspell-types && typedoc",
+    "build-cspell-types-docs": "shx rm -rf ../docs/types/cspell-types && typedoc",
     "test-build-docs": "typedoc --out ./temp/docs ",
     "test": "echo No tests needed."
   },
   "author": "",
   "license": "MIT",
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "dependencies": {
-    "typedoc": "^0.23.15",
-    "typedoc-plugin-markdown": "^3.13.6"
+    "typedoc": "^0.27.6",
+    "typedoc-plugin-markdown": "4.4.1"
   }
 }

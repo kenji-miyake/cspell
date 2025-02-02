@@ -1,55 +1,81 @@
 {
   "name": "@cspell/cspell-types",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
-  "version": "6.12.0",
+  "version": "8.17.3",
   "description": "Types for cspell and cspell-lib",
   "type": "commonjs",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./Parser": {
+      "import": "./dist/Parser/index.mjs",
+      "require": "./dist/Parser/index.js"
+    },
+    "./cspell.schema.json": {
+      "import": "./cspell.schema.json",
+      "require": "./cspell.schema.json"
+    },
+    "./ajv.config.js": {
+      "require": "./ajv.config.js"
+    }
+  },
+  "types": "index.d.ts",
   "typesVersions": {
     "*": {
-      "*": [
-        "dist/*"
+      "*.d.ts": [
+        "dist/*.d.ts"
+      ],
+      "*.d.mts": [
+        "dist/*.d.mts"
+      ],
+      "index.d.ts": [
+        "dist/index.d.ts"
       ],
       "dist/index.d.ts": [
         "dist/index.d.ts"
       ],
-      "index.d.ts": [
-        "dist/index.d.ts"
+      "Parser": [
+        "dist/Parser/index.d.ts"
+      ],
+      "*": [
+        "dist/*.d.ts",
+        "dist/*/index.d.ts"
       ]
     }
   },
-  "exports": {
-    ".": "./dist/index.js",
-    "./Parser": "./dist/Parser.js",
-    "./Parser.js": "./dist/Parser.js",
-    "./cspell.schema.json": "./cspell.schema.json",
-    "./ajv.config": "./ajv.config.js",
-    "./ajv.config.js": "./ajv.config.js"
-  },
   "scripts": {
-    "clean": "rimraf dist coverage .tsbuildinfo",
-    "build": "pnpm run compile && pnpm run build-schema",
-    "build-dev": "tsc -p tsconfig.dev.json",
-    "build-schema": "ts-json-schema-generator --no-top-ref --path src/CSpellSettingsDef.ts --type CSpellSettings --validation-keywords markdownDescription  --validation-keywords scope --validation-keywords deprecated --validation-keywords deprecationMessage -o  ./cspell.schema.json && cp ./cspell.schema.json ../..",
+    "clean": "shx rm -rf dist temp coverage \"*.tsbuildInfo\"",
+    "build": "pnpm build:tsc && pnpm build:tsup && pnpm run build-schema",
+    "build:tsc": "tsc -p tsconfig.json",
+    "build:tsup": "tsup-node --entry src/index.ts --entry src/Parser/index.ts --format cjs,esm  --dts --out-dir dist",
+    "build-schema": "pnpm build-cspell-schema",
     "clean-build": "pnpm run clean && pnpm run build",
-    "compile": "tsc -p .",
-    "test-schema": "ajv -s ./cspell.schema.json -d \"cspell.test.{json,yaml}\" -c ./ajv.config.js",
-    "test": "jest && pnpm run test-schema",
+    "coverage": "vitest run --coverage",
+    "test": "vitest run",
     "prepare": "echo Skip Building Types"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/streetsidesoftware/cspell.git"
+    "url": "https://github.com/streetsidesoftware/cspell.git",
+    "directory": "packages/cspell-types"
   },
   "files": [
     "dist",
     "ajv.config.js",
     "cspell.schema.json",
+    "!**/*.tsbuildInfo",
     "!**/__mocks__",
     "!**/*.test.*",
+    "!**/test/**",
+    "!**/test.*.*",
     "!**/*.spec.*",
     "!**/*.map"
   ],
@@ -60,13 +86,7 @@
   "author": "Jason Dent",
   "license": "MIT",
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
-  "devDependencies": {
-    "ajv-cli": "^5.0.0",
-    "jest": "^29.1.2",
-    "rimraf": "^3.0.2",
-    "ts-json-schema-generator": "^1.1.2",
-    "typescript": "^4.8.4"
-  }
+  "homepage": "https://github.com/streetsidesoftware/cspell/tree/main/packages/cspell-types#readme"
 }

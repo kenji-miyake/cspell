@@ -1,7 +1,8 @@
-import { autoCache, CacheStats, extractStats } from '../util/AutoCache';
-import { SearchOptions, SpellingDictionary } from './SpellingDictionary';
-import { SpellingDictionaryCollection } from './SpellingDictionaryCollection';
-import { canonicalSearchOptions } from './SpellingDictionaryMethods';
+import type { CacheStats } from '../util/AutoCache.js';
+import { autoCache, extractStats } from '../util/AutoCache.js';
+import type { PreferredSuggestion, SearchOptions, SpellingDictionary } from './SpellingDictionary.js';
+import type { SpellingDictionaryCollection } from './SpellingDictionaryCollection.js';
+import { canonicalSearchOptions } from './SpellingDictionaryMethods.js';
 
 interface CallStats {
     name: string;
@@ -9,9 +10,15 @@ interface CallStats {
     has: CacheStats;
     isNoSuggestWord: CacheStats;
     isForbidden: CacheStats;
+    getPreferredSuggestions: CacheStats;
 }
 
 let dictionaryCounter = 0;
+
+const DefaultAutoCacheSize = 1000;
+
+let logRequests = false;
+const log: LogEntry[] = [];
 
 /**
  * Caching Dictionary remembers method calls to increase performance.
@@ -23,27 +30,64 @@ export interface CachingDictionary {
     isNoSuggestWord(word: string): boolean;
     isForbidden(word: string): boolean;
     stats(): CallStats;
+    getPreferredSuggestions(word: string): PreferredSuggestion[] | undefined;
 }
+
+interface LogEntryBase extends SearchOptions {
+    time: number;
+    method: 'has';
+    word: string;
+    value?: unknown;
+}
+
+interface LogEntryHas extends LogEntryBase {
+    method: 'has';
+    value: boolean;
+}
+
+const startTime = performance.now();
+
+export type LogEntry = LogEntryHas;
 
 class CachedDict implements CachingDictionary {
     readonly name: string;
     readonly id = ++dictionaryCounter;
-    constructor(private dict: SpellingDictionary, private options: SearchOptions) {
+    constructor(
+        private dict: SpellingDictionary,
+        private options: SearchOptions,
+    ) {
         this.name = dict.name;
         // console.log(`CachedDict for ${this.name}`);
     }
 
-    readonly has = autoCache((word: string) => this.dict.has(word, this.options));
-    readonly isNoSuggestWord = autoCache((word: string) => this.dict.isNoSuggestWord(word, this.options));
-    readonly isForbidden = autoCache((word: string) => this.dict.isForbidden(word));
+    #has = autoCache((word: string) => this.dict.has(word, this.options), DefaultAutoCacheSize);
+    has = logRequests
+        ? (word: string): boolean => {
+              const time = performance.now() - startTime;
+              const value = this.#has(word);
+              log.push({ time, method: 'has', word, value });
+              return value;
+          }
+        : this.#has;
+
+    readonly isNoSuggestWord = autoCache(
+        (word: string) => this.dict.isNoSuggestWord(word, this.options),
+        DefaultAutoCacheSize,
+    );
+    readonly isForbidden = autoCache((word: string) => this.dict.isForbidden(word), DefaultAutoCacheSize);
+    readonly getPreferredSuggestions = autoCache(
+        (word: string) => this.dict.getPreferredSuggestions?.(word),
+        DefaultAutoCacheSize,
+    );
 
     stats(): CallStats {
         return {
             name: this.name,
             id: this.id,
-            has: extractStats(this.has),
+            has: extractStats(this.#has),
             isNoSuggestWord: extractStats(this.isNoSuggestWord),
             isForbidden: extractStats(this.isForbidden),
+            getPreferredSuggestions: extractStats(this.getPreferredSuggestions),
         };
     }
 }
@@ -58,7 +102,7 @@ const knownDicts = new Map<SearchOptions, WeakMap<SpellingDictionary, CachingDic
  */
 export function createCachingDictionary(
     dict: SpellingDictionary | SpellingDictionaryCollection,
-    options: SearchOptions
+    options: SearchOptions,
 ): CachingDictionary {
     options = canonicalSearchOptions(options);
     let knownOptions = knownDicts.get(options);
@@ -73,4 +117,12 @@ export function createCachingDictionary(
 
     knownOptions.set(dict, cached);
     return cached;
+}
+
+export function enableLogging(enabled = !logRequests): void {
+    logRequests = enabled;
+}
+
+export function getLog(): LogEntryBase[] {
+    return log;
 }

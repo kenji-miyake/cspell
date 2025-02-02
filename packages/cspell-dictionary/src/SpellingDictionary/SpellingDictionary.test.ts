@@ -1,8 +1,10 @@
-import { __testMethods__ } from './SpellingDictionaryMethods';
-import { createSpellingDictionary } from './createSpellingDictionary';
-import { SpellingDictionaryFromTrie } from './SpellingDictionaryFromTrie';
-import { Trie } from 'cspell-trie-lib';
-import { SpellingDictionaryOptions } from '.';
+import { buildITrieFromWords } from 'cspell-trie-lib';
+import { describe, expect, test } from 'vitest';
+
+import { createSpellingDictionary } from './createSpellingDictionary.js';
+import type { SpellingDictionaryOptions } from './SpellingDictionary.js';
+import { SpellingDictionaryFromTrie } from './SpellingDictionaryFromTrie.js';
+import { __testMethods__ } from './SpellingDictionaryMethods.js';
 
 // cSpell:ignore aple
 
@@ -55,7 +57,7 @@ describe('Verify building Dictionary', () => {
             'test',
             opts({
                 caseSensitive: true,
-            })
+            }),
         );
         const ignoreCase = { ignoreCase: true };
         const useCase = { ignoreCase: false };
@@ -94,7 +96,7 @@ describe('Verify building Dictionary', () => {
             'battles',
             'tattles',
         ];
-        const trie = Trie.create(words);
+        const trie = buildITrieFromWords(words);
         const dict = new SpellingDictionaryFromTrie(trie, 'trie', opts());
         // cspell:ignore cattles
         const results = dict.suggest('Cattles');
@@ -109,7 +111,6 @@ describe('Verify building Dictionary', () => {
 
         const dict = await createSpellingDictionary(words as string[], 'words', 'test', opts());
         expect(dict.name).toBe('words');
-        // expect(dict).toBeInstanceOf(SpellingDictionaryFromTrie);
         expect(dict.has('apple')).toBe(true);
         const suggestions = dict.suggest('aple').map(({ word }) => word);
         expect(suggestions).toEqual(expect.arrayContaining(['apple']));

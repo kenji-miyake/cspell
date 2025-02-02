@@ -1,12 +1,19 @@
-import { normalizeOutput } from './normalizeOutput';
+import { vi } from 'vitest';
+
+import { normalizeOutput } from './normalizeOutput.js';
 
 export function spyOnConsole() {
-    const log = jest.spyOn(console, 'log').mockImplementation();
-    const error = jest.spyOn(console, 'error').mockImplementation();
+    const con = {
+        log: vi.spyOn(console, 'log').mockImplementation(() => undefined),
+        error: vi.spyOn(console, 'error').mockImplementation(() => undefined),
+        consoleOutput,
+        attach,
+        reset,
+    };
 
     function consoleOutput() {
-        const _error = error.mock.calls.map((c) => c.join(',')).join('\n');
-        const _log = log.mock.calls.map((c) => c.join(',')).join('\n');
+        const _error = con.error.mock.calls.map((c) => c.join(',')).join('\n');
+        const _log = con.log.mock.calls.map((c) => c.join(',')).join('\n');
 
         return {
             log: normalizeOutput(_log),
@@ -14,9 +21,20 @@ export function spyOnConsole() {
         };
     }
 
+    function attach() {
+        reset();
+        con.log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+        con.error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    }
+
+    function reset() {
+        con.log.mockRestore();
+        con.error.mockRestore();
+    }
+
     return {
-        log,
-        error,
         consoleOutput,
+        attach,
+        reset,
     };
 }

@@ -1,7 +1,10 @@
-import { parser } from './TypeScriptParser';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import { ParseResult } from '@cspell/cspell-types/Parser';
+import { promises as fs } from 'node:fs';
+import * as path from 'node:path';
+
+import type { ParseResult } from '@cspell/cspell-types/Parser';
+import { describe, expect, test } from 'vitest';
+
+import { parser } from './TypeScriptParser.js';
 
 const fixtures = path.join(__dirname, '../../../fixtures');
 
@@ -22,7 +25,7 @@ describe('TypeScript Parser', () => {
 });
 
 function readSample(filename: string): Promise<string> {
-    return fs.readFile(path.resolve(fixtures, filename), 'utf-8');
+    return fs.readFile(path.resolve(fixtures, filename), 'utf8');
 }
 
 function stringifyResult(result: ParseResult): string {

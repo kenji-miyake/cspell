@@ -1,4 +1,6 @@
-import { mapRawString } from './typescript';
+import { describe, expect, test } from 'vitest';
+
+import { mapRawString } from './typescript.js';
 
 describe('mappers typescript', () => {
     // cspell:ignore Fingerspitzengef Fingerspitzengefühl ˈfɪŋɐˌʃpɪtsənɡəˌfyːl
@@ -28,7 +30,7 @@ describe('mappers typescript', () => {
         ${'hello'}              | ${'hello'}
         ${'caf\\xe9'}           | ${'café'}
         ${'caf\\u00e9'}         | ${'café'}
-        ${'hello\\x20there'}    | ${'hello\x20there'}
+        ${'hello\\x20there'}    | ${'hello\u0020there'}
         ${'hello\\u0020there'}  | ${'hello\u0020there'}
         ${'hello\\u{020}there'} | ${'hello\u{020}there'}
         ${'a\\tb'}              | ${'a\tb'}
@@ -70,8 +72,16 @@ describe('mappers typescript', () => {
 });
 
 function toCharCodes(s: string): string {
-    return s
-        .split('')
-        .map((a) => ('000' + a.charCodeAt(0).toString(16)).slice(-4))
+    return toCharCodesNumber(s)
+        .map((c) => ('000' + c.toString(16)).slice(-4))
         .join(', ');
+}
+
+function toCharCodesNumber(s: string): number[] {
+    const codes: number[] = [];
+    for (let i = 0; i < s.length; ++i) {
+        // eslint-disable-next-line unicorn/prefer-code-point
+        codes.push(s.charCodeAt(i));
+    }
+    return codes;
 }

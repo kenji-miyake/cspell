@@ -1,26 +1,30 @@
-import { check } from './check';
-import { addRepository, listRepositories, ListRepositoryOptions } from './repositoryHelper';
-import { createCommand } from 'commander';
-import * as commander from 'commander';
-import os from 'os';
+import os from 'node:os';
+import path from 'node:path';
+
+import type { Command } from 'commander';
+import { createCommand, InvalidArgumentError } from 'commander';
+
+import { check } from './check.js';
+import type { ListRepositoryOptions } from './repositoryHelper.js';
+import { addRepository, listRepositories } from './repositoryHelper.js';
 
 const defaultParallel = Math.max(os.cpus().length / 2, 1);
 
 function processParallelArg(value: string): number {
-    const v = parseInt(value, 10);
+    const v = Number.parseInt(value, 10);
     return v < 1 ? defaultParallel : v;
 }
 
 function validateParallelArg(value: string) {
     // parseInt takes a string and a radix
-    const parsedValue = parseInt(value, 10);
-    if (isNaN(parsedValue) || parsedValue < 1) {
-        throw new commander.InvalidArgumentError('Must be a number >= 1');
+    const parsedValue = Number.parseInt(value, 10);
+    if (Number.isNaN(parsedValue) || parsedValue < 1) {
+        throw new InvalidArgumentError('Must be a number >= 1');
     }
     return value;
 }
 
-function run(program: commander.Command) {
+function run(program: Command) {
     program
         .command('check')
         .argument('[patterns...]', 'Only check repositories whose name contain the pattern.')
@@ -28,13 +32,17 @@ function run(program: commander.Command) {
         .option('-u, --update-snapshots', 'Update Snapshots', false)
         .option('-f, --fail', 'Fail on first error.', false)
         .option('-x, --exclude <exclusions...>', 'Exclusions patterns.')
-        .option('-t, --githubToken <token>', 'GitHub Personal Access Token')
+        .option(
+            '-t, --githubToken <token>',
+            'GitHub Personal Access Token. Can also be set via the environment variable GITHUB_TOKEN. Example: -t $(gh auth token)',
+        )
         .option(
             '-p, --parallelLimit <number>',
             'Max number of parallel checks.',
             validateParallelArg,
-            `${defaultParallel}`
+            `${defaultParallel}`,
         )
+        .option('--cpu-prof', 'Enable NodeJS CPU Profiling')
         .description('Run the integration tests, checking the spelling results against the various repositories')
         .action(
             (
@@ -46,18 +54,20 @@ function run(program: commander.Command) {
                     exclude?: string[];
                     parallelLimit: string;
                     githubToken?: string | undefined;
-                }
+                    cpuProf?: boolean;
+                },
             ) => {
                 const {
                     updateRepositories: update = false,
                     fail = false,
                     exclude = [],
                     updateSnapshots = false,
+                    cpuProf = false,
                 } = options;
                 const parallelLimit = processParallelArg(options.parallelLimit);
                 registerToken(options.githubToken);
-                return check(patterns || [], { update, updateSnapshots, fail, exclude, parallelLimit });
-            }
+                return check(patterns || [], { update, updateSnapshots, fail, exclude, parallelLimit, cpuProf });
+            },
         );
 
     interface ListOptions extends Omit<ListRepositoryOptions, 'exclude' | 'patterns'> {
@@ -92,7 +102,7 @@ function run(program: commander.Command) {
         .description(
             'Add a repository to be checked.\n' +
                 '  Example: add "https://github.com/streetsidesoftware/cspell.git".\n' +
-                '  Note: to adjust the arguments, the configuration is found in `config/config.json`'
+                '  Note: to adjust the arguments, the configuration is found in `config/config.json`',
         )
         .action(async (url: string, options: { branch?: string; githubToken?: string | undefined }) => {
             registerToken(options.githubToken);
@@ -110,5 +120,7 @@ function registerToken(token: string | undefined) {
 const cmd = createCommand('tester').description(`Validate CSpell results against various GitHub repositories.
 Note: A GitHub Personal Access Token is needed.
   This can be supplied as a command line option or in the $GITHUB_TOKEN environment variable.
+  \`gh\` can be used to supply the token:
+  GITHUB_TOKEN=$(gh auth token) node ./${path.basename(process.argv[1])}
 `);
 run(cmd);

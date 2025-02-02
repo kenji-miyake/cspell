@@ -1,0 +1,30 @@
+{
+  "name": "test-cspell-cli",
+  "version": "8.17.3",
+  "description": "cli for cspell",
+  "private": "true",
+  "type": "module",
+  "bin": {
+    "cspell-cli": "bin.mjs",
+    "cspell-cli-esm": "bin.mjs"
+  },
+  "scripts": {
+    "test": "node ./bin.mjs ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streetsidesoftware/cspell-cli.git"
+  },
+  "keywords": [
+    "cspell"
+  ],
+  "author": "Jason Dent",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/streetsidesoftware/cspell-cli/issues"
+  },
+  "homepage": "https://github.com/streetsidesoftware/cspell-cli#readme",
+  "dependencies": {
+    "cspell": "workspace:*"
+  }
+}

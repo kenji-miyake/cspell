@@ -1,5 +1,5 @@
-import { GrammarDef, Pattern, Repository } from '..';
-import {
+import type { GrammarDef, Pattern, Repository } from '../parser/index.js';
+import type {
     Captures,
     PatternBeginEnd,
     PatternInclude,
@@ -7,8 +7,8 @@ import {
     PatternMatch,
     PatternName,
     PatternPatterns,
-} from './grammarDefinition';
-import {
+} from './grammarDefinition.js';
+import type {
     GrammarRule,
     MatchRuleResult,
     NCaptures,
@@ -24,11 +24,12 @@ import {
     NScope,
     NScopeSource,
     Rule,
-} from './grammarNormalized';
-import { isPatternBeginEnd, isPatternInclude, isPatternMatch, isPatternPatterns } from './grammarTypesHelpers';
-import { createMatchResult, createSimpleMatchResult } from './matchResult';
-import { Scope, ScopePool } from './scope';
-import type { LineOffsetAnchored, MatchResult } from './types';
+} from './grammarNormalized.js';
+import { isPatternBeginEnd, isPatternInclude, isPatternMatch, isPatternPatterns } from './grammarTypesHelpers.js';
+import { createMatchResult, createSimpleMatchResult } from './matchResult.js';
+import type { Scope } from './scope.js';
+import { ScopePool } from './scope.js';
+import type { LineOffsetAnchored, MatchResult } from './types.js';
 
 export function normalizeGrammar(grammar: GrammarDef): NGrammar {
     return new ImplNGrammar(grammar);
@@ -207,7 +208,7 @@ function factoryRuleBase(
     repository: NRepository,
     grammar: NGrammar,
     findNext: (this: Rule, line: LineOffsetAnchored) => MatchRuleResult | undefined,
-    end: (this: Rule, line: LineOffsetAnchored) => MatchResult | undefined
+    end: (this: Rule, line: LineOffsetAnchored) => MatchResult | undefined,
 ): GrammarRule;
 function factoryRuleBase(
     parent: Rule | undefined,
@@ -215,7 +216,7 @@ function factoryRuleBase(
     repository: NRepository,
     grammar: NGrammar,
     findNext?: (this: Rule, line: LineOffsetAnchored) => MatchRuleResult | undefined,
-    end?: (this: Rule, line: LineOffsetAnchored) => MatchResult | undefined
+    end?: (this: Rule, line: LineOffsetAnchored) => MatchResult | undefined,
 ): Rule;
 function factoryRuleBase(
     parent: Rule | undefined,
@@ -223,7 +224,7 @@ function factoryRuleBase(
     repository: NRepository,
     grammar: NGrammar,
     findNext?: (this: Rule, line: LineOffsetAnchored) => MatchRuleResult | undefined,
-    end?: (this: Rule, line: LineOffsetAnchored) => MatchResult | undefined
+    end?: (this: Rule, line: LineOffsetAnchored) => MatchResult | undefined,
 ): Rule {
     const depth = parent ? parent.depth + 1 : 0;
     return {
@@ -242,7 +243,7 @@ function factoryRule(
     parent: Rule,
     pattern: NPattern,
     findNext?: (this: Rule, line: LineOffsetAnchored) => MatchRuleResult | undefined,
-    end?: (this: Rule, line: LineOffsetAnchored) => MatchResult | undefined
+    end?: (this: Rule, line: LineOffsetAnchored) => MatchResult | undefined,
 ): Rule {
     return factoryRuleBase(parent, pattern, parent.repository, parent.grammar, findNext, end);
 }

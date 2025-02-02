@@ -1,4 +1,4 @@
-name: " 🖇 Update Integration Test Repositories"
+name: ' 🖇 Update Integration Test Repositories'
 
 on:
   workflow_dispatch:
@@ -7,17 +7,16 @@ on:
         description: Branch or hash
         required: false
   schedule:
-    - cron: "0 8 * * 1" # Monday at 8 UTC
+    - cron: '0 8 * * 1' # Monday at 8 UTC
 
 permissions:
   contents: read
 
 env:
-  NEW_BRANCH: "update-integration-repositories"
+  NEW_BRANCH: 'update-integration-repositories'
   REF_BRANCH_G: main
   RUNS_ON: ubuntu-latest
-  NODE_VERSION: "16.x"
-  NPM_VERSION: "8"
+  NODE_VERSION: '18.x'
 
 jobs:
   calc-ref:
@@ -41,7 +40,7 @@ jobs:
   build:
     needs:
       - calc-ref
-    uses: "./.github/workflows/reuseable-build-dist-cache.yml"
+    uses: './.github/workflows/reuseable-build-dist-cache.yml'
     with:
       ref: ${{ needs.calc-ref.outputs.ref }}
 
@@ -74,31 +73,31 @@ jobs:
           echo "path: ${{ needs.build.outputs.path }}"
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ env.REF_BRANCH }}
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.2
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - run: pnpm -v
 
       - name: Cache Build
         id: step-cache-build
-        uses: actions/cache@v3
+        uses: actions/cache@v4.2.0
         with:
           key: ${{ needs.build.outputs.key }}
           path: ${{ needs.build.outputs.path }}
 
       - name: Cached Results
         run: |
-          echo Build Cache: ${{ steps.step-cache-build.outputs.cache-hit && 'Hit' || 'Miss' }}
+          echo Build Cache: ${{ steps.step-cache-build.outputs.cache-hit == 'true' && 'Hit' || 'Miss' }}
 
       - name: pnpm CI
         run: pnpm i
@@ -110,11 +109,10 @@ jobs:
           cat /home/runner/.pnpm/_logs/*.log
 
       - name: Check Build
-        if: ${{ !steps.step-cache-build.outputs.cache-hit }}
+        if: ${{ steps.step-cache-build.outputs.cache-hit != 'true' }}
         run: exit 1
 
       - name: Run Integration Tests ${{ matrix.repo }}
-        if: ${{ !steps.step-cache-run.outputs.cache-hit }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
@@ -122,17 +120,27 @@ jobs:
           && pnpm i
           && pnpm run update-repositories -- ${{ matrix.repo }}
 
+      - name: Normalize Repo Name
+        id: step-normalize-repo-name
+        env:
+          REPO: ${{ matrix.repo }}
+          REPLACE: '/'
+          REPLACE_WITH: '__'
+        run: |
+          echo "REPO_NAME=${REPO//${REPLACE}/${REPLACE_WITH}}" >> $GITHUB_OUTPUT
+
       - name: Store Repo Diff
         id: step-repo-info
+        env:
+          REPO: ${{ steps.step-normalize-repo-name.outputs.REPO_NAME }}
         run: |
           mkdir temp
-          REPO=$(echo "${{ matrix.repo }}" | sed "s/[/]/__/g")
           echo "${{ matrix.repo }} =>" $REPO
           git diff > temp/$REPO.diff
       - name: store diff
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: diffs
+          name: diffs-repo-${{ steps.step-normalize-repo-name.outputs.REPO_NAME }}
           path: temp/*.diff
           retention-days: 1
 
@@ -149,34 +157,33 @@ jobs:
       base: ${{ env.REF_BRANCH }}
       body: |
         ## Update Integration Repositories
-      commit-message: "ci: Workflow Bot -- Update Integration Snapshots"
-      branch: ${{ env.NEW_BRANCH }}
-      title: "ci: Workflow Bot -- Update Integration Snapshots (${{ env.REF_BRANCH }})"
+      commit-message: 'ci: Workflow Bot -- Update Integration Snapshots'
+      branch: ${{ env.NEW_BRANCH }}-${{ env.REF_BRANCH }}
+      title: 'ci: Workflow Bot -- Update Integration Snapshots (${{ env.REF_BRANCH }})'
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ env.REF_BRANCH }}
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.2
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: restore repos
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: diffs
+          pattern: diffs-*
+          merge-multiple: true
           path: temp
       - name: show downloaded
         run: ls -alF temp
-      - name: show diff
-        run: cat temp/*.diff
 
       - name: apply diff
         run: git apply --allow-empty temp/*.diff
@@ -190,7 +197,7 @@ jobs:
           git --no-pager diff > temp/patch.diff
 
       - name: Store Patch
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: patch
           path: temp/patch.diff

@@ -1,26 +1,25 @@
-name: " 🚀 Create Version Release"
+name: ' 🚀 Publish: 1. Create Version Release'
 
 on:
   workflow_dispatch:
     inputs:
       bump:
-        description: "Version Bump"
+        description: 'Version Bump'
         type: choice
         options:
-          - "alpha"
-          - "patch"
-          - "minor"
-          - "auto"
-        default: "auto"
+          - 'patch'
+          - 'minor'
+          - 'major'
+          - 'auto'
+        default: 'auto'
         required: true
+      prerelease:
+        type: boolean
+        description: Prerelease
       dry_run:
-        description: "Dry Run"
-        type: choice
-        options:
-          - "yes"
-          - "no"
-        default: "yes"
-        required: false
+        description: 'Dry Run'
+        type: boolean
+        default: true
 
   workflow_call:
     secrets:
@@ -31,15 +30,26 @@ permissions:
   contents: read
 
 env:
-  USE_NEXT: ${{ inputs.bump == 'alpha' }}
-  BUMP: ${{ (inputs.bump != 'auto' && inputs.bump != 'alpha' && inputs.bump) || '' }}
-  DRY_RUN: ${{ (inputs.dry_run == 'yes' && '--git-dry-run') || '' }}
+  USE_NEXT: ${{ inputs.prerelease }}
+  BUMP: ${{ (inputs.bump != 'auto' && inputs.prerelease && 'pre') || '' }}${{ (inputs.bump != 'auto' && inputs.bump) || '' }}
+  DRY_RUN: ${{ (inputs.dry_run && '--dry-run') || '' }}
 
 jobs:
   release_version:
     runs-on: ubuntu-latest
     steps:
-      - uses: tibdex/github-app-token@f717b5ecd4534d3c4df4ce9b5c1c2214f0f7cd06 # v1.5 # cspell:ignore tibdex
+      - name: Show Inputs
+        env:
+          INPUTS: ${{ toJSON(inputs) }}
+
+        run: |
+          echo "$INPUTS"
+          echo USE_NEXT: "$USE_NEXT"
+          echo BUMP: "$BUMP"
+          echo DRY_RUN: "$DRY_RUN"
+
+      - uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        # cspell:ignore tibdex
         if: ${{ !env.DRY_RUN && !inputs.token }}
         id: generate-token
         with:
@@ -52,18 +62,18 @@ jobs:
         run: echo GITHUB_TOKEN=$GITHUB_TOKEN >> $GITHUB_ENV
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ env.GITHUB_TOKEN }} # needed to trigger workflows
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.2
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
-          registry-url: "https://registry.npmjs.org"
+          node-version: 18
+          registry-url: 'https://registry.npmjs.org'
           cache: pnpm
 
       - name: Version
@@ -73,8 +83,8 @@ jobs:
       - name: Mode
         env:
           MODE: >
-            ${{ (env.USE_NEXT == 'true' && '--conventional-prerelease')
-            || (contains(env.VERSION, 'alpha') && '--conventional-graduate')
+            ${{ (env.USE_NEXT == 'true' && '"--conventional-prerelease=*"')
+            || (contains(env.VERSION, 'alpha') && '"--conventional-graduate=*"')
             || ''
             }}
         run: |
@@ -89,5 +99,10 @@ jobs:
       - name: Install
         run: pnpm i
 
+      # - name: Debug
+      #   run: |
+      #     pnpx envinfo --system --npmPackages '@lerna-lite/*' --binaries --browsers
+
       - name: Push Version
-        run: pnpm lerna version --conventional-commits --sync-workspace-lock --yes ${{ env.MODE }} ${{ env.DRY_RUN }} ${{ env.BUMP }}
+        run: pnpm lerna version ${{ env.BUMP }} --conventional-commits --sync-workspace-lock --changelog-preset conventionalcommits --yes ${{ env.MODE }} ${{ env.DRY_RUN }}
+# cspell:ignore pnpx envinfo conventionalcommits

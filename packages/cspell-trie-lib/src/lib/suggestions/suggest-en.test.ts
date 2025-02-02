@@ -1,33 +1,42 @@
-import { readRawDictionaryFile, readTrie } from '../../test/dictionaries.test.helper';
-import { genCompoundableSuggestions, suggest } from './suggest';
-import { suggestionCollector, SuggestionCollectorOptions, SuggestionResult } from './suggestCollector';
-import { createTimer } from '../utils/timer';
-import { CompoundWordsMethod } from './walker';
-import { clean } from '../trie-util';
-import { DictionaryInformation } from '../models/DictionaryInformation';
-import { mapDictionaryInformationToWeightMap, WeightMap } from '..';
-import assert from 'assert';
-import { SuggestionOptions } from './genSuggestionsOptions';
+import assert from 'node:assert';
+
+import { describe, expect, test } from 'vitest';
+
+import { readRawDictionaryFile, readTrieFromConfig } from '../../test/dictionaries.test.helper.js';
+import type { WeightMap } from '../distance/index.js';
+import { mapDictionaryInformationToWeightMap } from '../mappers/mapDictionaryInfoToWeightMap.js';
+import type { DictionaryInformation } from '../models/DictionaryInformation.js';
+import { clean } from '../utils/clean.js';
+import { startTimer } from '../utils/timer.js';
+import { CompoundWordsMethod } from '../walker/index.js';
+import type { SuggestionOptions } from './genSuggestionsOptions.js';
+import { genCompoundableSuggestions, suggest } from './suggest.js';
+import type { SuggestionCollectorOptions } from './suggestCollector.js';
+import { suggestionCollector } from './suggestCollector.js';
+import type { SuggestionResult } from './SuggestionTypes.js';
 
 function getTrie() {
-    return readTrie('@cspell/dict-en_us/cspell-ext.json');
+    return readTrieFromConfig('@cspell/dict-en_us/cspell-ext.json');
 }
 
-const timeout = 10000;
+const timeout = 10_000;
 
 interface ExpectedSuggestion extends Partial<SuggestionResult> {
     word: string;
 }
 
-const ac = expect.arrayContaining;
+const ac = <T>(a: Array<T>) => expect.arrayContaining(a);
 
 const pAffContent = readRawDictionaryFile('hunspell/en_US.aff');
 
 let affContent: string | undefined;
 
-const pReady = Promise.all([pAffContent.then((aff) => (affContent = aff))]).then(() => {
-    return undefined;
-});
+const pReady = pAffContent
+    .then((aff) => (affContent = aff))
+    .then(() => {
+        return undefined;
+    })
+    .catch(() => undefined);
 
 describe('Validate English Suggestions', () => {
     interface WordSuggestionsTest {
@@ -65,7 +74,7 @@ describe('Validate English Suggestions', () => {
             expect(suggestions).toEqual(expect.arrayContaining(['joyful']));
             expect(suggestions[0]).toBe('joyful');
         },
-        timeout
+        timeout,
     );
 
     test(
@@ -82,7 +91,7 @@ describe('Validate English Suggestions', () => {
             expect(suggestions[1]).toBe('joyful');
             expect(suggestions).toHaveLength(collector.maxNumSuggestions);
         },
-        timeout
+        timeout,
     );
 
     test(
@@ -98,7 +107,7 @@ describe('Validate English Suggestions', () => {
             expect(suggestions[0]).toBe('one two three four');
             expect(suggestions).toHaveLength(collector.maxNumSuggestions);
         },
-        timeout
+        timeout,
     );
 
     test(
@@ -113,7 +122,7 @@ describe('Validate English Suggestions', () => {
             expect(suggestions).toEqual(expect.arrayContaining(['one+two+three+four']));
             expect(suggestions).toHaveLength(collector.maxNumSuggestions);
         },
-        timeout
+        timeout,
     );
 
     test(
@@ -128,7 +137,7 @@ describe('Validate English Suggestions', () => {
             expect(suggestions).toEqual(expect.arrayContaining(['one+two+three+four']));
             expect(suggestions).toHaveLength(collector.maxNumSuggestions);
         },
-        timeout
+        timeout,
     );
 
     // Takes a long time.
@@ -145,7 +154,7 @@ describe('Validate English Suggestions', () => {
             expect(suggestions).toEqual(['tests compute suggestions', 'test compute suggestions']);
             expect(suggestions[0]).toBe('tests compute suggestions');
         },
-        timeout
+        timeout,
     );
 
     // Takes a long time.
@@ -162,7 +171,7 @@ describe('Validate English Suggestions', () => {
             expect(suggestions).toEqual(expect.arrayContaining(['tests compound suggestions']));
             expect(suggestions[0]).toBe('tests compound suggestions');
         },
-        timeout
+        timeout,
     );
 
     test(
@@ -172,12 +181,12 @@ describe('Validate English Suggestions', () => {
             const trie = await getTrie();
             // cspell:ignore testscompundsuggestions
             const collector = suggestionCollector('testscompundsuggestions', opts(1, undefined, 3));
-            const timer = createTimer();
+            const timer = startTimer();
             collector.collect(genCompoundableSuggestions(trie.root, collector.word, SEPARATE_WORDS), suggestionTimeout);
-            const elapsed = timer.elapsed();
+            const elapsed = timer();
             expect(elapsed).toBeLessThan(suggestionTimeout * 4);
         },
-        timeout
+        timeout,
     );
 
     test.each`
@@ -203,7 +212,7 @@ function opts(
     filter?: SuggestionCollectorOptions['filter'],
     changeLimit?: number,
     includeTies?: boolean,
-    ignoreCase?: boolean
+    ignoreCase?: boolean,
 ): SuggestionCollectorOptions {
     return clean({
         numSuggestions,

@@ -51,7 +51,7 @@ jobs:
       #     echo "$INPUT"
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ env.REF_BRANCH }}
 
@@ -82,7 +82,8 @@ jobs:
         run: |
           echo "$git_body"
 
-      - uses: tibdex/github-app-token@f717b5ecd4534d3c4df4ce9b5c1c2214f0f7cd06 # v1.5 # cspell:ignore tibdex
+      - uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        # cspell:ignore tibdex
         if: env.git_status == 'dirty'
         id: generate-token
         with:
@@ -91,7 +92,7 @@ jobs:
 
       - name: Create Pull Request
         if: env.git_status == 'dirty'
-        uses: peter-evans/create-pull-request@671dc9c9e0c2d73f07fa45a3eb0220e1622f0c5f # v4
+        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v4
         with:
           commit-message: ${{ inputs.commit-message }}
           branch: ${{ inputs.branch }}

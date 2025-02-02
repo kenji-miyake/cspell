@@ -1,21 +1,61 @@
-import { CSpellSettings } from '@cspell/cspell-types';
-import { Serializer } from './Serializer';
+import type { CSpellSettings } from '@cspell/cspell-types';
 
-export interface CSpellConfigFile {
-    readonly uri: string;
-    readonly settings: CSpellSettings;
-    serialize(): string;
-    addWords(words: string[]): this;
+export interface CSpellConfigFileReference {
+    readonly url: URL;
 }
 
-export class ImplCSpellConfigFile implements CSpellConfigFile {
-    constructor(readonly uri: string, readonly settings: CSpellSettings, readonly serializer: Serializer) {}
+export interface ICSpellConfigFile {
+    /**
+     * The url of the config file, used to resolve imports.
+     */
+    readonly url: URL;
+    /**
+     * The settings from the config file.
+     */
+    readonly settings: CSpellSettings;
+    /**
+     * Indicate that the config file is readonly.
+     */
+    readonly?: boolean;
+    /**
+     * Indicate that the config file is virtual and not associated with a file on disk.
+     */
+    virtual?: boolean;
+    /**
+     * Indicate that the config file is remote and not associated with a file on disk.
+     */
+    remote?: boolean;
+}
 
-    serialize(): string {
-        return this.serializer(this.settings);
+export abstract class CSpellConfigFile implements ICSpellConfigFile {
+    constructor(readonly url: URL) {}
+
+    abstract readonly settings: CSpellSettings;
+    abstract addWords(words: string[]): this;
+
+    get readonly(): boolean {
+        return this.settings.readonly || this.url.protocol !== 'file:';
+    }
+
+    get virtual(): boolean {
+        return false;
+    }
+
+    get remote(): boolean {
+        return this.url.protocol !== 'file:';
+    }
+}
+
+export abstract class ImplCSpellConfigFile extends CSpellConfigFile {
+    constructor(
+        readonly url: URL,
+        readonly settings: CSpellSettings,
+    ) {
+        super(url);
     }
 
     addWords(words: string[]): this {
+        if (this.readonly) throw new Error(`Config file is readonly: ${this.url.href}`);
         const w = this.settings.words || [];
         this.settings.words = w;
         addUniqueWordsToListAndSort(w, words);
@@ -25,6 +65,7 @@ export class ImplCSpellConfigFile implements CSpellConfigFile {
 
 /**
  * Adds words to a list, sorts the list and makes sure it is unique.
+ * Note: this method is used to try and preserve comments in the config file.
  * @param list - list to be modified
  * @param toAdd - words to add
  */
@@ -37,6 +78,19 @@ function addUniqueWordsToListAndSort(list: string[], toAdd: string[]): void {
             --i;
         }
     }
+}
+
+export function satisfiesCSpellConfigFile(obj: unknown): obj is ICSpellConfigFile {
+    const r: boolean =
+        obj instanceof CSpellConfigFile ||
+        (!!obj &&
+            typeof obj === 'object' &&
+            'url' in obj &&
+            obj.url instanceof URL &&
+            'settings' in obj &&
+            !!obj.settings &&
+            typeof obj.settings === 'object');
+    return r;
 }
 
 export const __testing__ = {

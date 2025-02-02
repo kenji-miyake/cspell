@@ -1,8 +1,8 @@
-import { CSpellIO } from './CSpellIO';
-import { ErrorNotImplemented } from './errors/ErrorNotImplemented';
-import { compareStats } from './common/stat';
-import type { Stats } from './models/Stats';
-import type { TextFileResource } from './models/FileResource';
+import { compareStats } from './common/stat.js';
+import type { CSpellIO } from './CSpellIO.js';
+import { ErrorNotImplemented } from './errors/errors.js';
+import type { FileReference, TextFileResource, UrlOrFilename, UrlOrReference } from './models/FileResource.js';
+import type { DirEntry, Stats } from './models/index.js';
 
 export class CSpellIOWeb implements CSpellIO {
     readFile(_uriOrFilename: string | URL): Promise<TextFileResource> {
@@ -11,7 +11,10 @@ export class CSpellIOWeb implements CSpellIO {
     readFileSync(_uriOrFilename: string | URL): TextFileResource {
         throw new ErrorNotImplemented('readFileSync');
     }
-    writeFile(_uriOrFilename: string | URL, _content: string): Promise<void> {
+    readDirectory(_urlOrFilename: string | URL): Promise<DirEntry[]> {
+        throw new ErrorNotImplemented('readDirectory');
+    }
+    writeFile(_uriOrFilename: UrlOrReference, _content: string | ArrayBufferView): Promise<FileReference> {
         throw new ErrorNotImplemented('writeFile');
     }
     getStat(_uriOrFilename: string | URL): Promise<Stats> {
@@ -23,13 +26,16 @@ export class CSpellIOWeb implements CSpellIO {
     compareStats(left: Stats, right: Stats): number {
         return compareStats(left, right);
     }
-    toURL(_uriOrFilename: string | URL): URL {
+    toURL(_uriOrFilename: UrlOrReference): URL {
         throw new ErrorNotImplemented('toURL');
     }
-    uriBasename(_uriOrFilename: string | URL): string {
+    toFileURL(_urlOrFilename: UrlOrFilename, _relativeTo?: string | URL | undefined): URL {
+        throw new ErrorNotImplemented('toFileURL');
+    }
+    urlBasename(_uriOrFilename: string | URL): string {
         throw new ErrorNotImplemented('uriBasename');
     }
-    uriDirname(_uriOrFilename: string | URL): URL {
+    urlDirname(_uriOrFilename: string | URL): URL {
         throw new ErrorNotImplemented('uriDirname');
     }
 }

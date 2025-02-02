@@ -10,10 +10,14 @@ A Spell Checker for Code!
 
 ## Support Future Development
 
-- Become a [<img src="https://github.githubassets.com/images/modules/site/icons/funding_platforms/patreon.svg" width="16" height="16" alt="Patreon">Patreon!](https://patreon.com/streetsidesoftware)
-- [Support through ![PayPal](https://raw.githubusercontent.com/streetsidesoftware/vscode-spell-checker/main/images/PayPal/paypal-logo-wide-18.png)](https://www.paypal.com/donate/?hosted_button_id=26LNBP2Q6MKCY)
-- [Open Collective](https://opencollective.com/cspell)
-- [Street Side Software](https://streetsidesoftware.com/support)
+<!--- @@inject: ../../static/sponsor.md --->
+
+- [![GitHub Sponsors](https://img.shields.io/badge/-black?style=social&logo=githubsponsors&label=GitHub%20Sponsor%3A%20Street%20Side%20Software)](https://github.com/sponsors/streetsidesoftware)
+- [![Patreon](https://img.shields.io/badge/-black?style=social&logo=patreon&label=Patreon%3A%20Street%20Side%20Software)](https://patreon.com/streetsidesoftware)
+- [![PayPal](https://img.shields.io/badge/-black?style=social&logo=paypal&label=PayPal%20Donate%3A%20Street%20Side%20Software)](https://www.paypal.com/donate/?hosted_button_id=26LNBP2Q6MKCY)
+- [![Open Collective](https://img.shields.io/badge/-black?style=social&logo=opencollective&label=Open%20Collective%3A%20CSpell)](https://opencollective.com/cspell)
+
+<!--- @@inject-end: ../../static/sponsor.md --->
 
 ## Features
 
@@ -29,15 +33,19 @@ A Spell Checker for Code!
 cspell was initially built as the spell checking service for the [spell checker extension](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) for
 [Visual Studio Code](https://code.visualstudio.com/).
 
-## cspell for enterprise
+## CSpell for Enterprise
+
+<!--- @@inject: ../../static/tidelift.md --->
 
 Available as part of the Tidelift Subscription.
 
 The maintainers of cspell and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source packages you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact packages you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-cspell?utm_source=npm-cspell&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
 
+<!--- @@inject-end: ../../static/tidelift.md --->
+
 ## Installation
 
-```sh
+```sh npm2yarn
 npm install -g cspell
 ```
 
@@ -45,12 +53,22 @@ npm install -g cspell
 
 There is a docker image at [Packages for cspell](https://github.com/streetsidesoftware/cspell-cli/pkgs/container/cspell).
 
-`cspell` commands below can be run by replacing `cspell` with: `docker run -v -i -t $PWD:/workdir ghcr.io/streetsidesoftware/cspell:latest`
+`cspell` commands below can be run by replacing
 
-Example:
+```
+cspell
+```
+
+with:
+
+```
+docker run -it -v $PWD:/workdir ghcr.io/streetsidesoftware/cspell:latest
+```
+
+**Example:**
 
 ```sh
-docker run -v -i -t $PWD:/workdir ghcr.io/streetsidesoftware/cspell:latest lint --help
+docker run -it -v $PWD:/workdir ghcr.io/streetsidesoftware/cspell:latest lint --help
 ```
 
 ## Basic Usage
@@ -89,83 +107,117 @@ cspell lint --help
 
 ### Options
 
-```text
-Usage: cspell lint [options] [globs...]
+<!--- @@inject: static/help-lint.txt --->
+
+```
+Usage: cspell lint [options] [globs...] [file://<path> ...] [stdin[://<path>]]
+
+Patterns:
+ - [globs...]            Glob Patterns
+ - [stdin]               Read from "stdin" assume text file.
+ - [stdin://<path>]      Read from "stdin", use <path> for file type and config.
+ - [file://<path>]       Check the file at <path>
+
+Examples:
+    cspell .                        Recursively check all files.
+    cspell lint .                   The same as "cspell ."
+    cspell "*.js"                   Check all .js files in the current directory
+    cspell "**/*.js"                Check all .js files recursively
+    cspell "src/**/*.js"            Only check .js under src
+    cspell "**/*.txt" "**/*.js"     Check both .js and .txt files.
+    cspell "**/*.{txt,js,md}"       Check .txt, .js, and .md files.
+    cat LICENSE | cspell stdin      Check stdin
+    cspell stdin://docs/doc.md      Check stdin as if it was "./docs/doc.md"
 
 Check spelling
 
 Options:
   -c, --config <cspell.json>   Configuration file to use.  By default cspell
                                looks for cspell.json in the current directory.
-
   -v, --verbose                Display more information about the files being
                                checked and the configuration.
-
   --locale <locale>            Set language locales. i.e. "en,fr" for English
                                and French, or "en-GB" for British English.
-
-  --language-id <language>     Force programming language for unknown
+  --language-id <file-type>    Force programming language for unknown
                                extensions. i.e. "php" or "scala"
-
   --words-only                 Only output the words not found in the
                                dictionaries.
-
   -u, --unique                 Only output the first instance of a word not
                                found in the dictionaries.
-
   -e, --exclude <glob>         Exclude files matching the glob pattern. This
-                               option can be used multiple times to add
-                               multiple globs.
-
+                               option can be used multiple times to add multiple
+                               globs.
   --file-list <path or stdin>  Specify a list of files to be spell checked. The
                                list is filtered against the glob file patterns.
                                Note: the format is 1 file path per line.
-
+  --file [file...]             Specify files to spell check. They are filtered
+                               by the [globs...].
   --no-issues                  Do not show the spelling errors.
   --no-progress                Turn off progress messages
   --no-summary                 Turn off summary message in console.
   -s, --silent                 Silent mode, suppress error messages.
+  --no-exit-code               Do not return an exit code if issues are found.
+  --quiet                      Only show spelling issues or errors.
   --fail-fast                  Exit after first file with an issue or error.
   -r, --root <root folder>     Root directory, defaults to current directory.
-  --relative                   Issues are displayed relative to root.
+  --no-relative                Issues are displayed with absolute path instead
+                               of relative to the root.
   --show-context               Show the surrounding text around an issue.
   --show-suggestions           Show spelling suggestions.
+  --no-show-suggestions        Do not show spelling suggestions or fixes.
   --no-must-find-files         Do not error if no files are found.
-
   --cache                      Use cache to only check changed files.
   --no-cache                   Do not use cache.
+  --cache-reset                Reset the cache file.
   --cache-strategy <strategy>  Strategy to use for detecting changed files.
-                               (choices: "metadata", "content")
-
+                               (choices: "content", "metadata", default:
+                               "content")
   --cache-location <path>      Path to the cache file or directory. (default:
                                ".cspellcache")
-
   --dot                        Include files and directories starting with `.`
                                (period) when matching globs.
-
   --gitignore                  Ignore files matching glob patterns found in
                                .gitignore files.
-
   --no-gitignore               Do NOT use .gitignore files.
-
-  --gitignore-root <path>      Prevent searching for .gitignore files past
-                               root.
-
-  --no-color                   Turn off color.
+  --gitignore-root <path>      Prevent searching for .gitignore files past root.
+  --validate-directives        Validate in-document CSpell directives.
   --color                      Force color.
+  --no-color                   Turn off color.
+  --no-default-configuration   Do not load the default configuration and
+                               dictionaries.
   --debug                      Output information useful for debugging
                                cspell.json files.
+  --reporter <module|path>     Specify one or more reporters to use.
+  --issue-template [template]  Use a custom issue template. See --help
+                               --issue-template for details.
   -h, --help                   display help for command
 
+More Examples:
 
-Examples:
-    cspell "*.js"                   Check all .js files in the current directory
-    cspell "**/*.js"                Check all .js files from the current directory
-    cspell "src/**/*.js"            Only check .js under src
-    cspell "**/*.txt" "**/*.js"     Check both .js and .txt files.
-    cspell "**/*.{txt,js,md}"       Check .txt, .js, and .md files.
-    cat LICENSE | cspell stdin      Check stdin
+    cspell "**/*.js" --reporter @cspell/cspell-json-reporter
+        This will spell check all ".js" files recursively and use
+        "@cspell/cspell-json-reporter".
+
+    cspell . --reporter default
+        This will force the default reporter to be used overriding
+        any reporters defined in the configuration.
+
+    cspell . --reporter ./<path>/reporter.cjs
+        Use a custom reporter. See API for details.
+
+    cspell "*.md" --exclude CHANGELOG.md --files README.md CHANGELOG.md
+        Spell check only check "README.md" but NOT "CHANGELOG.md".
+
+    cspell "/*.md" --no-must-find-files --files $FILES
+        Only spell check the "/*.md" files in $FILES,
+        where $FILES is a shell variable that contains the list of files.
+
+References:
+    https://cspell.org
+    https://github.com/streetsidesoftware/cspell
 ```
+
+<!--- @@inject-end: static/help-lint.txt --->
 
 ## Command: `check` - Quick Visual Check
 
@@ -193,6 +245,41 @@ Trace shows a the list of known dictionaries and a `*` next to the ones that con
 A `!` will appear next to the ones where the word is forbidden.
 
 ![image](https://user-images.githubusercontent.com/3740137/129488961-b99dbd2f-7daa-4462-96cd-568e0d4c3c6e.png)
+
+### Help `cspell trace --help`
+
+<!--- @@inject: static/help-trace.txt --->
+
+```
+Usage: cspell trace [options] [words...]
+
+Trace words -- Search for words in the configuration and dictionaries.
+
+Options:
+  -c, --config <cspell.json>  Configuration file to use.  By default cspell
+                              looks for cspell.json in the current directory.
+  --locale <locale>           Set language locales. i.e. "en,fr" for English and
+                              French, or "en-GB" for British English.
+  --language-id <language>    Use programming language. i.e. "php" or "scala".
+  --allow-compound-words      Turn on allowCompoundWords
+  --no-allow-compound-words   Turn off allowCompoundWords
+  --ignore-case               Ignore case and accents when searching for words.
+  --no-ignore-case            Do not ignore case and accents when searching for
+                              words.
+  --dictionary-path <format>  Configure how to display the dictionary path.
+                              (choices: "hide", "short", "long", "full",
+                              default: Display most of the path.)
+  --stdin                     Read words from stdin.
+  --all                       Show all dictionaries.
+  --only-found                Show only dictionaries that have the words.
+  --color                     Force color.
+  --no-color                  Turn off color.
+  --no-default-configuration  Do not load the default configuration and
+                              dictionaries.
+  -h, --help                  display help for command
+```
+
+<!--- @@inject-end: static/help-trace.txt --->
 
 ## CI/CD Continuous Integration support
 
@@ -227,7 +314,7 @@ exec git diff --cached --name-only | npx cspell --no-summary --no-progress --no-
 
 ## Requirements
 
-cspell needs Node 12 and above.
+CSpell needs Node 18 and above.
 
 ## How it works
 
@@ -261,7 +348,7 @@ The concept is simple, split camelCase and snake_case words before checking them
 It is possible to add spell check settings into your source code.
 This is to help with file specific issues that may not be applicable to the entire project.
 
-All settings are prefixed with `cSpell:` or `spell-checker:`.
+All settings are prefixed with `cspell:` or `spell-checker:`.
 
 - `disable` -- turn off the spell checker for a section of code.
 - `enable` -- turn the spell checker back on after it has been turned off.
@@ -278,25 +365,26 @@ It is possible to disable / enable the spell checker by adding comments to your 
 
 #### Disable Checking
 
-- `/* cSpell:disable */`
+- `/* cspell:disable */`
 - `/* spell-checker: disable */`
 - `/* spellchecker: disable */`
 - `// cspell:disable-line` -- disables checking for the current line.
 - `/* cspell:disable-next-line */` -- disables checking till the end of the next line.
-<!--- cSpell:enable -->
+
+<!--- cspell:enable -->
 
 #### Enable Checking
 
-- `/* cSpell:enable */`
+- `/* cspell:enable */`
 - `/* spell-checker: enable */`
 - `/* spellchecker: enable */`
 
 #### Example
 
 ```javascript
-// cSpell:disable
+// cspell:disable
 const wackyWord = ['zaallano', 'wooorrdd', 'zzooommmmmmmm'];
-/* cSpell:enable */
+/* cspell:enable */
 
 const words = ['zaallano', 'wooorrdd', 'zzooommmmmmmm']; // cspell:disable-line disables this entire line
 
@@ -313,7 +401,7 @@ var liep = 1;
 /* cspell:disable */
 // It is still disabled
 
-// cSpell:enable
+// cspell:enable
 // It is now enabled
 
 const str = 'goededag'; // <- will be flagged as an error.
@@ -326,15 +414,15 @@ const str = 'goededag'; // <- will be flagged as an error.
 const str = 'goedemorgen'; // <- will NOT be flagged as an error.
 ```
 
-<!--- cSpell:enable -->
+<!--- cspell:enable -->
 
 ### Ignore
 
 _Ignore_ allows you the specify a list of words you want to ignore within the document.
 
 ```javascript
-// cSpell:ignore zaallano, wooorrdd
-// cSpell:ignore zzooommmmmmmm
+// cspell:ignore zaallano, wooorrdd
+// cspell:ignore zzooommmmmmmm
 const wackyWord = ['zaallano', 'wooorrdd', 'zzooommmmmmmm'];
 ```
 
@@ -345,7 +433,7 @@ const wackyWord = ['zaallano', 'wooorrdd', 'zzooommmmmmmm'];
 The _words_ list allows you to add words that will be considered correct and will be used as suggestions.
 
 ```javascript
-// cSpell:words woorxs sweeetbeat
+// cspell:words woorxs sweeetbeat
 const companyName = 'woorxs sweeetbeat';
 ```
 
@@ -353,11 +441,11 @@ const companyName = 'woorxs sweeetbeat';
 
 ### Enable / Disable compound words
 
-In some programing language it is common to glue words together.
+In some programming language it is common to glue words together.
 
 ```c
-// cSpell:enableCompoundWords
-char * errormessage;  // Is ok with cSpell:enableCompoundWords
+// cspell:enableCompoundWords
+char * errormessage;  // Is ok with cspell:enableCompoundWords
 int    errornumber;   // Is also ok.
 ```
 
@@ -367,30 +455,30 @@ The last setting in the file determines the value for the entire file.
 ### Excluding and Including Text to be checked.
 
 By default, the entire document is checked for spelling.
-`cSpell:disable`/`cSpell:enable` above allows you to block off sections of the document.
+`cspell:disable`/`cspell:enable` above allows you to block off sections of the document.
 `ignoreRegExp` and `includeRegExp` give you the ability to ignore or include patterns of text.
 By default the flags `gim` are added if no flags are given.
 
 The spell checker works in the following way:
 
 1. Find all text matching `includeRegExp`
-2. Remove any text matching `ignoreRegExp`
-3. Check the remaining text.
+1. Remove any text matching `ignoreRegExp`
+1. Check the remaining text.
 
 #### Exclude Example
 
 ```javascript
-// cSpell:ignoreRegExp 0x[0-9a-f]+     -- will ignore c style hex numbers
-// cSpell:ignoreRegExp /0x[0-9A-F]+/g  -- will ignore upper case c style hex numbers.
-// cSpell:ignoreRegExp g{5} h{5}       -- will only match ggggg, but not hhhhh or 'ggggg hhhhh'
-// cSpell:ignoreRegExp g{5}|h{5}       -- will match both ggggg and hhhhh
-// cSpell:ignoreRegExp /g{5} h{5}/     -- will match 'ggggg hhhhh'
-/* cSpell:ignoreRegExp /n{5}/          -- will NOT work as expected because of the ending comment -> */
+// cspell:ignoreRegExp 0x[0-9a-f]+     -- will ignore c style hex numbers
+// cspell:ignoreRegExp /0x[0-9A-F]+/g  -- will ignore upper case c style hex numbers.
+// cspell:ignoreRegExp g{5} h{5}       -- will only match ggggg, but not hhhhh or 'ggggg hhhhh'
+// cspell:ignoreRegExp g{5}|h{5}       -- will match both ggggg and hhhhh
+// cspell:ignoreRegExp /g{5} h{5}/     -- will match 'ggggg hhhhh'
+/* cspell:ignoreRegExp /n{5}/          -- will NOT work as expected because of the ending comment -> */
 /*
-   cSpell:ignoreRegExp /q{5}/          -- will match qqqqq just fine but NOT QQQQQ
+   cspell:ignoreRegExp /q{5}/          -- will match qqqqq just fine but NOT QQQQQ
 */
-// cSpell:ignoreRegExp /[^\s]{40,}/    -- will ignore long strings with no spaces.
-// cSpell:ignoreRegExp Email           -- this will ignore email like patterns -- see Predefined RegExp expressions
+// cspell:ignoreRegExp /[^\s]{40,}/    -- will ignore long strings with no spaces.
+// cspell:ignoreRegExp Email           -- this will ignore email like patterns -- see Predefined RegExp expressions
 var encodedImage = 'HR+cPzr7XGAOJNurPL0G8I2kU0UhKcqFssoKvFTR7z0T3VJfK37vS025uKroHfJ9nA6WWbHZ/ASn...';
 var email1 = 'emailaddress@myfancynewcompany.com';
 var email2 = '<emailaddress@myfancynewcompany.com>';
@@ -403,8 +491,8 @@ var email2 = '<emailaddress@myfancynewcompany.com>';
 In general you should not need to use `includeRegExp`. But if you are mixing languages then it could come in helpful.
 
 ```Python
-# cSpell:includeRegExp #.*
-# cSpell:includeRegExp ("""|''')[^\1]*\1
+# cspell:includeRegExp #.*
+# cspell:includeRegExp ("""|''')[^\1]*\1
 # only comments and block strings will be checked for spelling.
 def sum_it(self, seq):
     """This is checked for spelling"""
@@ -421,7 +509,7 @@ def sum_it(self, seq):
 The _dictionaries_ list allows you to specify dictionaries to use for the file.
 
 ```javascript
-// cSpell:dictionaries lorem-ipsum
+// cspell:dictionaries lorem-ipsum
 const companyName = 'Lorem ipsum dolor sit amet';
 ```
 
@@ -432,7 +520,7 @@ const companyName = 'Lorem ipsum dolor sit amet';
 ### Exclude patterns
 
 - `Urls`<sup>1</sup> -- Matches urls
-- `HexValues` -- Matches common hex format like #aaa, 0xfeef, \\u0134
+- `HexValues` -- Matches common hex format like `#aaa`, `0xfeef`, `\u0134`
 - `Base64`<sup>1</sup> -- matches base64 blocks of text longer than 40 characters.
 - `Email` -- matches most email addresses.
 
@@ -495,11 +583,16 @@ Or you can specify a path to a config file with the `--config <path>` argument o
 ### cspell.json sections
 
 - `version` - currently always 0.2 - controls how the settings in the configuration file behave.
+
 - `language` - this specifies the language locale to use in choosing the general dictionary.
   For example: `"language": "en-GB"` tells cspell to use British English instead of US English.
+
 - `words` - a list of words to be considered correct.
+
 - `flagWords` - a list of words to be always considered incorrect
+
 - `ignoreWords` - a list of words to be ignored (even if they are in the flagWords).
+
 - `ignorePaths` - a list of globs to specify which files are to be ignored.
 
   **Example**
@@ -511,9 +604,13 @@ Or you can specify a path to a config file with the `--config <path>` argument o
   will cause cspell to ignore anything in the `node_modules` directory.
 
 - `maxNumberOfProblems` - defaults to **_100_** per file.
+
 - `minWordLength` - defaults to **_4_** - the minimum length of a word before it is checked.
+
 - `allowCompoundWords` - defaults to **_false_**; set to **true** to allow compound words by default.
+
 - `dictionaries` - list of the names of the dictionaries to use. See [Dictionaries](#Dictionaries) below.
+
 - `dictionaryDefinitions` - this list defines any custom dictionaries to use. This is how you can include other languages like Spanish.
 
   **Example**
@@ -533,9 +630,12 @@ Or you can specify a path to a config file with the `--config <path>` argument o
   ```
 
 - `ignoreRegExpList` - list of patterns to be ignored
+
 - `includeRegExpList` - _(Advanced)_ limits the text checked to be only that matching the expressions in the list.
+
 - `patterns` - this allows you to define named patterns to be used with
   `ignoreRegExpList` and `includeRegExpList`.
+
 - `languageSettings` - this allow for per programming language configuration settings. See [LanguageSettings](#LanguageSettings)
 
 ## Dictionaries
@@ -568,7 +668,7 @@ The spell checker includes a set of default dictionaries.
 ### Miscellaneous Dictionaries
 
 - **fonts** - long list of fonts - to assist with _css_
-- **filetypes** - list of file typescript
+- **filetypes** - list of file types
 - **npm** - list of top 500+ package names on npm.
 
 ### Dictionary Definition
@@ -620,7 +720,7 @@ The number of `!`s is important.
 
 ## LanguageSettings
 
-The Language Settings allow configuration to be based upon the programming language and/or the e.
+The Language Settings allow configuration to be based upon the programming language and/or the locale.
 There are two selector fields `locale` and `languageId`.
 
 - `languageId` defines which programming languages to match against.
@@ -672,16 +772,24 @@ Example:
     ]
 ```
 
-<!---
-    These are at the bottom because the VSCode Marketplace leaves a bit space at the top
+<!--- @@inject: ../../static/footer.md --->
 
-    cSpell:disableCompoundWords
-    cSpell:ignore  compoundwords stringlength errornumber
-    cSpell:ignore jsja goededag alek wheerd behaviour tsmerge QQQQQ ncode
-    cSpell:includeRegExp Everything
-    cSpell:ignore hte variabele alinea
-    cSpell:ignore mkdirp githubusercontent streetsidesoftware vsmarketplacebadge visualstudio
-    cSpell:words Verdana
-    cSpell:ignore ieeees beees treeees
-    cSpell:ignore amet
+<br/>
+
+---
+
+<p align="center">Brought to you by<a href="https://streetsidesoftware.com" title="Street Side Software"><img width="16" alt="Street Side Software Logo" src="https://i.imgur.com/CyduuVY.png" /> Street Side Software</a></p>
+
+<!--- @@inject-end: ../../static/footer.md --->
+
+<!---
+    cspell:disableCompoundWords
+    cspell:ignore  compoundwords stringlength errornumber
+    cspell:ignore jsja goededag alek wheerd behaviour tsmerge QQQQQ ncode
+    cspell:includeRegExp Everything
+    cspell:ignore hte variabele alinea
+    cspell:ignore mkdirp githubusercontent streetsidesoftware vsmarketplacebadge visualstudio
+    cspell:words Verdana
+    cspell:ignore ieeees beees treeees
+    cspell:ignore amet
 -->

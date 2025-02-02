@@ -1,5 +1,6 @@
-export {
+export type {
     CompileRequest,
+    CompileSourceOptions,
     CompileTargetOptions,
     DictionaryFormats,
     DictionarySource,
@@ -7,7 +8,7 @@ export {
     FilePath,
     FileSource,
     RunConfig,
-    SourceConfig,
     Target,
-} from './config';
-export { normalizeConfig } from './normalizeConfig';
+} from './config.js';
+export { isFileListSource, isFilePath, isFileSource } from './configUtils.js';
+export { normalizeConfig } from './normalizeConfig.js';

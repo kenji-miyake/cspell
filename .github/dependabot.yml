@@ -5,51 +5,155 @@
 
 version: 2
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: 'npm' # See documentation for possible values
+    directory: '/' # Location of package manifests
     versioning-strategy: increase
     schedule:
-      interval: "weekly"
-    ignore:
-      # Must wait until cspell version 7 to go ES Modules
-      - dependency-name: "get-stdin" # Needs ES Modules
-        versions: [">=9"]
-      - dependency-name: "configstore" # Needs ES Modules
-        versions: [">=6"]
-      - dependency-name: "strip-ansi" # Needs ES Modules
-        versions: [">=7"]
+      interval: 'weekly'
 
-  - package-ecosystem: "github-actions"
+  - package-ecosystem: 'github-actions'
     # Workflow files stored in the
     # default location of `.github/workflows`
-    directory: "/"
+    directory: '/'
     schedule:
-      interval: "daily"
+      interval: 'daily'
 
-  - package-ecosystem: "bundler"
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: 'github-actions'
+    # Workflow files stored in the
+    # default location of `.github/workflows`
+    directory: '/.github/actions/pr'
+    schedule:
+      interval: 'daily'
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: 'github-actions'
+    # Workflow files stored in the
+    # default location of `.github/workflows`
+    directory: '/.github/actions/github-app-token'
+    schedule:
+      interval: 'daily'
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: 'github-actions'
+    # Workflow files stored in the
+    # default location of `.github/workflows`
+    directory: '/.github/actions/setup'
+    schedule:
+      interval: 'daily'
+    commit-message:
+      prefix: chore
+
+  - package-ecosystem: 'bundler'
     # The Gemfile used in for the Jekyll doc site
-    directory: "/docs"
+    directory: '/docs'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
 
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    versioning-strategy: increase
-    target-branch: "cspell5"
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/write-file
     schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "configstore"
-        versions: [">=6"]
-      - dependency-name: "get-stdin"
-        versions: [">=9"]
-      - dependency-name: "commander"
-        versions: [">=8"]
+      interval: daily
+    commit-message:
+      prefix: chore
 
-  - package-ecosystem: "github-actions"
-    # Workflow files stored in the
-    # default location of `.github/workflows`
-    directory: "/"
-    target-branch: "cspell5"
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/summary
     schedule:
-      interval: "daily"
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/smoke-test
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/setup-and-test
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/set-env
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/read-file
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/output
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/list-integration-repos
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/install-build-cache
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/install-build
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/echo
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/build-for-integrations
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+
+  # Automatically added by streetsidesoftware/public/update-dependabot-github-actions
+  - package-ecosystem: github-actions
+    directory: /.github/actions/build
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore

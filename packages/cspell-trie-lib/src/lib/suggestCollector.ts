@@ -1,22 +1,20 @@
 /**
  * This file is here to support code the referenced suggest directly and limit the exports.
  */
+export type { FilterWordFn, SuggestionCollector, SuggestionCollectorOptions } from './suggestions/suggestCollector.js';
 export {
     compSuggestionResults,
     defaultSuggestionCollectorOptions,
     impersonateCollector,
     isSuggestionResult,
     suggestionCollector,
-} from './suggestions/suggestCollector';
+} from './suggestions/suggestCollector.js';
 export type {
     Cost,
-    FilterWordFn,
     GenerateNextParam,
     GenerateSuggestionResult,
     MaxCost,
     Progress,
-    SuggestionCollector,
-    SuggestionCollectorOptions,
     SuggestionGenerator,
     SuggestionResult,
-} from './suggestions/suggestCollector';
+} from './suggestions/SuggestionTypes.js';

@@ -1,6 +1,6 @@
 {
   "name": "@cspell/cspell-json-reporter",
-  "version": "6.12.0",
+  "version": "8.17.3",
   "description": "JSON reporter for CSpell",
   "author": "Jason Dent",
   "license": "MIT",
@@ -8,43 +8,48 @@
     "url": "https://github.com/streetsidesoftware/cspell/labels/cspell-json-reporter"
   },
   "homepage": "https://github.com/streetsidesoftware/cspell/tree/main/packages/cspell-json-reporter#readme",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "type": "module",
+  "sideEffects": false,
+  "types": "dist/esm/index.d.ts",
+  "module": "dist/esm/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js"
+    }
+  },
   "files": [
     "dist",
+    "!**/*.tsbuildInfo",
     "!**/__mocks__",
+    "!**/test/**",
     "!**/*.test.*",
     "!**/*.spec.*",
     "!**/*.map"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/streetsidesoftware/cspell.git"
+    "url": "https://github.com/streetsidesoftware/cspell.git",
+    "directory": "packages/cspell-json-reporter"
   },
   "scripts": {
-    "clean": "rimraf dist temp coverage .tsbuildinfo",
-    "build": "pnpm run compile",
-    "build-dev": "tsc -p tsconfig.dev.json",
+    "clean": "shx rm -rf dist temp coverage \"*.tsbuildInfo\"",
+    "build": "tsc -b . -f",
+    "build:esm": "tsc -p tsconfig.esm.json",
     "clean-build": "pnpm run clean && pnpm run build",
-    "compile": "tsc -p .",
-    "watch": "tsc --watch -p .",
-    "coverage": "jest --coverage",
-    "test-watch": "jest --watch",
-    "prepublishOnly": "pnpm run clean-build",
-    "test": "jest",
-    "update-snapshot": "jest --updateSnapshot"
+    "coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "test": "vitest run && pnpm test:run",
+    "test:run": "node ../../bin.mjs . --config cSpell.example.mjs",
+    "watch": "tsc -b . -w -f"
   },
   "dependencies": {
-    "@cspell/cspell-types": "workspace:^",
-    "mkdirp": "^1.0.4"
-  },
-  "devDependencies": {
-    "@types/mkdirp": "^1.0.2"
+    "@cspell/cspell-types": "workspace:*"
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   }
 }

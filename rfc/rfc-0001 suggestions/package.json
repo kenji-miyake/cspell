@@ -1,6 +1,6 @@
 {
   "name": "rfc-0001-suggestions",
-  "version": "6.12.0",
+  "version": "8.17.3",
   "description": "Possible ways to support suggestion lists",
   "private": true,
   "scripts": {
@@ -11,6 +11,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@cspell/cspell-types": "workspace:^"
+    "@cspell/cspell-types": "workspace:*"
   }
 }

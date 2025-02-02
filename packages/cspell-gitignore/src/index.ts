@@ -1,3 +1,3 @@
-export { GitIgnore } from './GitIgnore';
-export { findRepoRoot, directoryRoot, contains, isParentOf } from './helpers';
-export { GitIgnoreFile, GitIgnoreHierarchy, loadGitIgnore } from './GitIgnoreFile';
+export { GitIgnore } from './GitIgnore.js';
+export { GitIgnoreFile, GitIgnoreHierarchy, loadGitIgnore } from './GitIgnoreFile.js';
+export { contains, directoryRoot, findRepoRoot, isParentOf } from './helpers.js';

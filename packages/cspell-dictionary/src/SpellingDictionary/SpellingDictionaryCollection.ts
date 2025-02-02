@@ -1,25 +1,17 @@
-import { CASE_INSENSITIVE_PREFIX } from 'cspell-trie-lib';
-import { genSequence } from 'gensequence';
-import { isDefined } from '../util/util';
-import { clean } from '../util/clean';
-import {
-    CompoundWordsMethod,
+import type { SuggestionCollector, SuggestionResult } from 'cspell-trie-lib';
+import { CASE_INSENSITIVE_PREFIX, CompoundWordsMethod } from 'cspell-trie-lib';
+
+import { isDefined } from '../util/util.js';
+import * as Defaults from './defaults.js';
+import type {
     FindResult,
     HasOptions,
     SearchOptions,
     SpellingDictionary,
     SpellingDictionaryOptions,
-    SuggestionCollector,
-    SuggestionResult,
-    SuggestOptions,
-} from './SpellingDictionary';
-import {
-    defaultNumSuggestions,
-    hasOptionToSearchOption,
-    SuggestArgs,
-    suggestArgsToSuggestOptions,
-    suggestionCollector,
-} from './SpellingDictionaryMethods';
+} from './SpellingDictionary.js';
+import { defaultNumSuggestions, hasOptionToSearchOption, suggestionCollector } from './SpellingDictionaryMethods.js';
+import type { SuggestOptions } from './SuggestOptions.js';
 
 function identityString(w: string): string {
     return w;
@@ -39,9 +31,13 @@ class SpellingDictionaryCollectionImpl implements SpellingDictionaryCollection {
     readonly isDictionaryCaseSensitive: boolean;
     readonly containsNoSuggestWords: boolean;
 
-    constructor(readonly dictionaries: SpellingDictionary[], readonly name: string) {
+    constructor(
+        readonly dictionaries: SpellingDictionary[],
+        readonly name: string,
+        source?: string,
+    ) {
         this.dictionaries = this.dictionaries.sort((a, b) => b.size - a.size);
-        this.source = dictionaries.map((d) => d.name).join(', ');
+        this.source = source || dictionaries.map((d) => d.name).join(', ');
         this.isDictionaryCaseSensitive = this.dictionaries.reduce((a, b) => a || b.isDictionaryCaseSensitive, false);
         this.containsNoSuggestWords = this.dictionaries.reduce((a, b) => a || b.containsNoSuggestWords, false);
     }
@@ -53,33 +49,19 @@ class SpellingDictionaryCollectionImpl implements SpellingDictionaryCollection {
 
     public find(word: string, hasOptions?: HasOptions): FindResult | undefined {
         const options = hasOptionToSearchOption(hasOptions);
-        const {
-            found = false,
-            forbidden = false,
-            noSuggest = false,
-        } = findInAnyDictionary(this.dictionaries, word, options) || {};
-        return { found, forbidden, noSuggest };
+        return findInAnyDictionary(this.dictionaries, word, options);
     }
 
     public isNoSuggestWord(word: string, options?: HasOptions): boolean {
         return this._isNoSuggestWord(word, options);
     }
 
-    public isForbidden(word: string): boolean {
-        return !!this._isForbiddenInDict(word) && !this.isNoSuggestWord(word);
+    public isForbidden(word: string, ignoreCaseAndAccents?: boolean): boolean {
+        const ignoreCase = ignoreCaseAndAccents ?? Defaults.isForbiddenIgnoreCaseAndAccents;
+        return !!this._isForbiddenInDict(word, ignoreCase) && !this.isNoSuggestWord(word, { ignoreCase });
     }
 
-    public suggest(
-        word: string,
-        numSuggestions?: number,
-        compoundMethod?: CompoundWordsMethod,
-        numChanges?: number,
-        ignoreCase?: boolean
-    ): SuggestionResult[];
-    public suggest(word: string, suggestOptions: SuggestOptions): SuggestionResult[];
-    public suggest(...args: SuggestArgs): SuggestionResult[] {
-        const [word] = args;
-        const suggestOptions = suggestArgsToSuggestOptions(args);
+    public suggest(word: string, suggestOptions: SuggestOptions = {}): SuggestionResult[] {
         return this._suggest(word, suggestOptions);
     }
 
@@ -93,23 +75,32 @@ class SpellingDictionaryCollectionImpl implements SpellingDictionaryCollection {
                 !this.isNoSuggestWord(word, suggestOptions)
             );
         };
-        const collector = suggestionCollector(
-            word,
-            clean({
-                numSuggestions,
-                filter,
-                changeLimit: numChanges,
-                includeTies,
-                ignoreCase,
-                timeout,
-            })
-        );
+        const collectorOptions = {
+            numSuggestions,
+            filter,
+            changeLimit: numChanges,
+            includeTies,
+            ignoreCase,
+            timeout,
+        };
+        const collector = suggestionCollector(word, collectorOptions);
         this.genSuggestions(collector, suggestOptions);
-        return collector.suggestions.map((r) => ({ ...r, word: r.word }));
+        return collector.suggestions;
     }
 
     public get size(): number {
         return this.dictionaries.reduce((a, b) => a + b.size, 0);
+    }
+
+    getPreferredSuggestions(word: string) {
+        const sugs = this.dictionaries.flatMap((dict) => dict.getPreferredSuggestions?.(word)).filter(isDefined);
+        if (sugs.length <= 1) return sugs;
+        const unique = new Set<string>();
+        return sugs.filter((sug) => {
+            if (unique.has(sug.word)) return false;
+            unique.add(sug.word);
+            return true;
+        });
     }
 
     public genSuggestions(collector: SuggestionCollector, suggestOptions: SuggestOptions): void {
@@ -120,10 +111,12 @@ class SpellingDictionaryCollectionImpl implements SpellingDictionaryCollection {
     }
 
     public getErrors(): Error[] {
-        return this.dictionaries.reduce((errors, dict) => errors.concat(dict.getErrors?.() || []), [] as Error[]);
+        return this.dictionaries.reduce((errors, dict) => [...errors, ...(dict.getErrors?.() || [])], [] as Error[]);
     }
 
-    private _isForbiddenInDict = (word: string) => isWordForbiddenInAnyDictionary(this.dictionaries, word);
+    private _isForbiddenInDict(word: string, ignoreCase: boolean | undefined) {
+        return isWordForbiddenInAnyDictionary(this.dictionaries, word, ignoreCase);
+    }
 
     private _isNoSuggestWord = (word: string, options?: HasOptions) => {
         if (!this.containsNoSuggestWords) return false;
@@ -131,22 +124,26 @@ class SpellingDictionaryCollectionImpl implements SpellingDictionaryCollection {
     };
 }
 
-export function createCollection(dictionaries: SpellingDictionary[], name: string): SpellingDictionaryCollection {
-    return new SpellingDictionaryCollectionImpl(dictionaries, name);
+export function createCollection(
+    dictionaries: SpellingDictionary[],
+    name: string,
+    source?: string,
+): SpellingDictionaryCollection {
+    return new SpellingDictionaryCollectionImpl(dictionaries, name, source);
 }
 
 function isWordInAnyDictionary(
     dicts: SpellingDictionary[],
     word: string,
-    options: SearchOptions
+    options: SearchOptions,
 ): SpellingDictionary | undefined {
-    return genSequence(dicts).first((dict) => dict.has(word, options));
+    return dicts.find((dict) => dict.has(word, options));
 }
 
 function findInAnyDictionary(
     dicts: SpellingDictionary[],
     word: string,
-    options: SearchOptions
+    options: SearchOptions,
 ): FindResult | undefined {
     const found = dicts.map((dict) => dict.find(word, options)).filter(isDefined);
     if (!found.length) return undefined;
@@ -160,13 +157,17 @@ function findInAnyDictionary(
 function isNoSuggestWordInAnyDictionary(
     dicts: SpellingDictionary[],
     word: string,
-    options: HasOptions
+    options: HasOptions,
 ): SpellingDictionary | undefined {
-    return genSequence(dicts).first((dict) => dict.isNoSuggestWord(word, options));
+    return dicts.find((dict) => dict.isNoSuggestWord(word, options));
 }
 
-function isWordForbiddenInAnyDictionary(dicts: SpellingDictionary[], word: string): SpellingDictionary | undefined {
-    return genSequence(dicts).first((dict) => dict.isForbidden(word));
+function isWordForbiddenInAnyDictionary(
+    dicts: SpellingDictionary[],
+    word: string,
+    ignoreCase: boolean | undefined,
+): SpellingDictionary | undefined {
+    return dicts.find((dict) => dict.isForbidden(word, ignoreCase));
 }
 
 export function isSpellingDictionaryCollection(dict: SpellingDictionary): dict is SpellingDictionaryCollection {

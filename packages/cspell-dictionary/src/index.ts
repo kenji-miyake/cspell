@@ -1,13 +1,7 @@
-export {
-    createCachingDictionary,
-    createCollection,
-    createFailedToLoadDictionary,
-    createForbiddenWordsDictionary,
-    createIgnoreWordsDictionary,
-    createSpellingDictionary,
-    createSpellingDictionaryFromTrieFile,
-    SpellingDictionaryCollection,
-} from './SpellingDictionary';
+import {
+    enableLogging as cacheDictionaryEnableLogging,
+    getLog as cacheDictionaryGetLog,
+} from './SpellingDictionary/CachingDictionary.js';
 export type {
     CachingDictionary,
     FindOptions,
@@ -15,8 +9,30 @@ export type {
     HasOptions,
     SearchOptions,
     SpellingDictionary,
+    SpellingDictionaryCollection,
     SpellingDictionaryOptions,
     SuggestionCollector,
     SuggestionResult,
     SuggestOptions,
-} from './SpellingDictionary';
+} from './SpellingDictionary/index.js';
+export {
+    createCachingDictionary,
+    createCollection,
+    createFailedToLoadDictionary,
+    createFlagWordsDictionary,
+    createForbiddenWordsDictionary,
+    createIgnoreWordsDictionary,
+    createInlineSpellingDictionary,
+    createSpellingDictionary,
+    createSpellingDictionaryFromTrieFile,
+    createSuggestDictionary,
+    createSuggestOptions,
+} from './SpellingDictionary/index.js';
+
+/**
+ * Debugging utilities.
+ */
+export const _debug = {
+    cacheDictionaryEnableLogging,
+    cacheDictionaryGetLog,
+};

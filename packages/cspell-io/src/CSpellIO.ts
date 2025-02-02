@@ -1,44 +1,56 @@
-import type { Stats } from './models';
-import { BufferEncoding } from './models/BufferEncoding';
-import type { TextFileResource } from './models/FileResource';
+import type { BufferEncoding } from './models/BufferEncoding.js';
+import type { FileReference, TextFileResource, UrlOrFilename, UrlOrReference } from './models/FileResource.js';
+import type { DirEntry, Stats } from './models/index.js';
 
-export type UrlOrFilename = string | URL;
+export interface ReadFileOptions {
+    signal?: AbortSignal;
+    encoding?: BufferEncoding;
+}
+
+export type ReadFileOptionsOrEncoding = ReadFileOptions | BufferEncoding;
 
 export interface CSpellIO {
     /**
      * Read a file
-     * @param uriOrFilename - uri of the file to read
-     * @param encoding - optional encoding.
+     * @param urlOrFilename - uri of the file to read
+     * @param options - optional options for reading the file.
      * @returns A TextFileResource.
      */
-    readFile(uriOrFilename: UrlOrFilename, encoding?: BufferEncoding): Promise<TextFileResource>;
+    readFile(urlOrFilename: UrlOrReference, options?: ReadFileOptionsOrEncoding): Promise<TextFileResource>;
     /**
      * Read a file in Sync mode.
      * Note: `http` requests will fail.
-     * @param uriOrFilename - uri of the file to read
+     * @param urlOrFilename - uri of the file to read
      * @param encoding - optional encoding.
      * @returns A TextFileResource.
+     * @deprecated Use `readFile` instead.
      */
-    readFileSync(uriOrFilename: UrlOrFilename, encoding?: BufferEncoding): TextFileResource;
+    readFileSync(urlOrFilename: UrlOrReference, encoding?: BufferEncoding): TextFileResource;
     /**
      * Write content to a file using utf-8 encoding.
      * It will fail to write to non-file uris.
-     * @param uriOrFilename - uri
+     * @param urlOrFilename - uri
      * @param content - string to write.
      */
-    writeFile(uriOrFilename: UrlOrFilename, content: string): Promise<void>;
+    writeFile(urlOrFilename: UrlOrReference, content: string | ArrayBufferView): Promise<FileReference>;
+    /**
+     * Read a directory.
+     * @param urlOrFilename - uri
+     */
+    readDirectory(urlOrFilename: string | URL): Promise<DirEntry[]>;
     /**
      * Get Stats on a uri.
-     * @param uriOrFilename - uri to fetch stats on
+     * @param urlOrFilename - uri to fetch stats on
      * @returns Stats if successful.
      */
-    getStat(uriOrFilename: UrlOrFilename): Promise<Stats>;
+    getStat(urlOrFilename: UrlOrReference): Promise<Stats>;
     /**
      * Get Stats on a uri.
-     * @param uriOrFilename - uri to fetch stats on
+     * @param urlOrFilename - uri to fetch stats on
      * @returns Stats if successful, otherwise it throws an error.
+     * @deprecated Use `getStat` instead.
      */
-    getStatSync(uriOrFilename: UrlOrFilename): Stats;
+    getStatSync(urlOrFilename: UrlOrReference): Stats;
     /**
      * Compare two Stats.
      * @param left - left stat
@@ -46,32 +58,59 @@ export interface CSpellIO {
      * @returns 0 if they are equal and non-zero if they are not.
      */
     compareStats(left: Stats, right: Stats): number;
+
     /**
      * Convert a string to a URL
-     * @param uriOrFilename - string or URL to convert.
+     * @param urlOrFilename - string or URL to convert.
      *   If it is a URL, then it is just returned as is.
+     *   If is is a string and fully formed URL, then it is parsed.
+     *   If it is a string without a protocol/scheme it is assumed to be relative to `relativeTo`.
+     * @param relativeTo - optional
      */
-    toURL(uriOrFilename: UrlOrFilename): URL;
+    toURL(urlOrFilename: UrlOrReference, relativeTo?: string | URL): URL;
+
+    /**
+     * Convert a string to a File URL
+     * @param urlOrFilename - string or URL to convert.
+     * @param relativeTo - optional
+     */
+    toFileURL(urlOrFilename: UrlOrFilename, relativeTo?: string | URL): URL;
+
     /**
      * Try to determine the base name of a URL.
      *
      * Note: this handles `data:` URLs with `filename` attribute:
      *
-     * Example: `data:text/plain;charset=utf8;filename=hello.txt,Hello` would have a filename of `hello.txt`
-     * @param uriOrFilename - string or URL to extract the basename from.
+     * Example:
+     * - `data:text/plain;charset=utf8;filename=hello.txt,Hello` would have a filename of `hello.txt`
+     * - `file:///user/project/cspell.config.yaml` would have a filename of `cspell.config.yaml`
+     * - `https://raw.guc.com/sss/cspell/main/cspell.schema.json` would have a filename of `cspell.schema.json`
+     * @param urlOrFilename - string or URL to extract the basename from.
      */
-    uriBasename(uriOrFilename: UrlOrFilename): string;
+    urlBasename(urlOrFilename: UrlOrReference): string;
     /**
      * Try to determine the directory URL of the uri.
      *
-     * @param uriOrFilename - string or URL to extract the basename from.
+     * Example:
+     * - `file:///user/local/file.txt` becomes `file:///user/local/`
+     * - `file:///user/local/` becomes `file:///user/`
+     *
+     * @param urlOrFilename - string or URL
      */
-    uriDirname(uriOrFilename: UrlOrFilename): URL;
+    urlDirname(urlOrFilename: UrlOrReference): URL;
 
     // /**
     //  *
-    //  * @param uriOrFilename
+    //  * @param urlOrFilename
     //  * @param relativeTo -
     //  */
-    // resolveUrl(uriOrFilename: UrlOrFilename, relativeTo: UrlOrFilename): URL;
+    // resolveUrl(urlOrFilename: UrlOrFilename, relativeTo: UrlOrFilename): URL;
+}
+
+export function toReadFileOptions(options?: ReadFileOptionsOrEncoding): ReadFileOptions | undefined {
+    if (!options) return options;
+    if (typeof options === 'string') {
+        return { encoding: options };
+    }
+    return options;
 }

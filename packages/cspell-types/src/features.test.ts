@@ -1,5 +1,7 @@
-import * as features from './features';
-import type { Features, Feature } from './features';
+import { describe, expect, test } from 'vitest';
+
+import type { Feature, Features } from './features.js';
+import * as features from './features.js';
 
 describe('features', () => {
     test('exports', () => {
@@ -8,7 +10,7 @@ describe('features', () => {
 
     /**
      * This test is to ensure type, it is not really a unit test
-     * It uses the complier to verify the definitions.
+     * It uses the compiler to verify the definitions.
      */
     test('assignment', () => {
         const f: Features = {};

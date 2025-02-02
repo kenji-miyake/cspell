@@ -1,6 +1,9 @@
-import { opAwaitAsync, opMap } from '.';
-import { toArray } from '../helpers';
-import { pipeAsync } from '../pipe';
+import { describe, expect, test } from 'vitest';
+
+import { toArray } from '../helpers/index.js';
+import { pipeAsync } from '../pipe.js';
+import { opAwaitAsync } from './await.js';
+import { opMap } from './map.js';
 
 describe('Validate await', () => {
     test('asyncAwait', async () => {

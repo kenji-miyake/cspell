@@ -1,9 +1,10 @@
 {
   "name": "@cspell/cspell-service-bus",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
-  "version": "6.12.0",
+  "version": "8.17.3",
   "description": "A Library for connecting requests to services that can fulfill them.",
   "keywords": [
     "cspell"
@@ -11,38 +12,18 @@
   "author": "Jason Dent <jason@streetsidesoftware.nl>",
   "homepage": "https://github.com/streetsidesoftware/cspell/tree/main/packages/cspell-service-bus#readme",
   "license": "MIT",
-  "main": "dist/index.js",
-  "directories": {
-    "dist": "dist"
-  },
+  "type": "module",
+  "sideEffects": false,
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
   "exports": {
     ".": {
-      "require": "./dist/index.js"
-    },
-    "./*": {
-      "require": "./dist/*.js"
-    },
-    "./index": "./dist/index.js",
-    "./index.js": "./dist/index.js",
-    "./index.d.ts": "./dist/index.d.ts"
-  },
-  "typings": "dist/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "index.d.ts": [
-        "dist/index.d.ts"
-      ],
-      "dist/index.d.ts": [
-        "dist/index.d.ts"
-      ],
-      "*": [
-        "dist/*",
-        "dist/*/index.d.ts"
-      ]
+      "import": "./dist/esm/index.js"
     }
   },
   "files": [
     "dist",
+    "!**/*.tsbuildInfo",
     "!**/__mocks__",
     "!**/*.spec.*",
     "!**/*.test.*",
@@ -50,28 +31,26 @@
     "!**/*.map"
   ],
   "scripts": {
-    "build": "tsc -p .",
-    "build-dev": "tsc -p tsconfig.dev.json",
-    "watch": "tsc -p . -w",
-    "clean": "rimraf dist coverage .tsbuildinfo",
-    "clean-build": "pnpm run clean && pnpm run build",
-    "coverage": "jest --coverage",
-    "test-watch": "jest --watch",
-    "test": "jest"
+    "build": "tsc -b . -f",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:clean": "pnpm run clean && pnpm run build",
+    "watch": "tsc -b . -w -f",
+    "clean": "shx rm -rf dist temp coverage \"*.tsbuildInfo\"",
+    "clean-build": "pnpm build:clean",
+    "coverage": "vitest run --coverage",
+    "test-watch": "vitest --watch",
+    "test": "vitest run"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/streetsidesoftware/cspell.git"
+    "url": "https://github.com/streetsidesoftware/cspell.git",
+    "directory": "packages/cspell-service-bus"
   },
   "bugs": {
     "url": "https://github.com/streetsidesoftware/cspell/labels/cspell-service-bus"
   },
   "engines": {
-    "node": ">=14"
-  },
-  "devDependencies": {
-    "@types/node": "^18.8.2",
-    "jest": "^29.1.2",
-    "rimraf": "^3.0.2"
+    "node": ">=18"
   }
 }

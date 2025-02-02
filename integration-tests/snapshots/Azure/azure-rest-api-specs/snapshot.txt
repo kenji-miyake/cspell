@@ -1,413 +1,326 @@
 
 Repository: Azure/azure-rest-api-specs
 Url: "https://github.com/Azure/azure-rest-api-specs.git"
-Args: ["--config=cSpell.json","**/*.{md,ts,js}"]
+Args: ["--config=cspell.json","**/*.{md,ts,js}"]
 Lines:
- CSpell: Files checked: 1913, Issues found: 2262 in 727 files
+ CSpell: Files checked: 2367, Issues found: 319 in 12 files.
  exit code: 1
-./CONTRIBUTING.md:24:6      - Unknown word (tocstop)    -- <!-- tocstop -->
-./CONTRIBUTING.md:86:3      - Unknown word (Poli)       -- - PoliCheck -
-./CONTRIBUTING.md:9:29      - Unknown word (maxdepth)   -- npx markdown-toc -i --maxdepth 4 CONTRIBUTING.md
-./README.md:101:28    - Unknown word (Playfab)    -- +---Microsoft.Playfab
-./README.md:149:23    - Unknown word (sharedgallery) -- | |     +---sharedgallery
-./README.md:171:521   - Unknown word (enitity)       -- latter supports the enitity type sharing cross components
-./README.md:51:108    - Unknown word (AFEC)       -- Public Preview (behind [AFEC](https://armwiki.azurewebsite
-./README.md:99:10     - Unknown word (playfab)    -- | +---playfab
-./SECURITY.md:13:72     - Unknown word (MSRC)       -- Security Response Center (MSRC) at [https://msrc.microsoft
-./SECURITY.md:17:205    - Unknown word (msrc)       -- found at [microsoft.com/msrc](https://aka.ms/opensource
-./arm-compute/quickstart-templates/README.md:3:107     - Unknown word (quickstart) -- specification/compute/quickstart-templates`. However
-./dev/cognitiveservices/data-plane/Language/readme.md:35:1      - Unknown word (modelerfour) -- modelerfour:
-./documentation/FAQ.md:41:51     - Unknown word (examplegen) -- from Swagger?<a name="examplegen"></a>
-./documentation/Semantic-and-Model-Violations-Reference.md:15:14     - Unknown word (OPERATIONID) -- | [DUPLICATE_OPERATIONID](#DUPLICATE_OPERATIONID
-./documentation/Semantic-and-Model-Violations-Reference.md:647:39    - Unknown word (dicriminator) -- : The value of x-ms-dicriminator-value is not in the
-./documentation/api-scenario/how-to/GenerateABasicApiScenario.md:16:48     - Unknown word (Restler)    -- dependencies.json with Restler.
-./documentation/api-scenario/how-to/GenerateABasicApiScenario.md:19:129    - Unknown word (Tler)          -- tlerfuzzer/restler dotnet /RESTler/restler/Restler.dll
-./documentation/api-scenario/how-to/GenerateABasicApiScenario.md:19:182    - Unknown word (appconfiguration) -- --api_spec /swagger/appconfiguration/resource-manager/Microsoft
-./documentation/api-scenario/how-to/GenerateABasicApiScenario.md:19:63     - Unknown word (restler)    -- swagger -w /swagger/.restler_output mcr.microsoft
-./documentation/api-scenario/how-to/GenerateABasicApiScenario.md:19:96     - Unknown word (restlerfuzzer) -- output mcr.microsoft.com/restlerfuzzer/restler dotnet /RESTler
-./documentation/api-scenario/how-to/QuickStart.md:125:83    - Unknown word (apitest)    -- and postman env in `.apitest/<apiScenarioFile>/<runId
-./documentation/api-scenario/how-to/QuickStart.md:20:71     - Unknown word (Dogfood)    -- API Scenario with ARM Dogfood/Canary/Production environment
-./documentation/api-scenario/how-to/QuickStart.md:54:13     - Unknown word (configstor) -- prefix: configstor
-./documentation/api-scenario/how-to/ResolveDependencies.md:141:32    - Unknown word (azureuser)  -- adminUsername: azureuser
-./documentation/api-scenario/how-to/ResolveDependencies.md:246:22    - Unknown word (ipconfigmy) -- "name": "ipconfigmyVM",
-./documentation/api-scenario/references/ApiScenarioDefinition.md:277:29    - Unknown word (somedomain) -- value: $(serviceName).somedomain.com
-./documentation/api-scenario/references/ErrorCodeReference.md:32:31     - Unknown word (blobnfs)    -- "namespacePath":"/blobnfs"
-./documentation/ci-fix.md:162:9     - Unknown word (Pakcage)    -- |MissingPakcageJson| adding the package
-./documentation/ci-fix.md:60:216    - Unknown word (guildance)  -- github comment with guildance on how to fix.
-./documentation/ci-fix.md:74:125    - Unknown word (differece)  -- final result is the differece set between the result
-./documentation/ci-fix.md:74:55     - Unknown word (currect)    -- run linter against the currect spec and the spec before
-./documentation/ci-fix.md:9:76      - Unknown word (supress)    -- not a word and need to supress the error in that file
-./documentation/code-gen/configure-cli.md:103:91    - Unknown word (commmand)   -- passed by user in their commmand line which should points
-./documentation/code-gen/configure-cli.md:115:62    - Unknown word (offazure)   -- packages like migrate and offazure.
-./documentation/code-gen/configure-cli.md:243:47    - Unknown word (qiaozha)    -- autorest/az@latest /home/qiaozha/code/azure-rest-api
-./documentation/code-gen/configure-cli.md:93:48     - Unknown word (azext)      -- $(az-output-folder)/azext_communication/vendored
-./documentation/code-gen/configure-go-sdk.md:107:136   - Unknown word (agrifood)        -- specs/specification/agrifood/resource-manager/readme
-./documentation/code-gen/configure-go-sdk.md:121:32    - Unknown word (armcompute)      -- checkout -t origin/sdkAuto/armcompute
-./documentation/code-gen/configure-go-sdk.md:149:22    - Unknown word (nreplace)        -- Add-Content go.mod "`nreplace github.com/Azure/azure
-./documentation/code-gen/configure-go-sdk.md:82:188    - Unknown word (resourcemanager) -- packages use pattern `sdk/resourcemanager/$(rp)/arm$(namespace
-./documentation/code-gen/configure-python-sdk.md:132:224   - Unknown word (choosed)          -- api-version which is choosed as the latest stable
-./documentation/code-gen/configure-python-sdk.md:13:8      - Unknown word (Appconfiguration) -- title: AppconfigurationConfigurationClient
-./documentation/code-gen/configure-python-sdk.md:152:5     - Unknown word (multiapiscript)   -- - multiapiscript: true
-./documentation/creating-swagger.md:581:16    - Unknown word (flim)       -- "bar": "flim"
-./documentation/onboard-dpg-in-sdkautomation/Integrate-dpg-and-apiview-in-sdk-automation-pipeline.md:8:21      - Unknown word (apiview)    -- ![integrate-dpg-and-apiview](imgs/integrate-dpg
-./documentation/onboard-dpg-in-sdkautomation/add-autorest-configuration-for-dataplane-sdk.md:1:34      - Unknown word (Dataplane)  -- Autorest Configuration for Dataplane SDK
-./documentation/onboard-dpg-in-sdkautomation/java/README.md:45:106    - Unknown word (dataplane)  -- samples, please refer to [dataplane samples for multi client
-./documentation/openapi-authoring-automated-guidelines.md:1442:153  - Unknown word (extendedlocation) -- identity, systemData, extendedlocation. Model definition '
-./documentation/openapi-authoring-automated-guidelines.md:164:23    - Unknown word (Paas)       -- [R4023](#r4023) | [RPaasPutLongRunningOperation
-./documentation/openapi-authoring-automated-guidelines.md:254:3     - Unknown word (alllowercase) -- * alllowercase - If there are multiple
-./documentation/openapi-authoring-automated-guidelines.md:256:60    - Unknown word (Ikey)         -- incorrectly recognize "Ikey" as a word and not flag
-./documentation/openapi-authoring-automated-guidelines.md:314:283   - Unknown word (Listby)       -- the naming convention "ListbyResourceGroup", consider
-./documentation/openapi-authoring-automated-guidelines.md:3178:32   - Unknown word (subcription)      -- // ref to the same subcriptionId
-./documentation/openapi-authoring-automated-guidelines.md:3594:16   - Unknown word (Decenmber)        -- **CreatedAt**: Decenmber 15, 2021
-./documentation/sdkautomation/README.md:247:22    - Unknown word (snuget)     -- "sdk/cdn/cdn.snuget"
-./documentation/swagger-accuracy-report.md:3:99      - Unknown word (accuractly) -- that service contracts accuractly reflect true service
-./documentation/x-ms-examples.md:105:29    - Unknown word (testrg)     -- resourceGroupName": "testrg123",
-./documentation/x-ms-examples.md:106:30    - Unknown word (testacc)    -- storageAccountName": "testacc6141",
-./profiles/ResourceSchemas.md:11:5      - Unknown word (azureresourceschema) -- azureresourceschema:
-./profiles/ResourceSchemas.md:247:106   - Unknown word (servermanagement)    -- Management/2015-07-01-preview/servermanagement.json
-./profiles/definitions/latest-2019-04-01.md:1555:17   - Unknown word (dbformariadb)            -- microsoft.dbformariadb:
-./profiles/definitions/latest-2019-04-01.md:1940:17   - Unknown word (windowsiot)              -- microsoft.windowsiot:
-./profiles/definitions/latest-2019-04-01.md:1982:17   - Unknown word (domainregistration)      -- microsoft.domainregistration:
-./profiles/definitions/latest-2019-04-01.md:1996:17   - Unknown word (certificateregistration) -- microsoft.certificateregistration:
-./profiles/definitions/latest-2019-04-01.md:204:17    - Unknown word (databoxedge) -- microsoft.databoxedge:
-./profiles/definitions/latest-2019-04-01.md:2081:17   - Unknown word (dbformysql)              -- microsoft.dbformysql:
-./profiles/definitions/latest-2019-04-01.md:2096:17   - Unknown word (dbforpostgresql)         -- microsoft.dbforpostgresql:
-./profiles/definitions/latest-2019-04-01.md:254:17    - Unknown word (Migrationdate) -- - listMigrationdate
-./profiles/definitions/latest-2019-04-01.md:333:17    - Unknown word (virtualmachineimages) -- microsoft.virtualmachineimages:
-./profiles/definitions/latest-2019-04-01.md:436:17    - Unknown word (securityinsights)     -- microsoft.securityinsights:
-./profiles/definitions/latest-2019-04-01.md:872:17    - Unknown word (hardwaresecuritymodules) -- microsoft.hardwaresecuritymodules:
-./profiles/definitions/latest-2019-04-01.md:907:17    - Unknown word (signalrservice)          -- microsoft.signalrservice:
-./profiles/definitions/latest-2019-04-24.md:732:17    - Unknown word (enterpriseknowledgegraph) -- microsoft.enterpriseknowledgegraph:
-./profiles/definitions/latest-2019-04-30.md:49:13     - Unknown word (lockchain)  -- - lockchainMembers/regenerateApiKeys
-./scripts/prettier-swagger-plugin.ts:4:25      - Unknown word (hardline)   -- const { concat, indent, hardline, join } = doc.builders
-./scripts/prettier-swagger-plugin.ts:83:17     - Unknown word (estree)     -- astFormat: 'estree-swagger-customized'
-./scripts/utils.ts:7:29      - Unknown word (logissue)   -- console.log(`##vso[task.logissue type=${type}]${line
-./specification/EnterpriseKnowledgeGraph/resource-manager/readme.go.md:8:14      - Unknown word (enterpriseknowledgegraphservice) -- namespace: enterpriseknowledgegraphservice
-./specification/addons/resource-manager/readme.go.md:14:41     - Unknown word (armaddons)  -- resourcemanager/addons/armaddons
-./specification/adp/resource-manager/readme.md:30:18     - Unknown word (rpaas)      -- openapi-subtype: rpaas
-./specification/advisor/resource-manager/Microsoft.Advisor/stable/2017-04-19/feedback.md:40:20     - Unknown word (Asssignment) -- "policyAsssignmentId":"/subscriptions/
-./specification/advisor/resource-manager/readme.go.md:14:42     - Unknown word (armadvisor) -- resourcemanager/advisor/armadvisor
-./specification/agrifood/data-plane/readme.md:1:3       - Unknown word (agfood)     -- # agfood
-./specification/alertsmanagement/resource-manager/readme.terraform.md:55:1      - Unknown word (gosdk)      -- gosdk-folder: services/preview
-./specification/apimanagement/control-plane/readme.md:135:57    - Unknown word (somefile)   -- Example/stable/2010-01-01/somefile.json
-./specification/apimanagement/resource-manager/readme.md:49:56     - Unknown word (apimconnectivitycheck) -- preview/2021-12-01-preview/apimconnectivitycheck.json
-./specification/apimanagement/resource-manager/readme.md:50:56     - Unknown word (apimcontenttypes)      -- preview/2021-12-01-preview/apimcontenttypes.json
-./specification/apimanagement/resource-manager/readme.md:51:56     - Unknown word (apimdeletedservices)   -- preview/2021-12-01-preview/apimdeletedservices.json
-./specification/apimanagement/resource-manager/readme.md:55:56     - Unknown word (apimgateways)          -- preview/2021-12-01-preview/apimgateways.json
-./specification/apimanagement/resource-manager/readme.md:60:56     - Unknown word (apimnamedvalues)       -- preview/2021-12-01-preview/apimnamedvalues.json
-./specification/apimanagement/resource-manager/readme.md:64:56     - Unknown word (apimoutbounddependency) -- preview/2021-12-01-preview/apimoutbounddependency.json
-./specification/apimanagement/resource-manager/readme.md:66:56     - Unknown word (apimpolicydescriptions) -- preview/2021-12-01-preview/apimpolicydescriptions.json
-./specification/apimanagement/resource-manager/readme.md:67:56     - Unknown word (apimpolicyfragments)    -- preview/2021-12-01-preview/apimpolicyfragments.json
-./specification/apimanagement/resource-manager/readme.md:68:56     - Unknown word (apimportalrevisions)    -- preview/2021-12-01-preview/apimportalrevisions.json
-./specification/apimanagement/resource-manager/readme.md:70:56     - Unknown word (apimportalconfigs)      -- preview/2021-12-01-preview/apimportalconfigs.json
-./specification/apimanagement/resource-manager/readme.md:71:56     - Unknown word (apimprivatelink)        -- preview/2021-12-01-preview/apimprivatelink.json
-./specification/apimanagement/resource-manager/readme.md:78:56     - Unknown word (apimsettings)           -- preview/2021-12-01-preview/apimsettings.json
-./specification/apimanagement/resource-manager/readme.md:79:56     - Unknown word (apimskus)               -- preview/2021-12-01-preview/apimskus.json
-./specification/app/resource-manager/readme.python.md:9:26      - Unknown word (appcontainers) -- package-name: azure-mgmt-appcontainers
-./specification/appconfiguration/resource-manager/readme.md:176:50    - Unknown word (proxied)    -- plane level information proxied through the RP and cannot
-./specification/applicationinsights/data-plane/Monitor.Exporters/readme.md:29:39     - Unknown word (schemaregistry) -- global settings for the schemaregistry.
-./specification/applicationinsights/resource-manager/readme.go.md:19:165    - Unknown word (livetoken)  -- preview/2020-06-02-preview/livetoken_API.json
-./specification/appplatform/resource-manager/readme.go.md:8:14      - Unknown word (appplatform) -- namespace: appplatform
-./specification/azure-kusto/resource-manager/readme.go.md:14:40     - Unknown word (armkusto)   -- resourcemanager/kusto/armkusto
-./specification/azureactivedirectory/resource-manager/readme.go.md:14:38     - Unknown word (armaad)     -- resourcemanager/aad/armaad
-./specification/azurearcdata/resource-manager/readme.csharp.md:14:40     - Unknown word (azurearcdata) -- csharp-sdks-folder)/azurearcdata/Microsoft.Azure.Management
-./specification/azuredata/resource-manager/readme.csharp.md:14:40     - Unknown word (azuredata)  -- csharp-sdks-folder)/azuredata/Microsoft.Azure.Management
-./specification/azurestackhci/resource-manager/readme.az.md:8:27      - Unknown word (azurestackhci) -- namespace: azure.mgmt.azurestackhci
-./specification/batch/resource-manager/readme.go.md:15:40     - Unknown word (armbatch)   -- resourcemanager/batch/armbatch
-./specification/billing/resource-manager/readme.az.md:88:27     - Unknown word (connot)     -- # the three get API connot auto group for not
-./specification/billing/resource-manager/readme.go.md:15:42     - Unknown word (armbilling) -- resourcemanager/billing/armbilling
-./specification/botservice/resource-manager/readme.md:43:36     - Unknown word (systemdata) -- don not yet support systemdata
-./specification/cdn/resource-manager/readme.go.md:14:38     - Unknown word (armcdn)     -- resourcemanager/cdn/armcdn
-./specification/cdn/resource-manager/readme.md:43:46     - Unknown word (cdnwebapplicationfirewall) -- preview/2022-05-01-preview/cdnwebapplicationfirewall.json
-./specification/changeanalysis/resource-manager/readme.csharp.md:14:40     - Unknown word (changeanalysis) -- csharp-sdks-folder)/changeanalysis/management/Microsoft
-./specification/chaos/resource-manager/readme.go.md:8:40      - Unknown word (armchaos)   -- resourcemanager/chaos/armchaos
-./specification/chaos/resource-manager/readme.md:149:22    - Unknown word (toplevelresourcelistbysubscription) -- we defined the toplevelresourcelistbysubscription here:
-./specification/cloudshell/resource-manager/readme.md:58:67     - Unknown word (cloudshell) -- profiles['azure_mgmt_cloudshell']
-./specification/cognitiveservices/data-plane/AzureOpenAI/authoring/readme.md:21:40     - Unknown word (azureopenai) -- preview/2022-03-01-preview/azureopenai.json
-./specification/cognitiveservices/data-plane/Face/readme.python.md:27:62     - Unknown word (cognitives) -- cognitiveservices/azure-cognitives
-./specification/cognitiveservices/data-plane/FormRecognizer/preview/v1.0/feedback.md:45:5      - Unknown word (johanste)     -- 4. [johanste] /TrainCustomModel operation
-./specification/cognitiveservices/data-plane/FormRecognizer/preview/v1.0/feedback.md:7:5       - Unknown word (shahabhijeet) -- 1. [shahabhijeet] Don't specify x-nullable
-./specification/cognitiveservices/data-plane/FormRecognizer/preview/v1.0/feedback.receipt.md:7:5       - Unknown word (dsgouda)    -- 1. [dsgouda] Mark user non-editable
-./specification/cognitiveservices/data-plane/FormRecognizer/readme.ruby.md:24:43     - Unknown word (Reognizer)  -- CognitiveServices::FormReognizer::V1_0"
-./specification/cognitiveservices/data-plane/Personalizer/readme.python.md:6:59      - Unknown word (verison)    -- may need to specify `--verison=V2`.
-./specification/cognitiveservices/data-plane/QnAMaker/readme.go.md:37:12     - Unknown word (qnamakerruntime) -- namespace: qnamakerruntime
-./specification/cognitiveservices/data-plane/SpeakerRecognition/Identification/readme.go.md:8:14      - Unknown word (speakeridentification) -- namespace: speakeridentification
-./specification/cognitiveservices/data-plane/SpeakerRecognition/Verification/readme.go.md:8:14      - Unknown word (speakerverification) -- namespace: speakerverification
-./specification/cognitiveservices/data-plane/TextAnalytics/readme.md:21:21     - Unknown word (Quickstart) -- See Text Analytics [Quickstart guide](https://docs
-./specification/communication/data-plane/CallingServer/readme.md:1:3       - Unknown word (communicationservices) -- # communicationservices
-./specification/communication/data-plane/Chat/readme.md:38:33     - Unknown word (communicationserviceschat) -- 2020-09-21-preview2/communicationserviceschat.json
-./specification/communication/data-plane/JobRouter/readme.md:29:14     - Unknown word (jobrouter)  -- tag: package-jobrouter-2022-07-18-preview
-./specification/communication/data-plane/JobRouter/readme.md:38:32     - Unknown word (communicationservicejobrouter) -- preview/2022-07-18-preview/communicationservicejobrouter.json
-./specification/communication/data-plane/MediaComposition/readme.md:38:32     - Unknown word (mediacomposition) -- preview/2022-07-16-preview/mediacomposition.json
-./specification/communication/data-plane/OperatorConnect/readme.md:43:4      - Unknown word (Supression) -- ## Supression
-./specification/communication/data-plane/PhoneNumbers/readme.md:32:18     - Unknown word (phonenumber) -- ### Tag: package-phonenumber-2021-03-07
-./specification/communication/data-plane/PhoneNumbers/readme.md:38:23     - Unknown word (phonenumbers) -- - stable/2021-03-07/phonenumbers.json
-./specification/communication/data-plane/Rooms/readme.md:31:32     - Unknown word (communicationservicesrooms) -- preview/2022-02-01-preview/communicationservicesrooms.json
-./specification/communication/data-plane/SipRouting/readme.md:38:32     - Unknown word (communicationservicessiprouting) -- preview/2022-10-01-preview/communicationservicessiprouting.json
-./specification/communication/data-plane/Sms/readme.md:38:33     - Unknown word (communicationservicessms) -- 2020-07-20-preview1/communicationservicessms.json
-./specification/communication/resource-manager/readme.md:1:3       - Unknown word (vsonline)   -- # vsonline
-./specification/compute/resource-manager/readme.az.md:5:21      - Unknown word (cloudservice) -- ``` yaml $(az) && $(cloudservice)
-./specification/compute/resource-manager/readme.az.md:83:14     - Unknown word (sshkey)       -- group: sshkey
-./specification/compute/resource-manager/readme.md:270:23    - Unknown word (Cloudservice) -- - Microsoft.Compute/CloudserviceRP/stable/2022-04-04
-./specification/confidentialledger/data-plane/readme.md:10:151    - Unknown word (identityservice)    -- ntialLedger/stable/2022-05-13/identityservice.json` for the most up
-./specification/confidentialledger/data-plane/readme.md:1:3       - Unknown word (confidentialledger) -- # confidentialledger
-./specification/connectedvmware/resource-manager/readme.azureresourceschema.md:9:17      - Unknown word (connectedvmware) -- - tag: schema-connectedvmware-2020-10-01-preview
-./specification/containerregistry/resource-manager/readme.md:360:4     - Unknown word (Pyhton)     -- ## Pyhton
-./specification/cosmos-db/data-plane/readme.go.md:8:14      - Unknown word (storagetables) -- namespace: storagetables
-./specification/cosmos-db/data-plane/readme.md:49:46     - Unknown word (outputm)    -- only supports XML input/outputm which is not supported
-./specification/cosmos-db/resource-manager/readme.go.md:14:41     - Unknown word (armcosmos)  -- resourcemanager/cosmos/armcosmos
-./specification/cosmos-db/resource-manager/readme.md:43:53     - Unknown word (mongorbac)  -- preview/2022-08-15-preview/mongorbac.json
-./specification/cost-management/resource-manager/readme.md:156:57    - Unknown word (costallocation)             -- preview/2020-03-01-preview/costallocation.json
-./specification/cost-management/resource-manager/readme.md:245:52    - Unknown word (Operatio)                   -- Response schema of OperatioAPI does not match Arm
-./specification/cost-management/resource-manager/readme.md:68:63     - Unknown word (generatecostdetailsreport) -- 5-01/costmanagement.generatecostdetailsreport.json
-./specification/cost-management/resource-manager/readme.md:71:63     - Unknown word (generatedetailedcostreport) -- 0-01/costmanagement.generatedetailedcostreport.json
-./specification/cpim/resource-manager/readme.go.md:17:14     - Unknown word (azureadexternalidentities) -- namespace: azureadexternalidentities
-./specification/customerlockbox/resource-manager/readme.csharp.md:14:40     - Unknown word (customerlockbox) -- csharp-sdks-folder)/customerlockbox/management/Microsoft
-./specification/customproviders/resource-manager/readme.terraform.md:18:19     - Unknown word (resourceproviders) -- - IdPortion: "resourceproviders"
-./specification/databox/resource-manager/readme.go.md:14:42     - Unknown word (armdatabox) -- resourcemanager/databox/armdatabox
-./specification/databoxedge/resource-manager/readme.python.md:68:84     - Unknown word (datab)      -- databoxedge/azure/mgmt/datab
-./specification/databricks/resource-manager/readme.md:111:51    - Unknown word (accessconnector) -- preview/2022-04-01-preview/accessconnector.json
-./specification/databricks/resource-manager/readme.md:90:42     - Unknown word (vnetpeering) -- Databricks/stable/2018-04-01/vnetpeering.json
-./specification/datadog/resource-manager/readme.go.md:14:42     - Unknown word (armdatadog) -- resourcemanager/datadog/armdatadog
-./specification/datadog/resource-manager/readme.java.md:24:10     - Unknown word (ppackage)   -- ### Tag: ppackage-2022-06 and java
-./specification/datalake-analytics/resource-manager/readme.go.md:14:53     - Unknown word (armdatalakeanalytics) -- rcemanager/datalake-analytics/armdatalakeanalytics
-./specification/datalake-store/resource-manager/readme.go.md:14:49     - Unknown word (armdatalakestore) -- esourcemanager/datalake-store/armdatalakestore
-./specification/dataprotection/resource-manager/readme.go.md:9:14      - Unknown word (dataprotection) -- namespace: dataprotection
-./specification/dataprotection/resource-manager/readme.typescript.md:9:29      - Unknown word (dataprotectionplatform) -- package-name: "@azure/arm-dataprotectionplatform"
-./specification/datashare/resource-manager/readme.az.md:7:15      - Unknown word (datashare)  -- extensions: datashare
-./specification/desktopvirtualization/resource-manager/readme.az.md:22:36     - Unknown word (applicationgroup)      -- desktopvirtualization applicationgroup
-./specification/desktopvirtualization/resource-manager/readme.az.md:7:15      - Unknown word (desktopvirtualization) -- extensions: desktopvirtualization
-./specification/desktopvirtualization/resource-manager/readme.cli.md:10:49     - Unknown word (Applicationgroup) -- tiveApplications|Applications|ApplicationgroupAssignments|Desktops
-./specification/developerhub/resource-manager/readme.go.md:7:34      - Unknown word (devhub)     -- sdk/resourcemanager/devhub/armdevhub
-./specification/developerhub/resource-manager/readme.go.md:7:41      - Unknown word (armdevhub)  -- resourcemanager/devhub/armdevhub
-./specification/developerhub/resource-manager/readme.typescript.md:10:49     - Unknown word (developerhub) -- typescript-sdks-folder)/sdk/developerhub/arm-devhub"
-./specification/devops/resource-manager/readme.go.md:14:41     - Unknown word (armdevops)  -- resourcemanager/devops/armdevops
-./specification/dfp/resource-manager/readme.az.md:14:7      - Unknown word (additinal)  -- # add additinal configuration here specific
-./specification/dfp/resource-manager/readme.csharp.md:13:35     - Unknown word (Fraudprotection) -- Microsoft.Dynamics365Fraudprotection
-./specification/digitaltwins/data-plane/readme.java.md:11:18     - Unknown word (subpackage) -- implementation-subpackage: implementation
-./specification/digitaltwins/resource-manager/readme.md:156:67    - Unknown word (mysb)       -- E.g., "Endpoint=sb://mysb.servicebus.windows.net
-./specification/dnc/resource-manager/readme.go.md:9:14      - Unknown word (delegatednetwork) -- namespace: delegatednetwork
-./specification/dns/resource-manager/readme.go.md:14:38     - Unknown word (armdns)     -- resourcemanager/dns/armdns
-./specification/dnsresolver/resource-manager/readme.az.md:8:27      - Unknown word (dnsresolver) -- namespace: azure.mgmt.dnsresolver
-./specification/domainservices/resource-manager/readme.md:38:35     - Unknown word (oucontainer) -- AAD/stable/2021-05-01/oucontainer.json
-./specification/edgeorder/resource-manager/readme.az.md:7:17      - Unknown word (edgeorder)  -- extensions: edgeorder
-./specification/edgeorderpartner/resource-manager/readme.md:39:57     - Unknown word (edgeorderpartner) -- preview/2020-12-01-preview/edgeorderpartner.json
-./specification/elastic/resource-manager/readme.go.md:14:42     - Unknown word (armelastic) -- resourcemanager/elastic/armelastic
-./specification/elasticsan/resource-manager/readme.az.md:7:17      - Unknown word (diskpool)   -- extensions: diskpool
-./specification/elasticsan/resource-manager/readme.az.md:8:27      - Unknown word (storagepool) -- namespace: azure.mgmt.storagepool
-./specification/eventgrid/data-plane/readme.md:66:29     - Unknown word (Jhon)       -- senderDisplayName": "Jhon",
-./specification/eventhub/resource-manager/readme.md:87:49     - Unknown word (networkrulessets) -- preview/2021-01-01-preview/networkrulessets-preview.json
-./specification/extendedlocation/resource-manager/readme.md:38:59     - Unknown word (customlocations) -- preview/2021-03-15-preview/customlocations.json
-./specification/fluidrelay/resource-manager/readme.csharp.md:14:40     - Unknown word (fluidrelay) -- csharp-sdks-folder)/fluidrelay/management/Microsoft
-./specification/frontdoor/resource-manager/readme.cli.md:13:12     - Unknown word (networkexperimentprofiles) -- "^.*[/]networkexperimentprofiles([/][^/]*)?$": "internet
-./specification/frontdoor/resource-manager/readme.cli.md:14:45     - Unknown word (preconfiguredendpoints)    -- workexperimentprofiles[/].*[/]preconfiguredendpoints[/].*$": "internet-analyzer
-./specification/frontdoor/resource-manager/readme.cli.md:16:64     - Unknown word (latencyscorecard)          -- ]experiments[/].*[/]latencyscorecard$": "internet-analyzer
-./specification/frontdoor/resource-manager/readme.cli.md:20:18     - Unknown word (endpointa)                 -- "/properties/endpointa": "endpointA_*/"
-./specification/frontdoor/resource-manager/readme.cli.md:21:18     - Unknown word (endpointb)                 -- "/properties/endpointb": "endpointB_*/"
-./specification/frontdoor/resource-manager/readme.md:43:41     - Unknown word (networkexperiment) -- Network/stable/2019-11-01/networkexperiment.json
-./specification/guestconfiguration/resource-manager/readme.az.md:7:15      - Unknown word (guestconfig) -- extensions: guestconfig
-./specification/hdinsight/resource-manager/readme.md:42:53     - Unknown word (vmsize)     -- CapabilitiesResult.properties.vmsize_filters
-./specification/healthcareapis/resource-manager/readme.cli.md:13:18     - Unknown word (authenticationconfiguration) -- "/properties/authenticationconfiguration": "Authentication*/
-./specification/healthcareapis/resource-manager/readme.cli.md:14:18     - Unknown word (corsconfiguration)           -- "/properties/corsconfiguration": "Cors*/"
-./specification/healthcareapis/resource-manager/readme.cli.md:15:18     - Unknown word (cosmosdbconfiguration)       -- "/properties/cosmosdbconfiguration": "CosmosDb*/"
-./specification/healthcareapis/resource-manager/readme.cli.md:16:18     - Unknown word (accesspolicies)              -- "/properties/accesspolicies": "AccessPolicies*/
-./specification/hybridaks/resource-manager/readme.az.md:10:14     - Unknown word (hybridaks)  -- group: hybridaks provisionedcluster
-./specification/hybridaks/resource-manager/readme.az.md:10:24     - Unknown word (provisionedcluster) -- group: hybridaks provisionedcluster
-./specification/hybridaks/resource-manager/readme.python.md:9:26      - Unknown word (hybridcontainerservice) -- package-name: azure-mgmt-hybridcontainerservice
-./specification/hybridcompute/resource-manager/readme.az.md:7:17      - Unknown word (connectedmachine) -- extensions: connectedmachine
-./specification/hybridcompute/resource-manager/readme.go.md:9:14      - Unknown word (hybridcompute) -- namespace: hybridcompute
-./specification/hybridconnectivity/resource-manager/readme.az.md:9:17      - Unknown word (hybridconnectivity) -- extensions: hybridconnectivity
-./specification/hybridkubernetes/resource-manager/readme.csharp.md:15:40     - Unknown word (hybridkubernetes) -- csharp-sdks-folder)/hybridkubernetes/Microsoft.Azure.Management
-./specification/hybridnetwork/resource-manager/readme.csharp.md:14:40     - Unknown word (hybridnetwork) -- csharp-sdks-folder)/hybridnetwork/management/Microsoft
-./specification/iothub/resource-manager/readme.go.md:14:41     - Unknown word (armiothub)  -- resourcemanager/iothub/armiothub
-./specification/keyvault/data-plane/Microsoft.KeyVault/preview/7.0/index.md:2:4       - Unknown word (assetid)    -- ms.assetid: 357c9947-1098-4a03
-./specification/keyvault/data-plane/readme.md:39:35     - Unknown word (backuprestore) -- KeyVault/stable/7.3/backuprestore.json
-./specification/keyvault/resource-manager/readme.md:201:5     - Unknown word (Supressions) -- ### Supressions
-./specification/keyvault/resource-manager/readme.md:210:91    - Unknown word (syncronous)  -- return a mix of 202 and syncronous return types (200,
-./specification/kubernetesconfiguration/resource-manager/readme.csharp.md:14:40     - Unknown word (kubernetesconfiguration) -- csharp-sdks-folder)/kubernetesconfiguration/Microsoft.Azure.Management
-./specification/kubernetesconfiguration/resource-manager/readme.md:44:57     - Unknown word (fluxconfiguration) -- nfiguration/stable/2022-07-01/fluxconfiguration.json
-./specification/logic/resource-manager/readme.go.md:14:40     - Unknown word (armlogic)   -- resourcemanager/logic/armlogic
-./specification/logz/resource-manager/readme.go.md:14:39     - Unknown word (armlogz)    -- resourcemanager/logz/armlogz
-./specification/m365securityandcompliance/resource-manager/readme.go.md:9:18      - Unknown word (securityandcompliance) -- namespace: m365securityandcompliance
-./specification/maintenance/resource-manager/readme.az.md:17:26     - Unknown word (applyupdate) -- group: maintenance applyupdate
-./specification/managednetwork/resource-manager/readme.cli.md:11:37     - Unknown word (scopeassignments) -- microsoft.managednetwork/scopeassignments([/][^/]*)?$": "managed
-./specification/managednetwork/resource-manager/readme.cli.md:12:12     - Unknown word (managednetworkgroups) -- "^.*[/]managednetworkgroups([/][^/]*)?$": "managed
-./specification/managednetwork/resource-manager/readme.cli.md:13:12     - Unknown word (managednetworkpeeringpolicies) -- "^.*[/]managednetworkpeeringpolicies([/][^/]*)?$": "managed
-./specification/managednetwork/resource-manager/readme.cli.md:8:25      - Unknown word (managednetwork) -- namespace: azure.mgmt.managednetwork
-./specification/managementgroups/resource-manager/readme.az.md:7:15      - Unknown word (managementgroup) -- extensions: managementgroup
-./specification/maps/data-plane/Creator/readme.md:49:17     - Unknown word (dwgconversion) -- - preview/2.0/dwgconversion.json
-./specification/maps/data-plane/Render/readme.md:30:96     - Unknown word (Lintdiff)   -- v0.26 of the Swagger Lintdiff.
-./specification/maps/resource-manager/readme.go.md:14:39     - Unknown word (armmaps)    -- resourcemanager/maps/armmaps
-./specification/mariadb/resource-manager/readme.go.md:14:42     - Unknown word (armmariadb) -- resourcemanager/mariadb/armmariadb
-./specification/marketplacenotifications/resource-manager/readme.azureresourceschema.md:9:17      - Unknown word (marketplacenotifications) -- - tag: schema-marketplacenotifications-2021-03-03
-./specification/marketplacenotifications/resource-manager/readme.md:73:14     - Unknown word (sdkauto)    -- - node sdkauto_afterscript.js marketplacenot
-./specification/marketplacenotifications/resource-manager/readme.md:73:22     - Unknown word (afterscript) -- - node sdkauto_afterscript.js marketplacenotifications
-./specification/migrate/resource-manager/readme.go.md:14:42     - Unknown word (armmigrate) -- resourcemanager/migrate/armmigrate
-./specification/migrate/resource-manager/readme.md:127:39    - Unknown word (hubmigrate) -- Migrate/stable/2020-05-01/hubmigrate.json
-./specification/migrateprojects/resource-manager/readme.nodejs.md:9:27      - Unknown word (migrateprojects) -- package-name: azure-arm-migrateprojects
-./specification/mixedreality/resource-manager/readme.md:190:30    - Unknown word (pyhton)     -- configuration in [readme.pyhton.md](./readme.python
-./specification/mobilenetwork/resource-manager/readme.csharp.md:14:40     - Unknown word (mobilenetwork) -- csharp-sdks-folder)/mobilenetwork/management/Microsoft
-./specification/monitor/resource-manager/readme.az.md:13:27     - Unknown word (amcs)       -- namespace: azure.mgmt.amcs
-./specification/monitor/resource-manager/readme.az.md:6:7       - Unknown word (AMCS)       -- - AMCS: true
-./specification/monitor/resource-manager/readme.csharp.md:52:65     - Unknown word (asumming)   -- api-specs, clone it (asumming at C:\Repos)
-./specification/monitor/resource-manager/readme.go.md:13:42     - Unknown word (armmonitor) -- resourcemanager/monitor/armmonitor
-./specification/monitor/resource-manager/readme.go.md:156:12    - Unknown word (datacollection)      -- namespace: datacollection
-./specification/monitor/resource-manager/readme.go.md:186:12    - Unknown word (activitylogs)        -- namespace: activitylogs
-./specification/monitor/resource-manager/readme.go.md:42:34     - Unknown word (monitorlegacy) -- package-2016-03-preview-monitorlegacy
-./specification/monitor/resource-manager/readme.go.md:46:26     - Unknown word (scheduledqueryrules) -- tag: package-2021-08-scheduledqueryrules
-./specification/msi/resource-manager/readme.go.md:14:38     - Unknown word (armmsi)     -- resourcemanager/msi/armmsi
-./specification/mysql/resource-manager/readme.go.md:11:42     - Unknown word (singleservers) -- track2) && $(package-singleservers)
-./specification/mysql/resource-manager/readme.go.md:13:40     - Unknown word (armmysql)      -- resourcemanager/mysql/armmysql
-./specification/mysql/resource-manager/readme.go.md:19:42     - Unknown word (flexibleservers) -- track2) && $(package-flexibleservers)
-./specification/mysql/resource-manager/readme.go.md:31:18     - Unknown word (flexibleserver)  -- - tag: package-flexibleserver-2021-12-01-preview
-./specification/mysql/resource-manager/readme.go.md:46:1      - Unknown word (rpname)          -- rpname: mysql
-./specification/mysql/resource-manager/readme.go.md:47:12     - Unknown word (mysqlflexibleservers) -- namespace: mysqlflexibleservers
-./specification/mysql/resource-manager/readme.md:171:68    - Unknown word (reponse)    -- included in get operation reponse body
-./specification/netapp/resource-manager/readme.go.md:14:41     - Unknown word (armnetapp)  -- resourcemanager/netapp/armnetapp
-./specification/network/resource-manager/readme.cli.md:104:14    - Unknown word (routefilters)  -- - split: routefilters
-./specification/network/resource-manager/readme.cli.md:111:14    - Unknown word (routefilterrules) -- - split: routefilterrules
-./specification/network/resource-manager/readme.cli.md:117:14    - Unknown word (virtualwans)      -- - split: virtualwans
-./specification/network/resource-manager/readme.cli.md:124:14    - Unknown word (virtualhubs)      -- - split: virtualhubs
-./specification/network/resource-manager/readme.cli.md:132:14    - Unknown word (virtualhubroutetable) -- - split: virtualhubroutetablev2s
-./specification/network/resource-manager/readme.cli.md:139:14    - Unknown word (vpnsites)             -- - split: vpnsites
-./specification/network/resource-manager/readme.cli.md:156:14    - Unknown word (bastionhosts)         -- - split: bastionhosts
-./specification/network/resource-manager/readme.cli.md:165:14    - Unknown word (inboundnatrules)      -- - split: inboundnatrules
-./specification/network/resource-manager/readme.cli.md:174:14    - Unknown word (networksecuritygroups) -- - split: networksecuritygroups
-./specification/network/resource-manager/readme.cli.md:182:14    - Unknown word (securityrules)         -- - split: securityrules
-./specification/network/resource-manager/readme.cli.md:188:14    - Unknown word (ipallocations)         -- - split: ipallocations
-./specification/network/resource-manager/readme.cli.md:197:14    - Unknown word (publicipprefixes)      -- - split: publicipprefixes
-./specification/network/resource-manager/readme.cli.md:205:14    - Unknown word (firewallpolicies)      -- - split: firewallpolicies
-./specification/network/resource-manager/readme.cli.md:218:14    - Unknown word (virtualrouters)        -- - split: virtualrouters
-./specification/network/resource-manager/readme.cli.md:224:14    - Unknown word (azurefirewalls)        -- - split: azurefirewalls
-./specification/network/resource-manager/readme.cli.md:243:14    - Unknown word (vpngateways)           -- - split: vpngateways
-./specification/network/resource-manager/readme.cli.md:251:14    - Unknown word (natgateways)           -- - split: natgateways
-./specification/network/resource-manager/readme.cli.md:260:14    - Unknown word (virtualnetworktaps)    -- - split: virtualnetworktaps
-./specification/network/resource-manager/readme.cli.md:271:14    - Unknown word (networkinterfacetapconfigurations) -- - split: networkinterfacetapconfigurations
-./specification/network/resource-manager/readme.cli.md:310:16    - Unknown word (svpngateways)                      -- - split: p2svpngateways
-./specification/network/resource-manager/readme.cli.md:321:14    - Unknown word (privatelinkservices)               -- - split: privatelinkservices
-./specification/network/resource-manager/readme.cli.md:339:14    - Unknown word (expressroutecircuits)              -- - split: expressroutecircuits
-./specification/network/resource-manager/readme.cli.md:363:14    - Unknown word (expressrouteports)                 -- - split: expressrouteports
-./specification/network/resource-manager/readme.cli.md:385:14    - Unknown word (networkwatchers)                   -- - split: networkwatchers
-./specification/network/resource-manager/readme.cli.md:404:14    - Unknown word (privateendpoints)                  -- - split: privateendpoints
-./specification/network/resource-manager/readme.cli.md:412:14    - Unknown word (applicationgateways)               -- - split: applicationgateways
-./specification/network/resource-manager/readme.cli.md:430:14    - Unknown word (networkprofiles)                   -- - split: networkprofiles
-./specification/network/resource-manager/readme.cli.md:440:14    - Unknown word (localnetworkgateways)              -- - split: localnetworkgateways
-./specification/network/resource-manager/readme.cli.md:446:14    - Unknown word (serviceendpointpolicies)           -- - split: serviceendpointpolicies
-./specification/network/resource-manager/readme.cli.md:454:14    - Unknown word (serviceendpointpolicydefinitions)  -- - split: serviceendpointpolicydefinitions
-./specification/network/resource-manager/readme.cli.md:460:14    - Unknown word (ddoscustompolicies)                -- - split: ddoscustompolicies
-./specification/network/resource-manager/readme.cli.md:465:14    - Unknown word (ddosprotectionplans)               -- - split: ddosprotectionplans
-./specification/network/resource-manager/readme.cli.md:472:14    - Unknown word (expressroutegateways)              -- - split: expressroutegateways
-./specification/network/resource-manager/readme.cli.md:480:14    - Unknown word (expressroutecrossconnections)      -- - split: expressroutecrossconnections
-./specification/network/resource-manager/readme.cli.md:489:14    - Unknown word (virtualnetworkgatewayconnections)  -- - split: virtualnetworkgatewayconnections
-./specification/network/resource-manager/readme.cli.md:501:14    - Unknown word (vpnserverconfigurations)           -- - split: vpnserverconfigurations
-./specification/network/resource-manager/readme.cli.md:508:14    - Unknown word (networkvirtualappliances)          -- - split: networkvirtualappliances
-./specification/network/resource-manager/readme.cli.md:518:14    - Unknown word (securitypartnerproviders)          -- - split: securitypartnerproviders
-./specification/network/resource-manager/readme.cli.md:525:14    - Unknown word (applicationsecuritygroups)         -- - split: applicationsecuritygroups
-./specification/network/resource-manager/readme.cli.md:532:14    - Unknown word (webapplicationfirewallpolicies)    -- - split: webapplicationfirewallpolicies
-./specification/network/resource-manager/readme.cli.md:538:14    - Unknown word (vpnconnections)                    -- - split: vpnconnections
-./specification/network/resource-manager/readme.cli.md:543:14    - Unknown word (loadbalancerbackendaddresspools)   -- - split: loadbalancerbackendaddresspools
-./specification/network/resource-manager/readme.cli.md:555:14    - Unknown word (expressroutecircuitpeerings)       -- - split: expressroutecircuitpeerings
-./specification/network/resource-manager/readme.cli.md:55:14     - Unknown word (loadbalancers) -- - split: loadbalancers
-./specification/network/resource-manager/readme.cli.md:561:14    - Unknown word (virtualrouterpeerings)             -- - split: virtualrouterpeerings
-./specification/network/resource-manager/readme.cli.md:566:14    - Unknown word (connectionmonitors)                -- - split: connectionmonitors
-./specification/network/resource-manager/readme.cli.md:576:14    - Unknown word (packetcaptures)                    -- - split: packetcaptures
-./specification/network/resource-manager/readme.cli.md:583:14    - Unknown word (flowlogs)                          -- - split: flowlogs
-./specification/network/resource-manager/readme.cli.md:589:14    - Unknown word (hubroutetables)                    -- - split: hubroutetables
-./specification/network/resource-manager/readme.cli.md:594:14    - Unknown word (expressroutecircuitauthorizations) -- - split: expressroutecircuitauthorizations
-./specification/network/resource-manager/readme.cli.md:600:14    - Unknown word (expressroutecrossconnectionpeerings) -- - split: expressroutecrossconnectionpeerings
-./specification/network/resource-manager/readme.cli.md:605:14    - Unknown word (privatednszonegroups)                -- - split: privatednszonegroups
-./specification/network/resource-manager/readme.cli.md:610:14    - Unknown word (expressrouteconnections)             -- - split: expressrouteconnections
-./specification/network/resource-manager/readme.cli.md:620:14    - Unknown word (virtualnetworkpeerings)              -- - split: virtualnetworkpeerings
-./specification/network/resource-manager/readme.cli.md:625:14    - Unknown word (expressroutecircuitconnections)      -- - split: expressroutecircuitconnections
-./specification/network/resource-manager/readme.cli.md:90:14     - Unknown word (routetables)   -- - split: routetables
-./specification/network/resource-manager/readme.go.md:14:42     - Unknown word (armnetwork) -- resourcemanager/network/armnetwork
-./specification/networkfunction/resource-manager/readme.csharp.md:14:40     - Unknown word (networkfunction) -- csharp-sdks-folder)/networkfunction/management/Microsoft
-./specification/nginx/resource-manager/readme.go.md:14:40     - Unknown word (armnginx)   -- resourcemanager/nginx/armnginx
-./specification/nginx/resource-manager/readme.md:40:9      - Unknown word (NGINXPLUS)  -- - NGINX.NGINXPLUS/stable/2022-08-01/swagger
-./specification/oep/resource-manager/readme.go.md:8:38      - Unknown word (armoep)     -- resourcemanager/oep/armoep
-./specification/orbital/resource-manager/readme.go.md:8:42      - Unknown word (armorbital) -- resourcemanager/orbital/armorbital
-./specification/peering/resource-manager/readme.cli.md:11:12     - Unknown word (legacypeerings) -- "^.*[/]legacypeerings$": "peering legacy"
-./specification/peering/resource-manager/readme.cli.md:12:12     - Unknown word (peeringlocations) -- "^.*[/]peeringlocations$": "peering location
-./specification/peering/resource-manager/readme.cli.md:13:12     - Unknown word (peeringservicelocations) -- "^.*[/]peeringservicelocations$": "peering service
-./specification/peering/resource-manager/readme.cli.md:14:12     - Unknown word (peeringserviceproviders) -- "^.*[/]peeringserviceproviders$": "peering service
-./specification/peering/resource-manager/readme.cli.md:15:12     - Unknown word (peeringservices)         -- "^.*[/]peeringservices([/][^/]*)?$": "peering
-./specification/peering/resource-manager/readme.cli.md:25:18     - Unknown word (peercontactinfo)         -- "/properties/peercontactinfo": "*/"
-./specification/peering/resource-manager/readme.cli.md:9:12      - Unknown word (peerasns)   -- "^.*[/]peerasns[/].*$": "peering asn
-./specification/peering/resource-manager/readme.go.md:15:42     - Unknown word (armpeering) -- resourcemanager/peering/armpeering
-./specification/policyinsights/resource-manager/readme.md:67:39     - Unknown word (pagable)    -- operations API is not pagable.
-./specification/portal/resource-manager/readme.go.md:14:41     - Unknown word (armportal)  -- resourcemanager/portal/armportal
-./specification/postgresql/resource-manager/readme.go.md:47:12     - Unknown word (postgresqlflexibleservers) -- namespace: postgresqlflexibleservers
-./specification/postgresqlhsc/resource-manager/readme.az.md:7:17      - Unknown word (postgresqlhsc) -- extensions: postgresqlhsc
-./specification/postgresqlhsc/resource-manager/readme.csharp.md:12:36     - Unknown word (SQLHSC)     -- Microsoft.DBforPostgreSQLHSC
-./specification/powerbiprivatelinks/resource-manager/readme.az.md:9:17      - Unknown word (powerbiprivatelinks) -- extensions: powerbiprivatelinks
-./specification/powerplatform/resource-manager/readme.csharp.md:14:40     - Unknown word (powerplatform) -- csharp-sdks-folder)/powerplatform/management/Microsoft
-./specification/purview/data-plane/readme.md:39:64     - Unknown word (purviewcatalog) -- preview/2022-03-01-preview/purviewcatalog.json
-./specification/purview/data-plane/readme.python.md:23:22     - Unknown word (truefr)     -- clear-output-folder: truefr
-./specification/purview/resource-manager/readme.go.md:14:42     - Unknown word (armpurview) -- resourcemanager/purview/armpurview
-./specification/quantum/resource-manager/readme.go.md:14:42     - Unknown word (armquantum) -- resourcemanager/quantum/armquantum
-./specification/quota/resource-manager/readme.go.md:14:40     - Unknown word (armquota)   -- resourcemanager/quota/armquota
-./specification/recommendationsservice/resource-manager/readme.az.md:9:17      - Unknown word (recommendationsservice) -- extensions: recommendationsservice
-./specification/recoveryservicesbackup/resource-manager/readme.md:38:20     - Unknown word (passivestamp) -- ``` yaml $(package-passivestamp)
-./specification/recoveryservicesbackup/resource-manager/readme.md:42:20     - Unknown word (activestamp)  -- ``` yaml $(package-activestamp)
-./specification/redhatopenshift/resource-manager/readme.go.md:8:14      - Unknown word (redhatopenshift) -- namespace: redhatopenshift
-./specification/redis/resource-manager/readme.go.md:14:40     - Unknown word (armredis)   -- resourcemanager/redis/armredis
-./specification/redis/resource-manager/readme.java.md:10:13     - Unknown word (additonal)  -- reason: additonal properties should be
-./specification/redisenterprise/resource-manager/readme.csharp.md:23:39     - Unknown word (Oneh)       -- public const string Oneh /g, "public const string
-./specification/redisenterprise/resource-manager/readme.csharp.md:24:39     - Unknown word (Sixh)       -- public const string Sixh /g, "public const string
-./specification/redisenterprise/resource-manager/readme.csharp.md:25:42     - Unknown word (Twoh)       -- public const string OneTwoh /g, "public const string
-./specification/redisenterprise/resource-manager/readme.typescript.md:9:29      - Unknown word (redisenterprisecache) -- package-name: "@azure/arm-redisenterprisecache"
-./specification/relay/resource-manager/readme.go.md:14:40     - Unknown word (armrelay)   -- resourcemanager/relay/armrelay
-./specification/resourceconnector/resource-manager/readme.go.md:32:12     - Unknown word (resourceconnector) -- namespace: resourceconnector
-./specification/resourcegraph/resource-manager/readme.md:112:56    - Unknown word (graphquery)       -- preview/2018-09-01-preview/graphquery.json
-./specification/resourcegraph/resource-manager/readme.md:174:38    - Unknown word (Listresourcechanges) -- it to ResourceChanges_Listresourcechanges seems to get rid of
-./specification/resourcegraph/resource-manager/readme.md:52:56     - Unknown word (resourceshistory) -- preview/2021-06-01-preview/resourceshistory.json
-./specification/resourcegraph/resource-manager/readme.md:60:56     - Unknown word (resourcechanges)  -- preview/2020-09-01-preview/resourcechanges.json
-./specification/resourcemover/resource-manager/readme.az.md:8:28      - Unknown word (resourcemover) -- package-name: azure-mgmt-resourcemover
-./specification/resourcemover/resource-manager/readme.md:1:3       - Unknown word (regionmove) -- # regionmove
-./specification/resourcemover/resource-manager/readme.md:39:41     - Unknown word (resourcemovercollection) -- Migrate/stable/2021-08-01/resourcemovercollection.json
-./specification/resources/resource-manager/readme.csharp.md:26:13     - Unknown word (deploymentscripts) -- - package-deploymentscripts: true
-./specification/resources/resource-manager/readme.csharp.md:27:13     - Unknown word (templatespecs)     -- - package-templatespecs: true
-./specification/resources/resource-manager/readme.go.md:47:44     - Unknown word (armlinks)   -- resourcemanager/resources/armlinks
-./specification/resources/resource-manager/readme.go.md:55:44     - Unknown word (armlocks)   -- resourcemanager/resources/armlocks
-./specification/resources/resource-manager/readme.go.md:71:44     - Unknown word (armpolicy)  -- resourcemanager/resources/armpolicy
-./specification/resources/resource-manager/readme.terraform.md:49:15     - Unknown word (newgen)     -- - Gen: "newgen"
-./specification/saas/resource-manager/readme.go.md:13:45     - Unknown word (saasresources) -- providers/Microsoft.SaaS/saasresources/{resourceId}/listAccessToken
-./specification/saas/resource-manager/readme.go.md:7:39      - Unknown word (armsaas)    -- resourcemanager/saas/armsaas
-./specification/saas/resource-manager/readme.md:65:47     - Unknown word (exsisting)  -- tenant level and its an exsisting API
-./specification/scvmm/resource-manager/readme.go.md:8:40      - Unknown word (armscvmm)   -- resourcemanager/scvmm/armscvmm
-./specification/search/data-plane/Azure.Search/readme.md:314:1     - Unknown word (vararg)     -- vararg-properties: >-
-./specification/search/data-plane/Azure.Search/readme.md:378:33    - Unknown word (fasterxml)  -- replace(/(import com.fasterxml.jackson.annotation.JsonProper
-./specification/search/resource-manager/readme.go.md:14:41     - Unknown word (armsearch)  -- resourcemanager/search/armsearch
-./specification/security/resource-manager/readme.csharp.md:18:40     - Unknown word (securitycenter) -- csharp-sdks-folder)/securitycenter/Microsoft.Azure.Management
-./specification/securityinsights/resource-manager/readme.md:405:152   - Unknown word (reviewr)    -- supress this by Swagger reviewr.'
-./specification/servicebus/resource-manager/readme.md:41:51     - Unknown word (migrationconfigs) -- preview/2021-01-01-preview/migrationconfigs.json
-./specification/servicebus/resource-manager/readme.md:42:51     - Unknown word (networksets)      -- preview/2021-01-01-preview/networksets.json
-./specification/servicefabric/resource-manager/readme.md:98:54     - Unknown word (managedcluster) -- preview/2020-01-01-preview/managedcluster.json
-./specification/servicefabric/resource-manager/readme.python.md:31:36     - Unknown word (Managedcluster) -- $['operationId'] = 'Managedcluster_List'
-./specification/servicefabricmanagedclusters/resource-manager/readme.md:199:40    - Unknown word (servicefabricmanagedclusters) -- csharp-sdks-folder)/servicefabricmanagedclusters/Microsoft.Azure.Management
-./specification/servicefabricmanagedclusters/resource-manager/readme.md:78:54     - Unknown word (managedapplication) -- preview/2022-08-01-preview/managedapplication.json
-./specification/servicelinker/resource-manager/readme.csharp.md:14:40     - Unknown word (servicelinker) -- csharp-sdks-folder)/servicelinker/management/Microsoft
-./specification/signalr/resource-manager/readme.go.md:14:42     - Unknown word (armsignalr) -- resourcemanager/signalr/armsignalr
-./specification/sql/resource-manager/readme.go.md:7:38      - Unknown word (armsql)     -- resourcemanager/sql/armsql
-./specification/sql/resource-manager/readme.md:2227:40   - Unknown word (sqlmanagement) -- csharp-sdks-folder)/sqlmanagement/Microsoft.Azure.Management
-./specification/storage/data-plane/Azure.Storage.Files.DataLake/readme.md:82:34     - Unknown word (predfined)  -- These parameters are predfined by storage specifications
-./specification/storage/resource-manager/readme.go.md:14:42     - Unknown word (armstorage) -- resourcemanager/storage/armstorage
-./specification/storagecache/resource-manager/readme.az.md:7:15      - Unknown word (storagecache) -- extensions: storagecache
-./specification/storagemover/resource-manager/readme.az.md:9:17      - Unknown word (storagemover) -- extensions: storagemover
-./specification/support/resource-manager/readme.go.md:14:42     - Unknown word (armsupport) -- resourcemanager/support/armsupport
-./specification/synapse/data-plane/readme.go.md:59:12     - Unknown word (accesscontrol) -- namespace: accesscontrol
-./specification/synapse/data-plane/readme.go.md:89:12     - Unknown word (managedvirtualnetwork) -- namespace: managedvirtualnetwork
-./specification/synapse/data-plane/readme.md:432:97    - Unknown word (proeprties)     -- Rp can't change these proeprties.
-./specification/synapse/data-plane/readme.md:66:41     - Unknown word (gitintegration) -- Synapse/stable/2020-12-01/gitintegration.json
-./specification/synapse/data-plane/readme.python.md:44:29     - Unknown word (managedprivateendpoints) -- name: azure-synapse-managedprivateendpoints
-./specification/synapse/resource-manager/readme.go.md:14:42     - Unknown word (armsynapse) -- resourcemanager/synapse/armsynapse
-./specification/testbase/resource-manager/readme.csharp.md:14:40     - Unknown word (testbase)   -- csharp-sdks-folder)/testbase/management/Microsoft
-./specification/vi/resource-manager/readme.design.md:6:133     - Unknown word (Mediause)     -- for Medianalyzer for Mediause Video Indexer today
-./specification/vi/resource-manager/readme.design.md:6:26      - Unknown word (Medianalyzer) -- Azure Video Analyzer for Medianalyzer for Media is managed
-./specification/vi/resource-manager/readme.python.md:9:26      - Unknown word (videoindexer) -- package-name: azure-mgmt-videoindexer
-./specification/vmware/resource-manager/readme.go.md:14:38     - Unknown word (armavs)     -- resourcemanager/avs/armavs
-./specification/vmwarecloudsimple/resource-manager/readme.csharp.md:13:40     - Unknown word (vmwarecloudsimple) -- csharp-sdks-folder)/vmwarecloudsimple/Microsoft.Azure.Management
-./specification/web/resource-manager/readme.md:1019:18   - Unknown word (weidongxu)  -- approved-by: "@weidongxu-microsoft"
-./specification/web/resource-manager/readme.md:1027:23   - Unknown word (cowlishaw)  -- approved-by: "@mark.cowlishaw"
-./specification/webpubsub/data-plane/readme.md:110:31    - Unknown word (webpubsubservice) -- name: azure-messaging-webpubsubservice
-./specification/windowsiot/resource-manager/readme.az.md:7:15      - Unknown word (windowsiotservices) -- extensions: windowsiotservices
+CONTRIBUTING.md:24:6      - Unknown word (tocstop)    -- <!-- tocstop -->
+CONTRIBUTING.md:79:3      - Unknown word (Poli)       -- - PoliCheck -
+README.md:23:13     - Unknown word (azsdk)      -- See [aka.ms/azsdk/spec-dirs](https://aka
+README.md:9:148     - Unknown word (azsdk)      -- Releases, go to the [aka.ms/azsdk/join](https://aka.ms
+SECURITY.md:13:72     - Unknown word (MSRC)       -- Security Response Center (MSRC) at [https://msrc.microsoft
+SECURITY.md:17:205    - Unknown word (msrc)       -- found at [microsoft.com/msrc](https://aka.ms/opensource
+profiles/ResourceSchemas.md:112:26    - Unknown word (devtestlabs)              -- - ../specification/devtestlabs/resource-manager/Microsoft
+profiles/ResourceSchemas.md:113:26    - Unknown word (devtestlabs)              -- - ../specification/devtestlabs/resource-manager/Microsoft
+profiles/ResourceSchemas.md:118:26    - Unknown word (hdinsight)                -- - ../specification/hdinsight/resource-manager/Microsoft
+profiles/ResourceSchemas.md:119:26    - Unknown word (hdinsight)                -- - ../specification/hdinsight/resource-manager/Microsoft
+profiles/ResourceSchemas.md:120:26    - Unknown word (hdinsight)                -- - ../specification/hdinsight/resource-manager/Microsoft
+profiles/ResourceSchemas.md:121:26    - Unknown word (hdinsight)                -- - ../specification/hdinsight/resource-manager/Microsoft
+profiles/ResourceSchemas.md:122:26    - Unknown word (hdinsight)                -- - ../specification/hdinsight/resource-manager/Microsoft
+profiles/ResourceSchemas.md:136:26    - Unknown word (intune)                   -- - ../specification/intune/resource-manager/Microsoft
+profiles/ResourceSchemas.md:136:60    - Unknown word (Intune)                   -- resource-manager/Microsoft.Intune/2015-01-14-preview/intune
+profiles/ResourceSchemas.md:136:86    - Unknown word (intune)                   -- Intune/2015-01-14-preview/intune.json
+profiles/ResourceSchemas.md:137:26    - Unknown word (intune)                   -- - ../specification/intune/resource-manager/Microsoft
+profiles/ResourceSchemas.md:137:60    - Unknown word (Intune)                   -- resource-manager/Microsoft.Intune/2015-01-14-privatepreview
+profiles/ResourceSchemas.md:137:93    - Unknown word (intune)                   -- 1-14-privatepreview/intune.json
+profiles/ResourceSchemas.md:213:26    - Unknown word (powerbiembedded)          -- - ../specification/powerbiembedded/resource-manager/Microsoft
+profiles/ResourceSchemas.md:213:88    - Unknown word (powerbiembedded)          -- Microsoft.PowerBI/2016-01-29/powerbiembedded.json
+profiles/ResourceSchemas.md:47:92     - Unknown word (apimdeployment) -- ApiManagement/2016-07-07/apimdeployment.json
+profiles/ResourceSchemas.md:49:92     - Unknown word (apimapis)       -- ApiManagement/2016-10-10/apimapis.json
+profiles/ResourceSchemas.md:50:92     - Unknown word (apimauthorizationservers) -- ApiManagement/2016-10-10/apimauthorizationservers.json
+profiles/ResourceSchemas.md:51:92     - Unknown word (apimbackends)             -- ApiManagement/2016-10-10/apimbackends.json
+profiles/ResourceSchemas.md:52:92     - Unknown word (apimcertificates)         -- ApiManagement/2016-10-10/apimcertificates.json
+profiles/ResourceSchemas.md:53:92     - Unknown word (apimdeployment)           -- ApiManagement/2016-10-10/apimdeployment.json
+profiles/ResourceSchemas.md:54:92     - Unknown word (apimgroups)               -- ApiManagement/2016-10-10/apimgroups.json
+profiles/ResourceSchemas.md:56:92     - Unknown word (apimloggers)              -- ApiManagement/2016-10-10/apimloggers.json
+profiles/ResourceSchemas.md:57:92     - Unknown word (apimnetworkstatus)        -- ApiManagement/2016-10-10/apimnetworkstatus.json
+profiles/ResourceSchemas.md:59:92     - Unknown word (apimproducts)             -- ApiManagement/2016-10-10/apimproducts.json
+profiles/ResourceSchemas.md:60:92     - Unknown word (apimproperties)           -- ApiManagement/2016-10-10/apimproperties.json
+profiles/ResourceSchemas.md:61:92     - Unknown word (apimquotas)               -- ApiManagement/2016-10-10/apimquotas.json
+profiles/ResourceSchemas.md:62:92     - Unknown word (apimreports)              -- ApiManagement/2016-10-10/apimreports.json
+profiles/ResourceSchemas.md:63:92     - Unknown word (apimsubscriptions)        -- ApiManagement/2016-10-10/apimsubscriptions.json
+profiles/ResourceSchemas.md:64:92     - Unknown word (apimtenant)               -- ApiManagement/2016-10-10/apimtenant.json
+profiles/definitions/hybrid-2018-03-01.md:107:13    - Unknown word (ishostnameavailable) -- - ishostnameavailable
+profiles/definitions/hybrid-2018-03-01.md:108:13    - Unknown word (isusernameavailable) -- - isusernameavailable
+profiles/definitions/hybrid-2019-03-01.md:150:13    - Unknown word (ishostnameavailable) -- - ishostnameavailable
+profiles/definitions/hybrid-2019-03-01.md:151:13    - Unknown word (isusernameavailable) -- - isusernameavailable
+profiles/definitions/latest-2019-04-01.md:1011:17   - Unknown word (devtestlab)                        -- microsoft.devtestlab:
+profiles/definitions/latest-2019-04-01.md:1027:22   - Unknown word (Vhds)                              -- - labs/listVhds
+profiles/definitions/latest-2019-04-01.md:1069:23   - Unknown word (retarget)                          -- - schedules/retarget
+profiles/definitions/latest-2019-04-01.md:112:15    - Unknown word (svpn)       -- - p2svpnGateways
+profiles/definitions/latest-2019-04-01.md:113:15    - Unknown word (svpn)       -- - p2svpnGateways/generatevpnprofile
+profiles/definitions/latest-2019-04-01.md:1141:17   - Unknown word (iotcentral)                        -- microsoft.iotcentral:
+profiles/definitions/latest-2019-04-01.md:1231:39   - Unknown word (migratetoaad)                      -- vaults/replicationFabrics/migratetoaad
+profiles/definitions/latest-2019-04-01.md:1296:20   - Unknown word (replicationv)                      -- - vaults/replicationvCenters
+profiles/definitions/latest-2019-04-01.md:1440:13   - Unknown word (remediations)                      -- - remediations
+profiles/definitions/latest-2019-04-01.md:1441:13   - Unknown word (remediations)                      -- - remediations/cancel
+profiles/definitions/latest-2019-04-01.md:1442:13   - Unknown word (remediations)                      -- - remediations/listDeployments
+profiles/definitions/latest-2019-04-01.md:144:20    - Unknown word (Wans)       -- - virtualWans
+profiles/definitions/latest-2019-04-01.md:145:20    - Unknown word (Wans)       -- - virtualWans/p2sVpnServerConfigurations
+profiles/definitions/latest-2019-04-01.md:146:20    - Unknown word (Wans)       -- - virtualWans/supportedSecurityProviders
+profiles/definitions/latest-2019-04-01.md:147:20    - Unknown word (Wans)       -- - virtualWans/vpnConfiguration
+profiles/definitions/latest-2019-04-01.md:1555:17   - Unknown word (dbformariadb)                      -- microsoft.dbformariadb:
+profiles/definitions/latest-2019-04-01.md:1663:17   - Unknown word (hdinsight)                         -- microsoft.hdinsight:
+profiles/definitions/latest-2019-04-01.md:2015:24   - Unknown word (ipfilterrules)                     -- - namespaces/ipfilterrules
+profiles/definitions/latest-2019-04-01.md:201:17    - Unknown word (Asns)       -- - peerAsns
+profiles/definitions/latest-2019-04-01.md:2050:24   - Unknown word (ipfilterrules)                     -- - namespaces/ipfilterrules
+profiles/definitions/latest-2019-04-01.md:2081:17   - Unknown word (dbformysql)                        -- microsoft.dbformysql:
+profiles/definitions/latest-2019-04-01.md:2096:17   - Unknown word (dbforpostgresql)                   -- microsoft.dbforpostgresql:
+profiles/definitions/latest-2019-04-01.md:2111:17   - Unknown word (hanaonazure)                       -- microsoft.hanaonazure:
+profiles/definitions/latest-2019-04-01.md:2183:17   - Unknown word (iotspaces)                         -- microsoft.iotspaces:
+profiles/definitions/latest-2019-04-01.md:2188:17   - Unknown word (powerbidedicated)                  -- microsoft.powerbidedicated:
+profiles/definitions/latest-2019-04-01.md:2311:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers
+profiles/definitions/latest-2019-04-01.md:2312:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/backup
+profiles/definitions/latest-2019-04-01.md:2313:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/disks
+profiles/definitions/latest-2019-04-01.md:2316:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/metrics
+profiles/definitions/latest-2019-04-01.md:2322:22   - Unknown word (iscsiservers)                      -- - managers/iscsiservers
+profiles/definitions/latest-2019-04-01.md:2357:39   - Unknown word (Kpis)                              -- profiles/getEnrichingKpis
+profiles/definitions/latest-2019-04-01.md:2491:17   - Unknown word (powerbi)                           -- microsoft.powerbi:
+profiles/definitions/latest-2019-04-01.md:2563:17   - Unknown word (intune)                            -- microsoft.intune:
+profiles/definitions/latest-2019-04-01.md:2588:17   - Unknown word (adhybridhealthservice)            -- microsoft.adhybridhealthservice:
+profiles/definitions/latest-2019-04-01.md:2591:26   - Unknown word (addomainservicemembers)           -- - addsservices/addomainservicemembers
+profiles/definitions/latest-2019-04-01.md:2660:19   - Unknown word (backendid)                        -- '/backends/{backendid}': '2017-03-01'
+profiles/definitions/latest-2019-04-01.md:2672:18   - Unknown word (loggerid)                         -- '/loggers/{loggerid}': '2017-03-01'
+profiles/definitions/latest-2019-04-01.md:2674:33   - Unknown word (opid)                             -- openidConnectProviders/{opid}': '2017-03-01'
+profiles/definitions/latest-2019-04-01.md:2676:23   - Unknown word (signup)                           -- /portalsettings/signup: '2017-03-01'
+profiles/definitions/latest-2019-04-01.md:2741:8    - Unknown word (nodeagentskus)                    -- /nodeagentskus: 2018-12-01.8.0
+profiles/definitions/latest-2019-04-01.md:2783:39   - Unknown word (reimage)                          -- poolId}/nodes/{nodeId}/reimage': 2018-12-01.8.0
+profiles/definitions/latest-2019-04-01.md:2790:24   - Unknown word (upgradeos)                        -- '/pools/{poolId}/upgradeos': 2018-08-01.7.0
+profiles/definitions/latest-2019-04-01.md:2869:8    - Unknown word (findsimilars)                     -- /findsimilars: '1.0'
+profiles/definitions/latest-2019-04-01.md:2919:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts': '2.0'
+profiles/definitions/latest-2019-04-01.md:2920:43   - Unknown word (listprebuilts)                    -- versions/{versionId}/listprebuilts': '2.0'
+profiles/definitions/latest-2019-04-01.md:2928:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{prebuiltId}': '2.0
+profiles/definitions/latest-2019-04-01.md:2967:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{entityId}/roles':
+profiles/definitions/latest-2019-04-01.md:2978:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{entityId}/roles/{roleId
+profiles/definitions/latest-2019-04-01.md:3031:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-01.md:3032:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-01.md:3033:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-01.md:3034:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-01.md:3035:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-01.md:3128:29   - Unknown word (LISTAFTERID)                      -- templeton/v1/jobs?op=LISTAFTERID: 2018-11-01-preview
+profiles/definitions/latest-2019-04-01.md:3133:21   - Unknown word (sqoop)                            -- /templeton/v1/sqoop: 2018-11-01-preview
+profiles/definitions/latest-2019-04-01.md:3270:10   - Unknown word (Unprovision)                      -- /$/Unprovision: 6.4.0.36
+profiles/definitions/latest-2019-04-01.md:3289:50   - Unknown word (Unprovision)                      -- applicationTypeName}/$/Unprovision': 6.4.0.36
+profiles/definitions/latest-2019-04-01.md:410:13    - Unknown word (pricings)   -- - pricings
+profiles/definitions/latest-2019-04-01.md:447:17    - Unknown word (devspaces)  -- microsoft.devspaces:
+profiles/definitions/latest-2019-04-01.md:695:19    - Unknown word (iscloneable) -- - sites/iscloneable
+profiles/definitions/latest-2019-04-01.md:770:25    - Unknown word (iscloneable) -- - sites/slots/iscloneable
+profiles/definitions/latest-2019-04-01.md:801:25    - Unknown word (snapshotsdr) -- - sites/slots/snapshotsdr
+profiles/definitions/latest-2019-04-01.md:819:19    - Unknown word (snapshotsdr) -- - sites/snapshotsdr
+profiles/definitions/latest-2019-04-01.md:850:13    - Unknown word (csrs)        -- - csrs
+profiles/definitions/latest-2019-04-01.md:852:13    - Unknown word (ishostingenvironmentnameavailable) -- - ishostingenvironmentnameavailable
+profiles/definitions/latest-2019-04-01.md:907:17    - Unknown word (signalrservice)                    -- microsoft.signalrservice:
+profiles/definitions/latest-2019-04-01.md:947:37    - Unknown word (reimage)                           -- virtualMachineScaleSets/reimage
+profiles/definitions/latest-2019-04-01.md:948:37    - Unknown word (reimageall)                        -- virtualMachineScaleSets/reimageall
+profiles/definitions/latest-2019-04-01.md:974:29    - Unknown word (reimage)                           -- - virtualMachines/reimage
+profiles/definitions/latest-2019-04-24.md:1015:13   - Unknown word (csrs)        -- - csrs
+profiles/definitions/latest-2019-04-24.md:1017:13   - Unknown word (ishostingenvironmentnameavailable) -- - ishostingenvironmentnameavailable
+profiles/definitions/latest-2019-04-24.md:1122:17   - Unknown word (signalrservice)                    -- microsoft.signalrservice:
+profiles/definitions/latest-2019-04-24.md:1144:17   - Unknown word (devtestlab)                        -- microsoft.devtestlab:
+profiles/definitions/latest-2019-04-24.md:1160:22   - Unknown word (Vhds)                              -- - labs/listVhds
+profiles/definitions/latest-2019-04-24.md:1202:23   - Unknown word (retarget)                          -- - schedules/retarget
+profiles/definitions/latest-2019-04-24.md:1296:17   - Unknown word (iotcentral)                        -- microsoft.iotcentral:
+profiles/definitions/latest-2019-04-24.md:1365:39   - Unknown word (migratetoaad)                      -- vaults/replicationFabrics/migratetoaad
+profiles/definitions/latest-2019-04-24.md:1430:20   - Unknown word (replicationv)                      -- - vaults/replicationvCenters
+profiles/definitions/latest-2019-04-24.md:1575:13   - Unknown word (remediations)                      -- - remediations
+profiles/definitions/latest-2019-04-24.md:1576:13   - Unknown word (remediations)                      -- - remediations/cancel
+profiles/definitions/latest-2019-04-24.md:1577:13   - Unknown word (remediations)                      -- - remediations/listDeployments
+profiles/definitions/latest-2019-04-24.md:1685:17   - Unknown word (dbformariadb)                      -- microsoft.dbformariadb:
+profiles/definitions/latest-2019-04-24.md:1863:17   - Unknown word (hdinsight)                         -- microsoft.hdinsight:
+profiles/definitions/latest-2019-04-24.md:2055:24   - Unknown word (ipfilterrules)                     -- - namespaces/ipfilterrules
+profiles/definitions/latest-2019-04-24.md:2081:24   - Unknown word (ipfilterrules)                     -- - namespaces/ipfilterrules
+profiles/definitions/latest-2019-04-24.md:209:15    - Unknown word (svpn)       -- - p2svpnGateways
+profiles/definitions/latest-2019-04-24.md:210:15    - Unknown word (svpn)       -- - p2svpnGateways/generatevpnprofile
+profiles/definitions/latest-2019-04-24.md:2121:17   - Unknown word (dbformysql)                        -- microsoft.dbformysql:
+profiles/definitions/latest-2019-04-24.md:2136:17   - Unknown word (dbforpostgresql)                   -- microsoft.dbforpostgresql:
+profiles/definitions/latest-2019-04-24.md:2151:17   - Unknown word (hanaonazure)                       -- microsoft.hanaonazure:
+profiles/definitions/latest-2019-04-24.md:2179:17   - Unknown word (iotspaces)                         -- microsoft.iotspaces:
+profiles/definitions/latest-2019-04-24.md:2184:17   - Unknown word (powerbidedicated)                  -- microsoft.powerbidedicated:
+profiles/definitions/latest-2019-04-24.md:2338:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers
+profiles/definitions/latest-2019-04-24.md:2339:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/backup
+profiles/definitions/latest-2019-04-24.md:2340:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/disks
+profiles/definitions/latest-2019-04-24.md:2343:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/metrics
+profiles/definitions/latest-2019-04-24.md:2349:22   - Unknown word (iscsiservers)                      -- - managers/iscsiservers
+profiles/definitions/latest-2019-04-24.md:2388:39   - Unknown word (Kpis)                              -- profiles/getEnrichingKpis
+profiles/definitions/latest-2019-04-24.md:241:20    - Unknown word (Wans)       -- - virtualWans
+profiles/definitions/latest-2019-04-24.md:242:20    - Unknown word (Wans)       -- - virtualWans/p2sVpnServerConfigurations
+profiles/definitions/latest-2019-04-24.md:243:20    - Unknown word (Wans)       -- - virtualWans/supportedSecurityProviders
+profiles/definitions/latest-2019-04-24.md:244:20    - Unknown word (Wans)       -- - virtualWans/vpnConfiguration
+profiles/definitions/latest-2019-04-24.md:2538:17   - Unknown word (powerbi)                           -- microsoft.powerbi:
+profiles/definitions/latest-2019-04-24.md:2616:17   - Unknown word (intune)                            -- microsoft.intune:
+profiles/definitions/latest-2019-04-24.md:2641:17   - Unknown word (adhybridhealthservice)             -- microsoft.adhybridhealthservice:
+profiles/definitions/latest-2019-04-24.md:2644:26   - Unknown word (addomainservicemembers)            -- - addsservices/addomainservicemembers
+profiles/definitions/latest-2019-04-24.md:2713:19   - Unknown word (backendid)                         -- '/backends/{backendid}': '2017-03-01'
+profiles/definitions/latest-2019-04-24.md:2725:18   - Unknown word (loggerid)                         -- '/loggers/{loggerid}': '2017-03-01'
+profiles/definitions/latest-2019-04-24.md:2727:33   - Unknown word (opid)                             -- openidConnectProviders/{opid}': '2017-03-01'
+profiles/definitions/latest-2019-04-24.md:2729:23   - Unknown word (signup)                           -- /portalsettings/signup: '2017-03-01'
+profiles/definitions/latest-2019-04-24.md:2794:8    - Unknown word (nodeagentskus)                    -- /nodeagentskus: 2018-12-01.8.0
+profiles/definitions/latest-2019-04-24.md:2836:39   - Unknown word (reimage)                          -- poolId}/nodes/{nodeId}/reimage': 2018-12-01.8.0
+profiles/definitions/latest-2019-04-24.md:2843:24   - Unknown word (upgradeos)                        -- '/pools/{poolId}/upgradeos': 2018-08-01.7.0
+profiles/definitions/latest-2019-04-24.md:2932:8    - Unknown word (findsimilars)                     -- /findsimilars: '1.0'
+profiles/definitions/latest-2019-04-24.md:2982:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts': '2.0'
+profiles/definitions/latest-2019-04-24.md:2983:43   - Unknown word (listprebuilts)                    -- versions/{versionId}/listprebuilts': '2.0'
+profiles/definitions/latest-2019-04-24.md:2991:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{prebuiltId}': '2.0
+profiles/definitions/latest-2019-04-24.md:3030:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{entityId}/roles':
+profiles/definitions/latest-2019-04-24.md:3041:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{entityId}/roles/{roleId
+profiles/definitions/latest-2019-04-24.md:3094:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-24.md:3095:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-24.md:3096:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-24.md:3097:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-24.md:3098:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-24.md:3191:29   - Unknown word (LISTAFTERID)                      -- templeton/v1/jobs?op=LISTAFTERID: 2018-11-01-preview
+profiles/definitions/latest-2019-04-24.md:3196:21   - Unknown word (sqoop)                            -- /templeton/v1/sqoop: 2018-11-01-preview
+profiles/definitions/latest-2019-04-24.md:332:37    - Unknown word (reimage)    -- virtualMachineScaleSets/reimage
+profiles/definitions/latest-2019-04-24.md:3333:10   - Unknown word (Unprovision)                      -- /$/Unprovision: 6.4.0.36
+profiles/definitions/latest-2019-04-24.md:333:37    - Unknown word (reimageall) -- virtualMachineScaleSets/reimageall
+profiles/definitions/latest-2019-04-24.md:3352:50   - Unknown word (Unprovision)                      -- applicationTypeName}/$/Unprovision': 6.4.0.36
+profiles/definitions/latest-2019-04-24.md:359:29    - Unknown word (reimage)    -- - virtualMachines/reimage
+profiles/definitions/latest-2019-04-24.md:407:17    - Unknown word (Asns)       -- - peerAsns
+profiles/definitions/latest-2019-04-24.md:679:17    - Unknown word (devspaces)  -- microsoft.devspaces:
+profiles/definitions/latest-2019-04-24.md:707:13    - Unknown word (pricings)   -- - pricings
+profiles/definitions/latest-2019-04-24.md:866:19    - Unknown word (iscloneable) -- - sites/iscloneable
+profiles/definitions/latest-2019-04-24.md:941:25    - Unknown word (iscloneable) -- - sites/slots/iscloneable
+profiles/definitions/latest-2019-04-24.md:972:25    - Unknown word (snapshotsdr) -- - sites/slots/snapshotsdr
+profiles/definitions/latest-2019-04-24.md:990:19    - Unknown word (snapshotsdr) -- - sites/snapshotsdr
+profiles/definitions/latest-2019-04-29.md:1029:25   - Unknown word (iscloneable) -- - sites/slots/iscloneable
+profiles/definitions/latest-2019-04-29.md:1060:25   - Unknown word (snapshotsdr) -- - sites/slots/snapshotsdr
+profiles/definitions/latest-2019-04-29.md:1078:19   - Unknown word (snapshotsdr) -- - sites/snapshotsdr
+profiles/definitions/latest-2019-04-29.md:1103:13   - Unknown word (csrs)        -- - csrs
+profiles/definitions/latest-2019-04-29.md:1105:13   - Unknown word (ishostingenvironmentnameavailable) -- - ishostingenvironmentnameavailable
+profiles/definitions/latest-2019-04-29.md:1179:17   - Unknown word (signalrservice)                    -- microsoft.signalrservice:
+profiles/definitions/latest-2019-04-29.md:1188:17   - Unknown word (devtestlab)                        -- microsoft.devtestlab:
+profiles/definitions/latest-2019-04-29.md:1204:22   - Unknown word (Vhds)                              -- - labs/listVhds
+profiles/definitions/latest-2019-04-29.md:1246:23   - Unknown word (retarget)                          -- - schedules/retarget
+profiles/definitions/latest-2019-04-29.md:1303:17   - Unknown word (iotcentral)                        -- microsoft.iotcentral:
+profiles/definitions/latest-2019-04-29.md:1372:39   - Unknown word (migratetoaad)                      -- vaults/replicationFabrics/migratetoaad
+profiles/definitions/latest-2019-04-29.md:1437:20   - Unknown word (replicationv)                      -- - vaults/replicationvCenters
+profiles/definitions/latest-2019-04-29.md:1582:13   - Unknown word (remediations)                      -- - remediations
+profiles/definitions/latest-2019-04-29.md:1583:13   - Unknown word (remediations)                      -- - remediations/cancel
+profiles/definitions/latest-2019-04-29.md:1584:13   - Unknown word (remediations)                      -- - remediations/listDeployments
+profiles/definitions/latest-2019-04-29.md:166:15    - Unknown word (svpn)       -- - p2svpnGateways
+profiles/definitions/latest-2019-04-29.md:167:15    - Unknown word (svpn)       -- - p2svpnGateways/generatevpnprofile
+profiles/definitions/latest-2019-04-29.md:1693:17   - Unknown word (dbformariadb)                      -- microsoft.dbformariadb:
+profiles/definitions/latest-2019-04-29.md:1868:17   - Unknown word (hdinsight)                         -- microsoft.hdinsight:
+profiles/definitions/latest-2019-04-29.md:198:20    - Unknown word (Wans)       -- - virtualWans
+profiles/definitions/latest-2019-04-29.md:199:20    - Unknown word (Wans)       -- - virtualWans/p2sVpnServerConfigurations
+profiles/definitions/latest-2019-04-29.md:200:20    - Unknown word (Wans)       -- - virtualWans/supportedSecurityProviders
+profiles/definitions/latest-2019-04-29.md:201:20    - Unknown word (Wans)       -- - virtualWans/vpnConfiguration
+profiles/definitions/latest-2019-04-29.md:2074:24   - Unknown word (ipfilterrules)                     -- - namespaces/ipfilterrules
+profiles/definitions/latest-2019-04-29.md:2100:24   - Unknown word (ipfilterrules)                     -- - namespaces/ipfilterrules
+profiles/definitions/latest-2019-04-29.md:2131:17   - Unknown word (dbforpostgresql)                   -- microsoft.dbforpostgresql:
+profiles/definitions/latest-2019-04-29.md:2146:17   - Unknown word (dbformysql)                        -- microsoft.dbformysql:
+profiles/definitions/latest-2019-04-29.md:2160:17   - Unknown word (hanaonazure)                       -- microsoft.hanaonazure:
+profiles/definitions/latest-2019-04-29.md:2188:17   - Unknown word (iotspaces)                         -- microsoft.iotspaces:
+profiles/definitions/latest-2019-04-29.md:2193:17   - Unknown word (powerbidedicated)                  -- microsoft.powerbidedicated:
+profiles/definitions/latest-2019-04-29.md:2347:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers
+profiles/definitions/latest-2019-04-29.md:2348:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/backup
+profiles/definitions/latest-2019-04-29.md:2349:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/disks
+profiles/definitions/latest-2019-04-29.md:2352:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/metrics
+profiles/definitions/latest-2019-04-29.md:2358:22   - Unknown word (iscsiservers)                      -- - managers/iscsiservers
+profiles/definitions/latest-2019-04-29.md:2397:39   - Unknown word (Kpis)                              -- profiles/getEnrichingKpis
+profiles/definitions/latest-2019-04-29.md:2547:17   - Unknown word (powerbi)                           -- microsoft.powerbi:
+profiles/definitions/latest-2019-04-29.md:2626:17   - Unknown word (intune)                            -- microsoft.intune:
+profiles/definitions/latest-2019-04-29.md:2651:17   - Unknown word (adhybridhealthservice)             -- microsoft.adhybridhealthservice:
+profiles/definitions/latest-2019-04-29.md:2654:26   - Unknown word (addomainservicemembers)            -- - addsservices/addomainservicemembers
+profiles/definitions/latest-2019-04-29.md:2723:19   - Unknown word (backendid)                         -- '/backends/{backendid}': '2017-03-01'
+profiles/definitions/latest-2019-04-29.md:2735:18   - Unknown word (loggerid)                         -- '/loggers/{loggerid}': '2017-03-01'
+profiles/definitions/latest-2019-04-29.md:2737:33   - Unknown word (opid)                             -- openidConnectProviders/{opid}': '2017-03-01'
+profiles/definitions/latest-2019-04-29.md:2739:23   - Unknown word (signup)                           -- /portalsettings/signup: '2017-03-01'
+profiles/definitions/latest-2019-04-29.md:278:17    - Unknown word (devspaces)  -- microsoft.devspaces:
+profiles/definitions/latest-2019-04-29.md:2804:8    - Unknown word (nodeagentskus)                    -- /nodeagentskus: 2018-12-01.8.0
+profiles/definitions/latest-2019-04-29.md:2846:39   - Unknown word (reimage)                          -- poolId}/nodes/{nodeId}/reimage': 2018-12-01.8.0
+profiles/definitions/latest-2019-04-29.md:2853:24   - Unknown word (upgradeos)                        -- '/pools/{poolId}/upgradeos': 2018-08-01.7.0
+profiles/definitions/latest-2019-04-29.md:2942:8    - Unknown word (findsimilars)                     -- /findsimilars: '1.0'
+profiles/definitions/latest-2019-04-29.md:2992:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts': '2.0'
+profiles/definitions/latest-2019-04-29.md:2993:43   - Unknown word (listprebuilts)                    -- versions/{versionId}/listprebuilts': '2.0'
+profiles/definitions/latest-2019-04-29.md:3001:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{prebuiltId}': '2.0
+profiles/definitions/latest-2019-04-29.md:3040:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{entityId}/roles':
+profiles/definitions/latest-2019-04-29.md:3051:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{entityId}/roles/{roleId
+profiles/definitions/latest-2019-04-29.md:3117:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-29.md:3118:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-29.md:3119:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-29.md:3120:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-29.md:3121:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-29.md:3214:29   - Unknown word (LISTAFTERID)                      -- templeton/v1/jobs?op=LISTAFTERID: 2018-11-01-preview
+profiles/definitions/latest-2019-04-29.md:3219:21   - Unknown word (sqoop)                            -- /templeton/v1/sqoop: 2018-11-01-preview
+profiles/definitions/latest-2019-04-29.md:3356:10   - Unknown word (Unprovision)                      -- /$/Unprovision: 6.4.0.36
+profiles/definitions/latest-2019-04-29.md:3375:50   - Unknown word (Unprovision)                      -- applicationTypeName}/$/Unprovision': 6.4.0.36
+profiles/definitions/latest-2019-04-29.md:347:37    - Unknown word (reimage)    -- virtualMachineScaleSets/reimage
+profiles/definitions/latest-2019-04-29.md:348:37    - Unknown word (reimageall) -- virtualMachineScaleSets/reimageall
+profiles/definitions/latest-2019-04-29.md:374:29    - Unknown word (reimage)    -- - virtualMachines/reimage
+profiles/definitions/latest-2019-04-29.md:449:17    - Unknown word (Asns)       -- - peerAsns
+profiles/definitions/latest-2019-04-29.md:751:13    - Unknown word (pricings)   -- - pricings
+profiles/definitions/latest-2019-04-29.md:954:19    - Unknown word (iscloneable) -- - sites/iscloneable
+profiles/definitions/latest-2019-04-30.md:1020:25   - Unknown word (snapshotsdr) -- - sites/slots/snapshotsdr
+profiles/definitions/latest-2019-04-30.md:1038:19   - Unknown word (snapshotsdr) -- - sites/snapshotsdr
+profiles/definitions/latest-2019-04-30.md:1063:13   - Unknown word (csrs)        -- - csrs
+profiles/definitions/latest-2019-04-30.md:1065:13   - Unknown word (ishostingenvironmentnameavailable) -- - ishostingenvironmentnameavailable
+profiles/definitions/latest-2019-04-30.md:1181:17   - Unknown word (signalrservice)                    -- microsoft.signalrservice:
+profiles/definitions/latest-2019-04-30.md:1203:17   - Unknown word (devtestlab)                        -- microsoft.devtestlab:
+profiles/definitions/latest-2019-04-30.md:1219:22   - Unknown word (Vhds)                              -- - labs/listVhds
+profiles/definitions/latest-2019-04-30.md:1261:23   - Unknown word (retarget)                          -- - schedules/retarget
+profiles/definitions/latest-2019-04-30.md:1318:17   - Unknown word (iotcentral)                        -- microsoft.iotcentral:
+profiles/definitions/latest-2019-04-30.md:1387:39   - Unknown word (migratetoaad)                      -- vaults/replicationFabrics/migratetoaad
+profiles/definitions/latest-2019-04-30.md:1452:20   - Unknown word (replicationv)                      -- - vaults/replicationvCenters
+profiles/definitions/latest-2019-04-30.md:1597:13   - Unknown word (remediations)                      -- - remediations
+profiles/definitions/latest-2019-04-30.md:1598:13   - Unknown word (remediations)                      -- - remediations/cancel
+profiles/definitions/latest-2019-04-30.md:1599:13   - Unknown word (remediations)                      -- - remediations/listDeployments
+profiles/definitions/latest-2019-04-30.md:1871:17   - Unknown word (hdinsight)                         -- microsoft.hdinsight:
+profiles/definitions/latest-2019-04-30.md:1889:17   - Unknown word (dbformariadb)                      -- microsoft.dbformariadb:
+profiles/definitions/latest-2019-04-30.md:194:37    - Unknown word (reimage)    -- virtualMachineScaleSets/reimage
+profiles/definitions/latest-2019-04-30.md:195:37    - Unknown word (reimageall) -- virtualMachineScaleSets/reimageall
+profiles/definitions/latest-2019-04-30.md:2076:24   - Unknown word (ipfilterrules)                     -- - namespaces/ipfilterrules
+profiles/definitions/latest-2019-04-30.md:2123:24   - Unknown word (ipfilterrules)                     -- - namespaces/ipfilterrules
+profiles/definitions/latest-2019-04-30.md:2146:17   - Unknown word (dbforpostgresql)                   -- microsoft.dbforpostgresql:
+profiles/definitions/latest-2019-04-30.md:2161:17   - Unknown word (dbformysql)                        -- microsoft.dbformysql:
+profiles/definitions/latest-2019-04-30.md:2176:17   - Unknown word (hanaonazure)                       -- microsoft.hanaonazure:
+profiles/definitions/latest-2019-04-30.md:2204:17   - Unknown word (powerbidedicated)                  -- microsoft.powerbidedicated:
+profiles/definitions/latest-2019-04-30.md:2213:17   - Unknown word (iotspaces)                         -- microsoft.iotspaces:
+profiles/definitions/latest-2019-04-30.md:221:29    - Unknown word (reimage)    -- - virtualMachines/reimage
+profiles/definitions/latest-2019-04-30.md:2363:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers
+profiles/definitions/latest-2019-04-30.md:2364:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/backup
+profiles/definitions/latest-2019-04-30.md:2365:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/disks
+profiles/definitions/latest-2019-04-30.md:2368:30   - Unknown word (iscsiservers)                      -- - managers/devices/iscsiservers/metrics
+profiles/definitions/latest-2019-04-30.md:2374:22   - Unknown word (iscsiservers)                      -- - managers/iscsiservers
+profiles/definitions/latest-2019-04-30.md:2413:39   - Unknown word (Kpis)                              -- profiles/getEnrichingKpis
+profiles/definitions/latest-2019-04-30.md:2563:17   - Unknown word (powerbi)                           -- microsoft.powerbi:
+profiles/definitions/latest-2019-04-30.md:2642:17   - Unknown word (intune)                            -- microsoft.intune:
+profiles/definitions/latest-2019-04-30.md:2667:17   - Unknown word (adhybridhealthservice)             -- microsoft.adhybridhealthservice:
+profiles/definitions/latest-2019-04-30.md:2670:26   - Unknown word (addomainservicemembers)            -- - addsservices/addomainservicemembers
+profiles/definitions/latest-2019-04-30.md:2739:19   - Unknown word (backendid)                         -- '/backends/{backendid}': '2017-03-01'
+profiles/definitions/latest-2019-04-30.md:2751:18   - Unknown word (loggerid)                         -- '/loggers/{loggerid}': '2017-03-01'
+profiles/definitions/latest-2019-04-30.md:2753:33   - Unknown word (opid)                             -- openidConnectProviders/{opid}': '2017-03-01'
+profiles/definitions/latest-2019-04-30.md:2755:23   - Unknown word (signup)                           -- /portalsettings/signup: '2017-03-01'
+profiles/definitions/latest-2019-04-30.md:2820:8    - Unknown word (nodeagentskus)                    -- /nodeagentskus: 2018-12-01.8.0
+profiles/definitions/latest-2019-04-30.md:2862:39   - Unknown word (reimage)                          -- poolId}/nodes/{nodeId}/reimage': 2018-12-01.8.0
+profiles/definitions/latest-2019-04-30.md:2869:24   - Unknown word (upgradeos)                        -- '/pools/{poolId}/upgradeos': 2018-08-01.7.0
+profiles/definitions/latest-2019-04-30.md:2958:8    - Unknown word (findsimilars)                     -- /findsimilars: '1.0'
+profiles/definitions/latest-2019-04-30.md:3008:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts': '2.0'
+profiles/definitions/latest-2019-04-30.md:3009:43   - Unknown word (listprebuilts)                    -- versions/{versionId}/listprebuilts': '2.0'
+profiles/definitions/latest-2019-04-30.md:3017:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{prebuiltId}': '2.0
+profiles/definitions/latest-2019-04-30.md:3056:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{entityId}/roles':
+profiles/definitions/latest-2019-04-30.md:3067:43   - Unknown word (prebuilts)                        -- versions/{versionId}/prebuilts/{entityId}/roles/{roleId
+profiles/definitions/latest-2019-04-30.md:3133:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-30.md:3134:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-30.md:3135:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-30.md:3136:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-30.md:3137:17   - Unknown word (usql)                             -- '/catalog/usql/databases/{databaseName
+profiles/definitions/latest-2019-04-30.md:3230:29   - Unknown word (LISTAFTERID)                      -- templeton/v1/jobs?op=LISTAFTERID: 2018-11-01-preview
+profiles/definitions/latest-2019-04-30.md:3235:21   - Unknown word (sqoop)                            -- /templeton/v1/sqoop: 2018-11-01-preview
+profiles/definitions/latest-2019-04-30.md:3372:10   - Unknown word (Unprovision)                      -- /$/Unprovision: 6.4.0.36
+profiles/definitions/latest-2019-04-30.md:3391:50   - Unknown word (Unprovision)                      -- applicationTypeName}/$/Unprovision': 6.4.0.36
+profiles/definitions/latest-2019-04-30.md:344:15    - Unknown word (svpn)       -- - p2svpnGateways
+profiles/definitions/latest-2019-04-30.md:345:15    - Unknown word (svpn)       -- - p2svpnGateways/generatevpnprofile
+profiles/definitions/latest-2019-04-30.md:376:20    - Unknown word (Wans)       -- - virtualWans
+profiles/definitions/latest-2019-04-30.md:377:20    - Unknown word (Wans)       -- - virtualWans/p2sVpnServerConfigurations
+profiles/definitions/latest-2019-04-30.md:378:20    - Unknown word (Wans)       -- - virtualWans/supportedSecurityProviders
+profiles/definitions/latest-2019-04-30.md:379:20    - Unknown word (Wans)       -- - virtualWans/vpnConfiguration
+profiles/definitions/latest-2019-04-30.md:401:17    - Unknown word (devspaces)  -- microsoft.devspaces:
+profiles/definitions/latest-2019-04-30.md:464:17    - Unknown word (Asns)       -- - peerAsns
+profiles/definitions/latest-2019-04-30.md:766:13    - Unknown word (pricings)   -- - pricings
+profiles/definitions/latest-2019-04-30.md:914:19    - Unknown word (iscloneable) -- - sites/iscloneable
+profiles/definitions/latest-2019-04-30.md:989:25    - Unknown word (iscloneable) -- - sites/slots/iscloneable
+profiles/definitions/stable-2019-01.md:53:13     - Unknown word (ishostnameavailable) -- - ishostnameavailable
+profiles/definitions/stable-2019-01.md:54:13     - Unknown word (isusernameavailable) -- - isusernameavailable
+specification/recoveryservicesdatareplication/resource-manager/readme.java.md:11:447    - Unknown word (Mware)      -- tensionModelCustomProperties:VMwareToAzStackHciRepExtnCustomProps

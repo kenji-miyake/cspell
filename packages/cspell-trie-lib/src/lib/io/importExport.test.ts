@@ -1,7 +1,10 @@
-import { readFile } from 'fs-extra';
-import * as Trie from '..';
-import { resolveSample } from '../../test/samples';
-import { importTrie, serializeTrie } from './importExport';
+import { readFile } from 'node:fs/promises';
+
+import { describe, expect, test } from 'vitest';
+
+import { resolveSample } from '../../test/samples.js';
+import * as Trie from '../index.js';
+import { importTrie, serializeTrie } from './importExport.js';
 
 describe('Import/Export', () => {
     const pSampleWords = readFile(resolveSample('sample.txt'), 'utf8');
@@ -14,7 +17,7 @@ describe('Import/Export', () => {
         ${4}    | ${10}
     `('tests serialize / deserialize version: $version, base: $base', async ({ version, base }) => {
         const sampleWords = (await pSampleWords).split('\n').filter((a) => !!a);
-        const trie = Trie.createTriFromList(sampleWords);
+        const trie = Trie.createTrieRootFromList(sampleWords);
         const data = [...serializeTrie(trie, { version, base })];
         const root = importTrie(data);
         const words = [...Trie.iteratorTrieWords(root)];
@@ -23,7 +26,7 @@ describe('Import/Export', () => {
 
     test('tests serialize / deserialize V2', async () => {
         const sampleWords = (await pSampleWords).split('\n').filter((a) => !!a);
-        const trie = Trie.createTriFromList(sampleWords);
+        const trie = Trie.createTrieRootFromList(sampleWords);
         const data = [
             ...serializeTrie(trie, {
                 version: 2,
@@ -38,7 +41,7 @@ describe('Import/Export', () => {
 
     test('tests serialize unknown version', async () => {
         const sampleWords = (await pSampleWords).split('\n').filter((a) => !!a);
-        const trie = Trie.createTriFromList(sampleWords);
+        const trie = Trie.createTrieRootFromList(sampleWords);
         const dataFn = () =>
             serializeTrie(trie, {
                 version: 99,

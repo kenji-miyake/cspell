@@ -1,7 +1,9 @@
+import { promises as fs } from 'node:fs';
+import * as path from 'node:path';
+
 import type { ParsedText, Parser } from '@cspell/cspell-types/Parser';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import { parser as parserTypeScript } from './parsers/typescript';
+
+import { parser as parserTypeScript } from './parsers/typescript/index.js';
 
 const parsers: Record<string, Parser> = {
     '.ts': parserTypeScript,
@@ -19,7 +21,7 @@ export async function run(args: string[]): Promise<void> {
         return;
     }
 
-    const filename = args.slice(2).filter((p) => !p.startsWith('-'))[0];
+    const filename = args.slice(2).find((p) => !p.startsWith('-'));
     if (!filename) {
         console.log('filename missing');
         return;
@@ -33,7 +35,7 @@ export async function run(args: string[]): Promise<void> {
     }
 
     console.log(`File: ${path.basename(filename)} Parser: ${parser.name}`);
-    const content = await fs.readFile(filename, 'utf-8');
+    const content = await fs.readFile(filename, 'utf8');
 
     const result = parser.parse(content, filename);
     for (const pt of result.parsedTexts) {
@@ -42,6 +44,6 @@ export async function run(args: string[]): Promise<void> {
 }
 
 function emit(pt: ParsedText) {
-    const t = pt.text.replace(/\t/g, '↦').replace(/\r?\n/g, '↩︎').replace(/\r/g, '⇠');
+    const t = pt.text.replaceAll('\t', '↦').replaceAll(/\r?\n/g, '↩︎').replaceAll('\r', '⇠');
     console.log(`${pt.range[0]}-${pt.range[1]}\t${t}\t${pt.scope?.toString() || ''}`);
 }

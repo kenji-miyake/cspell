@@ -1,9 +1,0 @@
-{
-    "ignoreWords": [
-        "quic",
-        "tsbuildinfo"
-    ],
-    "words": [
-        "pnpm"
-    ]
-}

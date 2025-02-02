@@ -1,10 +1,9 @@
-import type { DictionaryInformation } from './DictionaryInformation';
-import type { Features } from './features';
-import { Parser, ParserName } from './Parser';
-import { Serializable } from './types';
-
-export type ReplaceEntry = [string, string];
-export type ReplaceMap = ReplaceEntry[];
+import type { ReporterConfigurationBase } from './CSpellReporter.js';
+import type { DictionaryDefinition, DictionaryReference } from './DictionaryDefinition.js';
+import type { Features } from './features.js';
+import type { InlineDictionary } from './InlineDictionary.js';
+import type { Parser, ParserName } from './Parser/index.js';
+import type { Serializable } from './types.js';
 
 /**
  * These settings come from user and workspace settings.
@@ -16,6 +15,7 @@ export type CSpellUserSettings = CSpellSettings;
 export interface CSpellSettings extends FileSettings, LegacySettings {}
 
 export interface ImportFileRef {
+    /** filename or URL */
     filename: string;
     error?: Error | undefined;
     referencedBy?: Source[];
@@ -93,7 +93,7 @@ export interface FileSettings extends ExtendableSettings, CommandLineSettings {
     /**
      * Glob patterns of files to be ignored.
      *
-     * Glob patterns are relative to the `globRoot` of the configuration file that defines them.
+     * Glob patterns are relative to the {@link globRoot} of the configuration file that defines them.
      */
     ignorePaths?: Glob[];
 
@@ -114,7 +114,16 @@ export interface FileSettings extends ExtendableSettings, CommandLineSettings {
     readonly?: boolean;
 
     /**
-     * Custom reporters configuration.
+     * Define which reports to use.
+     * `default` - is a special name for the default cli reporter.
+     *
+     * Examples:
+     * - `["default"]` - to use the default reporter
+     * - `["@cspell/cspell-json-reporter"]` - use the cspell JSON reporter.
+     * - `[["@cspell/cspell-json-reporter", { "outFile": "out.json" }]]`
+     * - `[ "default", ["@cspell/cspell-json-reporter", { "outFile": "out.json" }]]` - Use both the default reporter and the cspell-json-reporter.
+     *
+     * @default ["default"]
      */
     reporters?: ReporterSettings[];
 
@@ -125,7 +134,7 @@ export interface FileSettings extends ExtendableSettings, CommandLineSettings {
     useGitignore?: boolean;
 
     /**
-     * Tells the spell checker to searching for `.gitignore` files when it reaches a matching root.
+     * Tells the spell checker to stop searching for `.gitignore` files when it reaches a matching root.
      */
     gitignoreRoot?: FsPath | FsPath[];
 
@@ -137,7 +146,7 @@ export interface FileSettings extends ExtendableSettings, CommandLineSettings {
     /**
      * Configure CSpell features.
      *
-     * - Added with `v5.16.0`.
+     * @since 5.16.0
      */
     features?: Features;
 }
@@ -175,7 +184,70 @@ export interface ExtendableSettings extends Settings {
     overrides?: OverrideSettings[];
 }
 
-export interface Settings extends ReportingConfiguration, BaseSetting, PnPSettings {
+export interface SpellCheckerExtensionSettings {
+    // * @deprecated true
+    // * @deprecationMessage - Use {@link Settings.enabledFileTypes} instead.
+    /**
+     * Specify a list of file types to spell check. It is better to use {@link Settings.enabledFileTypes} to Enable / Disable checking files types.
+     * @title Enabled Language Ids
+     * @uniqueItems true
+     */
+    enabledLanguageIds?: LanguageIdSingle[];
+
+    // * @deprecated true
+    // * @deprecationMessage - Use {@link Settings.enabledFileTypes} instead.
+    /**
+     * Enable / Disable checking file types (languageIds).
+     *
+     * These are in additional to the file types specified by {@link Settings.enabledLanguageIds}.
+     * To disable a language, prefix with `!` as in `!json`,
+     *
+     *
+     * **Example: individual file types**
+     *
+     * ```
+     * jsonc       // enable checking for jsonc
+     * !json       // disable checking for json
+     * kotlin      // enable checking for kotlin
+     * ```
+     *
+     * **Example: enable all file types**
+     *
+     * ```
+     * *           // enable checking for all file types
+     * !json       // except for json
+     * ```
+     * @title Enable File Types
+     * @scope resource
+     * @uniqueItems true
+     */
+    enableFiletypes?: LanguageIdSingle[];
+
+    /**
+     * Enable / Disable checking file types (languageIds).
+     *
+     * This setting replaces: {@link Settings.enabledLanguageIds} and {@link Settings.enableFiletypes}.
+     *
+     * A Value of:
+     * - `true` - enable checking for the file type
+     * - `false` - disable checking for the file type
+     *
+     * A file type of `*` is a wildcard that enables all file types.
+     *
+     * **Example: enable all file types**
+     *
+     * | File Type | Enabled | Comment |
+     * | --------- | ------- | ------- |
+     * | `*`       | `true`  | Enable all file types. |
+     * | `json`    | `false` | Disable checking for json files. |
+     *
+     * @title Enabled File Types to Check
+     * @since 8.8.1
+     */
+    enabledFileTypes?: Record<string, boolean>;
+}
+
+export interface Settings extends ReportingConfiguration, BaseSetting, PnPSettings, SpellCheckerExtensionSettings {
     /**
      * Current active spelling language. This specifies the language locale to use in choosing the
      * general dictionary.
@@ -189,36 +261,16 @@ export interface Settings extends ReportingConfiguration, BaseSetting, PnPSettin
      */
     language?: LocaleId;
 
-    /** languageIds for the files to spell check. */
-    enabledLanguageIds?: LanguageIdSingle[];
-
-    /**
-     * @title File Types to Check
-     * @scope resource
-     * @uniqueItems true
-     * @markdownDescription
-     * Enable / Disable checking file types (languageIds).
-     * These are in additional to the file types specified by `cSpell.enabledLanguageIds`.
-     * To disable a language, prefix with `!` as in `!json`,
-     *
-     * Example:
-     * ```
-     * jsonc       // enable checking for jsonc
-     * !json       // disable checking for json
-     * kotlin      // enable checking for kotlin
-     * ```
-     */
-    enableFiletypes?: LanguageIdSingle[];
-
     /**
      * Additional settings for individual languages.
      *
      * See [Language Settings](https://cspell.org/configuration/language-settings/) for more details.
+     *
      */
     languageSettings?: LanguageSetting[];
 
     /** Forces the spell checker to assume a give language id. Used mainly as an Override. */
-    languageId?: LanguageId;
+    languageId?: MatchingFileType;
 
     /**
      * By default, the bundled dictionary configurations are loaded. Explicitly setting this to `false`
@@ -229,28 +281,7 @@ export interface Settings extends ReportingConfiguration, BaseSetting, PnPSettin
     loadDefaultConfiguration?: boolean;
 }
 
-export interface ReportingConfiguration extends SuggestionsConfiguration {
-    /**
-     * The maximum number of problems to report in a file.
-     *
-     * @default 100
-     */
-    maxNumberOfProblems?: number;
-
-    /**
-     * The maximum number of times the same word can be flagged as an error in a file.
-     *
-     * @default 5
-     */
-    maxDuplicateProblems?: number;
-
-    /**
-     * The minimum length of a word before checking it against a dictionary.
-     *
-     * @default 4
-     */
-    minWordLength?: number;
-}
+export interface ReportingConfiguration extends ReporterConfigurationBase, SuggestionsConfiguration {}
 
 export interface SuggestionsConfiguration {
     /**
@@ -304,10 +335,11 @@ export interface PnPSettings {
 
 /**
  * The Strategy to use to detect if a file has changed.
- * - `metadata` - uses the file system timestamp and size to detect changes (fastest).
  * - `content` - uses a hash of the file content to check file changes (slower - more accurate).
+ * - `metadata` - uses the file system timestamp and size to detect changes (fastest, may not work in CI).
+ * @default 'content'
  */
-export type CacheStrategy = 'metadata' | 'content';
+export type CacheStrategy = 'content' | 'metadata';
 
 export type CacheFormat = 'legacy' | 'universal';
 
@@ -339,7 +371,7 @@ export interface CacheSettings {
      * Format of the cache file.
      * - `legacy` - use absolute paths in the cache file
      * - `universal` - use a sharable format.
-     * @default 'legacy'
+     * @default 'universal'
      */
     cacheFormat?: CacheFormat | undefined;
 }
@@ -407,8 +439,8 @@ export interface LegacySettings {
 }
 
 export interface OverrideSettings extends Settings, OverrideFilterFields {
-    /** Sets the programming language id. */
-    languageId?: LanguageId;
+    /** Sets the programming language id to match file type. */
+    languageId?: MatchingFileType;
 
     /** Sets the locale. */
     language?: LocaleId;
@@ -419,7 +451,7 @@ export interface OverrideFilterFields {
     filename: Glob | Glob[];
 }
 
-export interface BaseSetting extends ExperimentalBaseSettings {
+export interface BaseSetting extends InlineDictionary, ExperimentalBaseSettings {
     /** Optional identifier. */
     id?: string;
 
@@ -435,20 +467,8 @@ export interface BaseSetting extends ExperimentalBaseSettings {
      */
     enabled?: boolean;
 
-    /** List of words to be always considered correct. */
-    words?: string[];
-
-    /** List of words to always be considered incorrect. */
-    flagWords?: string[];
-
     /**
-     * List of words to be ignored. An ignored word will not show up as an error, even if it is
-     * also in the `flagWords`.
-     */
-    ignoreWords?: string[];
-
-    /**
-     * True to enable compound word checking. See [Case Sensitivity](https://cspell.org/docs/case-sensitive/) for more details.
+     * True to enable compound word checking.
      *
      * @default false
      */
@@ -456,6 +476,8 @@ export interface BaseSetting extends ExperimentalBaseSettings {
 
     /**
      * Determines if words must match case and accent rules.
+     *
+     * See [Case Sensitivity](https://cspell.org/docs/case-sensitive/) for more details.
      *
      * - `false` - Case is ignored and accents can be missing on the entire word.
      *   Incorrect accents or partially missing accents will be marked as incorrect.
@@ -505,13 +527,29 @@ export interface BaseSetting extends ExperimentalBaseSettings {
     /**
      * List of regular expression patterns or pattern names to exclude from spell checking.
      *
-     * Example: ["href"] - to exclude html href.
+     * Example: `["href"]` - to exclude html href pattern.
+     *
+     * Regular expressions use JavaScript regular expression syntax.
+     *
+     * Example: to ignore ALL-CAPS words
+     *
+     * JSON
+     * ```json
+     * "ignoreRegExpList": ["/\\b[A-Z]+\\b/g"]
+     * ```
+     *
+     * YAML
+     * ```yaml
+     * ignoreRegExpList:
+     *   - >-
+     *    /\b[A-Z]+\b/g
+     * ```
      *
      * By default, several patterns are excluded. See
-     * [Configuration](https://cspell.org/configuration/#cspelljson-sections) for more details.
+     * [Configuration](https://cspell.org/configuration/patterns) for more details.
      *
      * While you can create your own patterns, you can also leverage several patterns that are
-     * [built-in to CSpell](https://github.com/streetsidesoftware/cspell/blob/main/packages/cspell-lib/src/Settings/DefaultSettings.ts#L22).
+     * [built-in to CSpell](https://cspell.org/types/cspell-types/types/PredefinedPatterns.html).
      */
     ignoreRegExpList?: RegExpPatternList;
 
@@ -521,13 +559,13 @@ export interface BaseSetting extends ExperimentalBaseSettings {
      * If this property is defined, only text matching the included patterns will be checked.
      *
      * While you can create your own patterns, you can also leverage several patterns that are
-     * [built-in to CSpell](https://github.com/streetsidesoftware/cspell/blob/main/packages/cspell-lib/src/Settings/DefaultSettings.ts#L22).
+     * [built-in to CSpell](https://cspell.org/types/cspell-types/types/PredefinedPatterns.html).
      */
     includeRegExpList?: RegExpPatternList;
 
     /**
-     * Defines a list of patterns that can be used with the `ignoreRegExpList` and
-     * `includeRegExpList` options.
+     * Defines a list of patterns that can be used with the {@link ignoreRegExpList} and
+     * {@link includeRegExpList} options.
      *
      * For example:
      *
@@ -553,153 +591,6 @@ export interface BaseSetting extends ExperimentalBaseSettings {
     patterns?: RegExpPatternDefinition[];
 }
 
-export type DictionaryFileTypes = 'S' | 'W' | 'C' | 'T';
-
-export type DictionaryDefinition =
-    | DictionaryDefinitionPreferred
-    | DictionaryDefinitionCustom
-    | DictionaryDefinitionAugmented
-    | DictionaryDefinitionAlternate
-    | DictionaryDefinitionLegacy;
-
-export interface DictionaryDefinitionBase {
-    /**
-     * This is the name of a dictionary.
-     *
-     * Name Format:
-     * - Must contain at least 1 number or letter.
-     * - Spaces are allowed.
-     * - Leading and trailing space will be removed.
-     * - Names ARE case-sensitive.
-     * - Must not contain `*`, `!`, `;`, `,`, `{`, `}`, `[`, `]`, `~`.
-     */
-    name: DictionaryId;
-    /** Optional description. */
-    description?: string;
-    /** Replacement pairs. */
-    repMap?: ReplaceMap;
-    /** Use Compounds. */
-    useCompounds?: boolean;
-    /**
-     * Indicate that suggestions should not come from this dictionary.
-     * Words in this dictionary are considered correct, but will not be
-     * used when making spell correction suggestions.
-     *
-     * Note: if a word is suggested by another dictionary, but found in
-     * this dictionary, it will be removed from the set of
-     * possible suggestions.
-     */
-    noSuggest?: boolean;
-    /**
-     * Type of file:
-     * S - single word per line,
-     * W - each line can contain one or more words separated by space,
-     * C - each line is treated like code (Camel Case is allowed).
-     * Default is S.
-     * C is the slowest to load due to the need to split each line based upon code splitting rules.
-     * @default "S"
-     */
-    type?: DictionaryFileTypes;
-}
-
-export interface DictionaryDefinitionPreferred extends DictionaryDefinitionBase {
-    /** Path to the file. */
-    path: DictionaryPath;
-
-    /**
-     * Only for legacy dictionary definitions.
-     * @deprecated true
-     * @deprecationMessage Use `path` instead.
-     * @hidden
-     */
-    file?: undefined;
-}
-
-/**
- * Used to provide extra data related to the dictionary
- */
-export interface DictionaryDefinitionAugmented extends DictionaryDefinitionPreferred {
-    dictionaryInformation?: DictionaryInformation;
-}
-
-/**
- * Only for legacy dictionary definitions.
- * @deprecated true
- * @deprecationMessage Use `DictionaryDefinitionPreferred` instead.
- */
-export interface DictionaryDefinitionAlternate extends DictionaryDefinitionBase {
-    /** @hidden */
-    path?: undefined;
-
-    /**
-     * Path to the file, only for legacy dictionary definitions.
-     * @deprecated true
-     * @deprecationMessage Use `path` instead.
-     */
-    file: DictionaryPath;
-
-    /** @hidden */
-    suggestionEditCosts?: undefined;
-}
-
-/**
- * @deprecated true
- * @hidden
- */
-export interface DictionaryDefinitionLegacy extends DictionaryDefinitionBase {
-    /** Path to the file, if undefined the path to the extension dictionaries is assumed. */
-    path?: FsPath;
-    /**
-     * File name.
-     * @deprecated true
-     * @deprecationMessage Use `path` instead.
-     */
-    file: FsPath;
-    /**
-     * Type of file:
-     * S - single word per line,
-     * W - each line can contain one or more words separated by space,
-     * C - each line is treated like code (Camel Case is allowed).
-     * Default is S.
-     * C is the slowest to load due to the need to split each line based upon code splitting rules.
-     * @default "S"
-     */
-    type?: DictionaryFileTypes;
-
-    /**
-     * @hidden
-     */
-    suggestionEditCosts?: undefined;
-}
-
-/**
- * Specifies the scope of a dictionary.
- */
-export type CustomDictionaryScope = 'user' | 'workspace' | 'folder';
-
-/**
- * For Defining Custom dictionaries. They are generally scoped to a
- * `user`, `workspace`, or `folder`.
- * When `addWords` is true, indicates that the spell checker can add words
- * to the file.
- * Note: only plain text files with one word per line are supported at this moment.
- */
-export interface DictionaryDefinitionCustom extends DictionaryDefinitionPreferred {
-    /** Path to custom dictionary text file. */
-    path: CustomDictionaryPath;
-
-    /**
-     * Defines the scope for when words will be added to the dictionary.
-     * Scope values: `user`, `workspace`, `folder`.
-     */
-    scope?: CustomDictionaryScope | CustomDictionaryScope[];
-
-    /**
-     * When `true`, let's the spell checker know that words can be added to this dictionary.
-     */
-    addWords: boolean;
-}
-
 export interface LanguageSetting extends LanguageSettingFilterFields, BaseSetting {}
 
 export interface LanguageSettingFilterFields
@@ -707,17 +598,17 @@ export interface LanguageSettingFilterFields
         LanguageSettingFilterFieldsDeprecated {}
 
 export interface LanguageSettingFilterFieldsPreferred {
-    /** The language id.  Ex: "typescript", "html", or "php".  "*" -- will match all languages. */
-    languageId: LanguageId | LanguageIdSingle[];
-    /** The locale filter, matches against the language. This can be a comma separated list. "*" will match all locales. */
+    /** The language id.  Ex: `typescript`, `html`, or `php`.  `*` -- will match all languages. */
+    languageId: MatchingFileType;
+    /** The locale filter, matches against the language. This can be a comma separated list. `*` will match all locales. */
     locale?: LocaleId | LocaleId[];
 }
 
 export interface LanguageSettingFilterFieldsDeprecated {
-    /** The language id.  Ex: "typescript", "html", or "php".  "*" -- will match all languages. */
-    languageId: LanguageId | LanguageIdSingle[];
+    /** The language id.  Ex: `typescript`, `html`, or `php`.  `*` -- will match all languages. */
+    languageId: MatchingFileType;
     /**
-     * Deprecated - The locale filter, matches against the language. This can be a comma separated list. "*" will match all locales.
+     * Deprecated - The locale filter, matches against the language. This can be a comma separated list. `*` will match all locales.
      * @deprecated true
      * @deprecationMessage Use `locale` instead.
      */
@@ -768,51 +659,7 @@ export type PatternRef = Pattern | PatternId | PredefinedPatterns;
 /** A list of pattern names or regular expressions. */
 export type RegExpPatternList = PatternRef[];
 
-/**
- * This is the name of a dictionary.
- *
- * Name Format:
- * - Must contain at least 1 number or letter.
- * - Spaces are allowed.
- * - Leading and trailing space will be removed.
- * - Names ARE case-sensitive.
- * - Must not contain `*`, `!`, `;`, `,`, `{`, `}`, `[`, `]`, `~`.
- *
- * @pattern ^(?=[^!*,;{}[\]~\n]+$)(?=(.*\w)).+$
- */
-export type DictionaryId = string;
-
-/**
- * This a reference to a named dictionary.
- * It is expected to match the name of a dictionary.
- */
-export type DictionaryRef = DictionaryId;
-
-/**
- * This a negative reference to a named dictionary.
- *
- * It is used to exclude or include a dictionary by name.
- *
- * The reference starts with 1 or more `!`.
- * - `!<dictionary_name>` - Used to exclude the dictionary matching `<dictionary_name>`.
- * - `!!<dictionary_name>` - Used to re-include a dictionary matching `<dictionary_name>`.
- *    Overrides `!<dictionary_name>`.
- * - `!!!<dictionary_name>` - Used to exclude a dictionary matching `<dictionary_name>`.
- *    Overrides `!!<dictionary_name>`.
- *
- * @pattern ^(?=!+[^!*,;{}[\]~\n]+$)(?=(.*\w)).+$
- */
-export type DictionaryNegRef = string;
-
-/**
- * Reference to a dictionary by name.
- * One of:
- * - {@link DictionaryRef}
- * - {@link DictionaryNegRef}
- */
-export type DictionaryReference = DictionaryRef | DictionaryNegRef;
-
-/** This is a written language locale like: 'en', 'en-GB', 'fr', 'es', 'de', etc. */
+/** This is a written language locale like: `en`, `en-GB`, `fr`, `es`, `de` or `en,fr` for both English and French */
 export type LocaleId = string;
 
 /**
@@ -862,24 +709,34 @@ export interface GlobDef {
 }
 
 /**
- * This can be '*', 'typescript', 'cpp', 'json', etc.
+ * A file type:
+ * - `*` - will match ALL file types.
+ * - `typescript`, `cpp`, `json`, etc.
  * @pattern ^(!?[-\w_\s]+)|(\*)$
  */
 export type LanguageIdSingle = string;
 
 /**
- * This can be 'typescript,cpp,json,literal haskell', etc.
+ * A single string with a comma separated list of file types:
+ * - `typescript,cpp`
+ * - `json,jsonc,yaml`
+ * - etc.
  * @pattern ^([-\w_\s]+)(,[-\w_\s]+)*$
  */
 export type LanguageIdMultiple = string;
 
 /**
- * This can be 'typescript,cpp,json,literal haskell', etc.
- * @pattern ^(![-\w_\s]+)(,![-\w_\s]+)*$
+ * A Negative File Type used to exclude files of that type.
+ * - `!typescript` - will exclude typescript files.
+ * - `!cpp,!json` - will exclude cpp and json files.
+ * - `!typescript,javascript` - will exclude typescript files and include javascript files.
+ * @pattern ^(![-\w_\s]+)(,!?[-\w_\s]+)*$
  */
 export type LanguageIdMultipleNeg = string;
 
 export type LanguageId = LanguageIdSingle | LanguageIdMultiple | LanguageIdMultipleNeg;
+
+export type MatchingFileType = LanguageId | LanguageId[];
 
 /**
  * A File System Path. Relative paths are relative to the configuration file.
@@ -897,17 +754,6 @@ export type FSPathResolvable = FsPath;
 
 /** Trust Security Level. */
 export type TrustLevel = 'trusted' | 'untrusted';
-
-/**
- * A File System Path to a dictionary file.
- * @pattern ^.*\.(?:txt|trie)(?:\.gz)?$
- */
-export type DictionaryPath = string;
-
-/**
- * A File System Path to a dictionary file.
- */
-export type CustomDictionaryPath = FsPath;
 
 export interface RegExpPatternDefinition {
     /**
@@ -975,9 +821,29 @@ interface BaseSource {
 }
 
 /**
- * Reporter name or reporter name + reporter config.
+ * The module or path to the the reporter to load.
  */
-export type ReporterSettings = string | [string] | [string, Serializable];
+export type ReporterModuleName = string;
+
+/**
+ * Options to send to the reporter. These are defined by the reporter.
+ */
+export type ReporterOptions = Serializable;
+
+/**
+ * Declare a reporter to use.
+ *
+ * `default` - is a special name for the default cli reporter.
+ *
+ * Examples:
+ * - `"default"` - to use the default reporter
+ * - `"@cspell/cspell-json-reporter"` - use the cspell JSON reporter.
+ * - `["@cspell/cspell-json-reporter", { "outFile": "out.json" }]`
+ */
+export type ReporterSettings =
+    | ReporterModuleName
+    | [name: ReporterModuleName]
+    | [name: ReporterModuleName, options: ReporterOptions];
 
 /**
  * Experimental Configuration / Options
@@ -990,13 +856,13 @@ export interface ExperimentalFileSettings {
     /**
      * Future Plugin support
      * @experimental
-     * @version 6.2.0
+     * @since 6.2.0
      */
     plugins?: Plugin[];
 }
 
 /**
- * Extends CSpellSettings with ExperimentalFileSettings
+ * Extends CSpellSettings with {@link ExperimentalFileSettings}
  * @experimental
  * @hidden
  */
@@ -1013,7 +879,7 @@ export interface ExperimentalBaseSettings {
     /**
      * Parser to use for the file content
      * @experimental
-     * @version 6.2.0
+     * @since 6.2.0
      */
     parser?: ParserName;
 }
@@ -1021,7 +887,7 @@ export interface ExperimentalBaseSettings {
 /**
  * Plugin API
  * @experimental
- * @version 6.2.0
+ * @since 6.2.0
  */
 export interface Plugin {
     parsers?: Parser[];

@@ -1,4 +1,6 @@
-import { expandRange, expandCharacterSet } from './text';
+import { describe, expect, test } from 'vitest';
+
+import { assertValidUtf16Character, expandCharacterSet, expandRange, isValidUtf16Character } from './text.js';
 
 describe('text', () => {
     test.each`
@@ -26,5 +28,37 @@ describe('text', () => {
         ${'a-cA-CZ-'} | ${['a', 'b', 'c', 'A', 'B', 'C', 'Z', '-']}
     `('expandCharacterSet "$line"', ({ line, expected }) => {
         expect(expandCharacterSet(line)).toEqual(new Set(expected));
+    });
+
+    test.each`
+        char             | expected
+        ${'a'}           | ${true}
+        ${'a'}           | ${true}
+        ${'ab'}          | ${false}
+        ${''}            | ${false}
+        ${'😁'}          | ${true}
+        ${'😁'[0]}       | ${false}
+        ${'😁'[1]}       | ${false}
+        ${'😁'[1] + '.'} | ${false}
+    `('isValidUtf16Character $char', ({ char, expected }) => {
+        expect(isValidUtf16Character(char)).toBe(expected);
+    });
+
+    test('assertValidUtf16Character', () => {
+        expect(() => assertValidUtf16Character('a')).not.toThrow();
+        expect(() => assertValidUtf16Character('ab')).toThrow(
+            'Invalid utf16 character, not a valid surrogate pair: [0x0061, 0x0062]',
+        );
+    });
+
+    test.each`
+        char             | expected
+        ${'😁'[0]}       | ${'Invalid utf16 character, lone surrogate: 0xd83d'}
+        ${'😁'[1]}       | ${'Invalid utf16 character, lone surrogate: 0xde01'}
+        ${'😁'[1] + '.'} | ${'Invalid utf16 character, not a valid surrogate pair: [0xde01, 0x002e]'}
+        ${'😁'[0] + '.'} | ${'Invalid utf16 character, not a valid surrogate pair: [0xd83d, 0x002e]'}
+        ${'😁😁'}        | ${'Invalid utf16 character, must be a single character, found: 4'}
+    `('assertValidUtf16Character $char', ({ char, expected }) => {
+        expect(() => assertValidUtf16Character(char)).toThrow(expected);
     });
 });

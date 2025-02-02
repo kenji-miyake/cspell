@@ -1,19 +1,36 @@
-import * as commander from 'commander';
-import * as fs from 'fs-extra';
-import { mkdirp } from 'fs-extra';
-import * as path from 'path';
+import { createWriteStream as fsCreateWriteStream } from 'node:fs';
+import * as fsp from 'node:fs/promises';
+import * as path from 'node:path';
+import * as stream from 'node:stream';
+import { fileURLToPath } from 'node:url';
+import * as zlib from 'node:zlib';
+
+import type { Command } from 'commander';
 import * as Trie from 'cspell-trie-lib';
-import { Sequence, genSequence } from 'gensequence';
-import * as stream from 'stream';
-import * as zlib from 'zlib';
+import type { Sequence } from 'gensequence';
+import { genSequence } from 'gensequence';
 
 const UTF8: BufferEncoding = 'utf8';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const packageInfo = require('../package.json');
-const version = packageInfo['version'];
-export function run(program: commander.Command, argv: string[]): Promise<commander.Command> {
-    program.version(version);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+interface PackageJson {
+    version: string;
+}
+
+async function getPackageInfo(): Promise<PackageJson> {
+    const packageInfo = await fsp.readFile(path.join(__dirname, '../package.json'), 'utf8');
+    return JSON.parse(packageInfo);
+}
+
+async function getPackageVersion() {
+    return (await getPackageInfo()).version;
+}
+
+export async function run(program: Command, argv: string[]): Promise<Command> {
+    const version = await getPackageVersion();
+    program.version(version).name('cspell-trie');
 
     program
         .command('create <file.txt>')
@@ -21,7 +38,7 @@ export function run(program: commander.Command, argv: string[]): Promise<command
         .option('-l, --lower_case', 'output in lower case')
         .option(
             '-b, --base <number>',
-            'Use base n for reference ids.  Defaults to 32. Common values are 10, 16, 32. Max of 36'
+            'Use base n for reference ids.  Defaults to 32. Common values are 10, 16, 32. Max of 36',
         )
         .description('Generate a file for use with cspell')
         .action(async (filename, options) => {
@@ -58,7 +75,7 @@ export function run(program: commander.Command, argv: string[]): Promise<command
             const pOutputStream = createWriteStream(outputFile);
             const lines = await fileToLines(filename);
             const root = Trie.importTrie(lines);
-            const words: Sequence<string> = Trie.iteratorTrieWords(root);
+            const words: Sequence<string> = genSequence(Trie.iteratorTrieWords(root));
             const outputStream = await pOutputStream;
             return new Promise((resolve) => {
                 stream.Readable.from(words.map((a) => a + '\n'))
@@ -67,23 +84,19 @@ export function run(program: commander.Command, argv: string[]): Promise<command
             });
         });
 
-    try {
-        return program.parseAsync(argv);
-    } catch (e) {
-        return Promise.reject(e);
-    }
+    return program.parseAsync(argv);
 }
 
 async function fileToLines(filename: string): Promise<Sequence<string>> {
-    const buffer = await fs.readFile(filename);
-    const file = (filename.match(/\.gz$/) ? zlib.gunzipSync(buffer) : buffer).toString(UTF8);
+    const buffer = await fsp.readFile(filename);
+    const file = (/\.gz$/.test(filename) ? zlib.gunzipSync(buffer) : buffer).toString(UTF8);
     return genSequence(file.split(/\r?\n/));
 }
 
 function createWriteStream(filename?: string): Promise<NodeJS.WritableStream> {
     return !filename
         ? Promise.resolve(process.stdout)
-        : mkdirp(path.dirname(filename)).then(() => fs.createWriteStream(filename));
+        : fsp.mkdir(path.dirname(filename), { recursive: true }).then(() => fsCreateWriteStream(filename));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,5 +1,5 @@
 export function hrTimeToSeconds([seconds, nanoseconds]: number[]) {
-    return seconds + nanoseconds / 1000000000;
+    return seconds + nanoseconds / 1_000_000_000;
 }
 
 export function uniqueFilter<T>(historySize: number): (i: T) => boolean;
@@ -70,4 +70,28 @@ export function cleanObject<T>(obj: T): T {
         }
     }
     return obj;
+}
+
+export function groupByField<T, K extends keyof T>(i: Iterable<T>, field: K): Map<T[K], T[]> {
+    const r = new Map<T[K], T[]>();
+    for (const t of i) {
+        const k = t[field];
+        let a = r.get(k);
+        if (!a) {
+            a = [];
+            r.set(k, a);
+        }
+        a.push(t);
+    }
+    return r;
+}
+
+export function insertItemIntoGroupByField<T, K extends keyof T>(map: Map<T[K], T[]>, field: K, item: T) {
+    const k = item[field];
+    let a = map.get(k);
+    if (!a) {
+        a = [];
+        map.set(k, a);
+    }
+    a.push(item);
 }

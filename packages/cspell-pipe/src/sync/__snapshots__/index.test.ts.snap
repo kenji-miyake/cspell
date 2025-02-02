@@ -1,8 +1,10 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Pipe Sync API pipe api 1`] = `
+exports[`Pipe Sync API > pipe api 1`] = `
 [
   "opAppend",
+  "opBuffer",
+  "opCombine",
   "opConcatMap",
   "opFilter",
   "opFirst",
@@ -10,12 +12,14 @@ exports[`Pipe Sync API pipe api 1`] = `
   "opJoinStrings",
   "opLast",
   "opMap",
+  "opReduce",
   "opSkip",
   "opTake",
   "opTap",
   "opUnique",
   "pipe",
   "pipeSync",
+  "reduce",
   "toArray",
 ]
 `;

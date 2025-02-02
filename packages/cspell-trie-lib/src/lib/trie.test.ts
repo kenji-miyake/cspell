@@ -1,9 +1,13 @@
-import { SuggestionOptions } from './suggestions/genSuggestionsOptions';
-import { CompoundWordsMethod, suggestionCollector } from './index';
-import { parseDictionary } from './SimpleDictionaryParser';
-import { SuggestionCollectorOptions } from './suggestions/suggestCollector';
-import { defaultTrieOptions, Trie } from './trie';
-import { clean, isWordTerminationNode, normalizeWordToLowercase, orderTrie } from './trie-util';
+import { describe, expect, test } from 'vitest';
+
+import { CompoundWordsMethod, defaultTrieInfo, suggestionCollector } from './index.js';
+import { parseDictionaryLegacy } from './SimpleDictionaryParser.js';
+import type { SuggestionOptions } from './suggestions/genSuggestionsOptions.js';
+import type { SuggestionCollectorOptions } from './suggestions/suggestCollector.js';
+import { Trie } from './trie.js';
+import { isWordTerminationNode, orderTrie } from './TrieNode/trie-util.js';
+import { clean } from './utils/clean.js';
+import { normalizeWordToLowercase } from './utils/normalizeWord.js';
 
 describe('Validate Trie Class', () => {
     const NumSuggestions: SuggestionOptions = { numSuggestions: 10 };
@@ -26,7 +30,7 @@ describe('Validate Trie Class', () => {
 
     test('Tests complete', () => {
         const trie = Trie.create(sampleWords);
-        expect([...trie.completeWord('lift')]).toEqual(sampleWords.filter((w) => w.slice(0, 4) === 'lift').sort());
+        expect([...trie.completeWord('lift')]).toEqual(sampleWords.filter((w) => w.startsWith('lift')).sort());
         expect([...trie.completeWord('life')]).toEqual([]);
         expect([...trie.completeWord('lifting')]).toEqual(['lifting']);
     });
@@ -84,14 +88,14 @@ describe('Validate Trie Class', () => {
         const trie = Trie.create(sampleWords);
         expect(trie).toBeInstanceOf(Trie);
         const options = trie.options;
-        expect(options).toEqual(defaultTrieOptions);
+        expect(options).toEqual(defaultTrieInfo);
     });
 
     test('Tests Trie options', () => {
         const trie = Trie.create(sampleWords, { forbiddenWordPrefix: '#' });
         expect(trie).toBeInstanceOf(Trie);
         const options = trie.options;
-        expect(options).not.toEqual(defaultTrieOptions);
+        expect(options).not.toEqual(defaultTrieInfo);
         expect(options.forbiddenWordPrefix).toBe('#');
     });
 
@@ -146,7 +150,7 @@ describe('Validate Trie Class', () => {
 
     test('isLegacy', () => {
         const trieLegacy = Trie.create(sampleWords);
-        const trieModern = parseDictionary(`
+        const trieModern = parseDictionaryLegacy(`
         # Sample Word List
         begin*
         *end
@@ -158,7 +162,7 @@ describe('Validate Trie Class', () => {
     });
 
     test('isSizeKnown', () => {
-        const trieModern = parseDictionary(`
+        const trieModern = parseDictionaryLegacy(`
         # Sample Word List
         begin*
         *end
@@ -193,7 +197,7 @@ describe('Validate Trie Class', () => {
         ${'playtime'}                       | ${false}      | ${false} | ${''}
         ${'playmiddletime'}                 | ${false}      | ${true}  | ${'cspell:disable-line'}
     `('hasWord $word $caseSensitive $found', ({ word, caseSensitive, found }: HasWordTestCase) => {
-        const trie = parseDictionary(`
+        const trie = parseDictionaryLegacy(`
         # Sample Word List
         Begin*
         *End
@@ -209,7 +213,7 @@ describe('Validate Trie Class', () => {
 
     // cspell:ignore begintime
     test('hasWord', () => {
-        const trie = parseDictionary(`
+        const trie = parseDictionaryLegacy(`
         # Sample Word List
         Begin*
         *End
@@ -242,7 +246,7 @@ describe('Validate Trie Class', () => {
     });
 
     test('find', () => {
-        const trie = parseDictionary(`
+        const trie = parseDictionaryLegacy(`
         # Sample Word List
         Begin*
         *End
@@ -351,7 +355,7 @@ function opts(
     filter?: SuggestionCollectorOptions['filter'],
     changeLimit?: number,
     includeTies?: boolean,
-    ignoreCase?: boolean
+    ignoreCase?: boolean,
 ): SuggestionCollectorOptions {
     return clean({
         numSuggestions: maxNumSuggestions,

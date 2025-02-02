@@ -1,10 +1,14 @@
-import { createServiceBus } from './bus';
-import { createIsRequestHandler } from './createRequestHandler';
-import { Dispatcher } from './Dispatcher';
-import { Handler } from './handlers';
-import { createResponse as response, ServiceRequest, ServiceResponse } from './request';
-import { requestFactory } from './requestFactory';
-import { ServiceRequestFactoryRequestType } from './ServiceRequestFactory';
+import { describe, expect, test } from 'vitest';
+
+import { createServiceBus } from './bus.js';
+import { createIsRequestHandler } from './createRequestHandler.js';
+import type { Dispatcher } from './Dispatcher.js';
+import { ErrorServiceRequestDepthExceeded, ErrorUnhandledRequest, UnhandledHandlerError } from './errors.js';
+import type { Handler } from './handlers.js';
+import type { ServiceRequest, ServiceResponse } from './request.js';
+import { createResponse as response, ServiceRequestCls } from './request.js';
+import { requestFactory } from './requestFactory.js';
+import type { ServiceRequestFactoryRequestType } from './ServiceRequestFactory.js';
 
 function calcFib(request: FibRequest): ServiceResponse<number> {
     let a = 0,
@@ -28,10 +32,10 @@ type FibRequestFactory = typeof FibRequestFactory;
 type FibRequest = ServiceRequestFactoryRequestType<FibRequestFactory>;
 
 const StringLengthRequestFactory = requestFactory<'calc-string-length', { readonly str: string }, number>(
-    'calc-string-length'
+    'calc-string-length',
 );
 
-class StringToUpperRequest extends ServiceRequest<'toUpper', { readonly str: string }, string> {
+class StringToUpperRequest extends ServiceRequestCls<'toUpper', { readonly str: string }, string> {
     constructor(readonly str: string) {
         super('toUpper', { str });
     }
@@ -40,13 +44,13 @@ class StringToUpperRequest extends ServiceRequest<'toUpper', { readonly str: str
     }
 }
 
-class DoNotHandleRequest extends ServiceRequest<'Do Not Handle', undefined, undefined> {
+class DoNotHandleRequest extends ServiceRequestCls<'Do Not Handle', undefined, undefined> {
     constructor() {
         super('Do Not Handle', undefined);
     }
 }
 
-class RetryAgainRequest extends ServiceRequest<'Retry Again Request', undefined, undefined> {
+class RetryAgainRequest extends ServiceRequestCls<'Retry Again Request', undefined, undefined> {
     constructor() {
         super('Retry Again Request', undefined);
     }
@@ -58,12 +62,12 @@ class RetryAgainRequest extends ServiceRequest<'Retry Again Request', undefined,
 const handlerStringLengthRequest = createIsRequestHandler(
     StringLengthRequestFactory.is,
     (r) => response(r.params.str.length),
-    'handlerStringLengthRequest'
+    'handlerStringLengthRequest',
 );
 const handlerStringToUpperRequest = createIsRequestHandler(
     StringToUpperRequest.is,
     (r) => response(r.str.toLocaleUpperCase()),
-    'handlerStringToUpperRequest'
+    'handlerStringToUpperRequest',
 );
 const handlerRetryAgainRequest: Handler = {
     fn: (service: Dispatcher) => (next) => (request) =>
@@ -92,9 +96,9 @@ describe('Service Bus', () => {
         ${FibRequestFactory.create({ fib: 7 })}                | ${response(13)}
         ${StringLengthRequestFactory.create({ str: 'hello' })} | ${response(5)}
         ${new StringToUpperRequest('hello')}                   | ${response('HELLO')}
-        ${new DoNotHandleRequest()}                            | ${{ error: Error('Unhandled Request: Do Not Handle') }}
-        ${new RetryAgainRequest()}                             | ${{ error: Error('Service Request Depth 10 Exceeded: Retry Again Request') }}
-        ${new ServiceRequest('throw', undefined)}              | ${{ error: Error('Unhandled Error in Handler: handlerThrowErrorOnRequest') }}
+        ${new DoNotHandleRequest()}                            | ${{ error: new ErrorUnhandledRequest(new DoNotHandleRequest()) }}
+        ${new RetryAgainRequest()}                             | ${{ error: new ErrorServiceRequestDepthExceeded(new RetryAgainRequest(), 10) }}
+        ${new ServiceRequestCls('throw', undefined)}           | ${{ error: new UnhandledHandlerError('handlerThrowErrorOnRequest', undefined, 'error') }}
     `('serviceBus handle request: $request.type', ({ request, expected }) => {
         expect(bus.dispatch(request)).toEqual(expected);
     });

@@ -11,8 +11,7 @@
             "name": "workspace",
             "path": "./cspell-dict.txt",
             "description": "Custom Workspace Dictionary",
-            "addWords": true,
-            "scope": "workspace"
+            "addWords": true
         },
         {
             "name": "ignore words",
@@ -22,10 +21,7 @@
             "noSuggest": true
         }
     ],
-    "dictionaries": [
-        "workspace",
-        "ignore words"
-    ],
+    "dictionaries": ["workspace", "ignore words"],
     "ignorePaths": [
         ".eslintignore",
         ".git",
@@ -35,46 +31,63 @@
         ".pnp.{js,cjs}",
         ".prettierignore",
         ".yarn",
+        "__snapshots__",
         "*.{png,jpg,pdf,svg}",
-        "/cspell-dict.txt",
-        "/cspell-ignore-words.txt",
-        "/docs/docsV2/**",
+        "*.cpuprofile",
+        "*.heapprofile",
+        "emoji*.txt",
         "**/.docusaurus/**",
         "**/.gitignore",
         "**/.vscode/**",
         "**/{cspell.*,cSpell.*,.cspell.*,cspell.config.*}",
+        "**/*.schema.json",
         "**/*.snap",
         "**/*.trie",
         "**/coverage/**",
         "**/dist/**",
+        "**/src/generated/**",
         "**/jest.config.js",
         "**/node_modules/**",
         "**/tsconfig.json",
+        "/tools/*/lib/**",
+        "/cspell-dict.txt",
+        "/cspell-ignore-words.txt",
+        "/docs/docsV2/**",
+        "/docs/types/cspell-types",
+        "examples/yarn/**",
         "/.cspell",
-        "cspell.json",
+        "cspell*.{json,yaml}",
         "integration-tests/config/config.json",
         "integration-tests/config/repositories/**",
+        "integration-tests/perf/**",
         "integration-tests/repositories/**",
         "integration-tests/snapshots/**",
         "lcov.info",
+        "lib-bundled",
         "package.json",
         "*-lock.{json,yaml}",
         "packages/*/fixtures/**",
+        "packages/*/Samples/**",
         "packages/*/samples/**",
         "packages/Samples/**",
         "packages/cspell-lib/fixtures/**",
         "temp",
         "test-fixtures/**",
-        "test-packages/test-cspell-eslint-plugin/**",
-        "test-packages/test-cspell-tools/src/*.txt"
+        "test-packages/*/test-cspell-eslint-plugin*/**",
+        "test-packages/examples/example-cspell-lib-single-doc/samples/**",
+        "test-packages/*/test-cspell-tools/src/*.txt",
+        "test-packages/yarn/yarn2/test-eslint-plugin/**"
     ],
     "useGitignore": true,
     "flagWords": [],
-    "ignoreWords": [
-        "commitcomment"
-    ],
-    "words": [],
+    "ignoreWords": ["commitcomment"],
     "features": {
         "weighted-suggestions": true
-    }
+    },
+    "overrides": [
+        {
+            "filename": "**/CHANGELOG.md",
+            "words": ["webm"]
+        }
+    ]
 }

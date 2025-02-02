@@ -1,10 +1,14 @@
 {
     "extends": "./tsconfig.base.json",
     "compilerOptions": {
-        "pretty": true,
-        "module": "ES2020",
-        "rootDir": ".",
-        "noEmit": true
+        "tsBuildInfoFile": "./dist/compile.tsbuildInfo"
     },
-    "exclude": ["fixtures/**"]
+    "files": [],
+    "references": [
+        { "path": "./src/test/tsconfig.json" },
+        { "path": "./src/generated/tsconfig.json" },
+        { "path": "./src/worker/tsconfig.json" },
+        { "path": "./src/common/tsconfig.json" },
+        { "path": "./src/plugin/tsconfig.json" }
+    ]
 }

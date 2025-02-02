@@ -1,9 +1,14 @@
-import assert from 'assert';
-import { mapDictionaryInformationToWeightMap, SuggestionResult, WeightMap } from '..';
-import { readRawDictionaryFile, readSampleTrie } from '../../test/dictionaries.test.helper';
-import { DictionaryInformation } from '../models/DictionaryInformation';
-import { clean } from '../utils/util';
-import { DEFAULT_COMPOUNDED_WORD_SEPARATOR } from './suggestCollector';
+import assert from 'node:assert';
+
+import { describe, expect, test } from 'vitest';
+
+import { readRawDictionaryFile, readSampleTrie } from '../../test/dictionaries.test.helper.js';
+import type { WeightMap } from '../distance/index.js';
+import { mapDictionaryInformationToWeightMap } from '../mappers/mapDictionaryInfoToWeightMap.js';
+import type { DictionaryInformation } from '../models/DictionaryInformation.js';
+import { clean } from '../utils/util.js';
+import { DEFAULT_COMPOUNDED_WORD_SEPARATOR } from './constants.js';
+import type { SuggestionResult } from './SuggestionTypes.js';
 
 function getTrie() {
     return readSampleTrie('nl_nl.trie.gz');
@@ -20,7 +25,7 @@ const pReady = Promise.all([pTrieNL, pAffContent.then((aff) => (affContent = aff
     return undefined;
 });
 
-const ac = expect.arrayContaining;
+const ac = <T>(a: Array<T>) => expect.arrayContaining(a);
 
 describe('Validate Dutch Suggestions', () => {
     // cspell:ignore buurtbewoners
@@ -33,7 +38,7 @@ describe('Validate Dutch Suggestions', () => {
             expect(suggestions).toEqual(expect.arrayContaining(['buurtbewoners']));
             expect(suggestions[0]).toBe('buurtbewoners');
         },
-        timeout
+        timeout,
     );
 
     // cspell:ignore burtbewoners burgbewoners
@@ -57,7 +62,7 @@ describe('Validate Dutch Suggestions', () => {
             const results = trie.suggestWithCost(word, { numSuggestions, includeTies: true });
             expect(results).toEqual(expected);
         },
-        timeout
+        timeout,
     );
 
     // cspell:ignore mexico stad
@@ -70,7 +75,7 @@ describe('Validate Dutch Suggestions', () => {
             expect(suggestions).toEqual(expect.arrayContaining(['Mexico-Stad']));
             expect(suggestions).not.toEqual(expect.arrayContaining(['Mexico-stad']));
         },
-        timeout
+        timeout,
     );
 
     function sr(word: string, cost: number, compoundWord?: string): SuggestionResult {

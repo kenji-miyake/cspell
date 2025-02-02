@@ -1,11 +1,16 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Operators operators 1`] = `
+exports[`Operators > operators 1`] = `
 [
   "opAppend",
   "opAppendAsync",
   "opAppendSync",
   "opAwaitAsync",
+  "opBuffer",
+  "opBufferAsync",
+  "opBufferSync",
+  "opCombineAsync",
+  "opCombineSync",
   "opConcatMap",
   "opConcatMapAsync",
   "opConcatMapSync",
@@ -27,6 +32,8 @@ exports[`Operators operators 1`] = `
   "opMap",
   "opMapAsync",
   "opMapSync",
+  "opReduceAsync",
+  "opReduceSync",
   "opSkip",
   "opSkipAsync",
   "opSkipSync",

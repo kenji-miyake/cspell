@@ -1,16 +1,34 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`index api 1`] = `
+exports[`index > api 1`] = `
 [
+  "CFileReference => function",
+  "CFileResource => function",
   "CSpellIONode => function",
+  "FSCapabilityFlags => object",
+  "VFileType => object",
   "asyncIterableToArray => function",
+  "compareStats => function",
+  "createRedirectProvider => function",
+  "createTextFileResource => function",
+  "createVirtualFS => function",
   "encodeDataUrl => function",
   "getDefaultCSpellIO => function",
+  "getDefaultVirtualFs => function",
   "getStat => function",
   "getStatSync => function",
-  "readFile => function",
-  "readFileSync => function",
+  "isFileURL => function",
+  "isUrlLike => function",
+  "readFileText => function",
+  "readFileTextSync => function",
+  "renameFileReference => function",
+  "renameFileResource => function",
   "toDataUrl => function",
+  "toFileURL => function",
+  "toURL => function",
+  "urlBasename => function",
+  "urlDirname => function",
+  "urlOrReferenceToUrl => function",
   "writeToFile => function",
   "writeToFileIterable => function",
   "writeToFileIterableP => function",

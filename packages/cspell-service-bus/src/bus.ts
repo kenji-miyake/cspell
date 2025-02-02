@@ -1,7 +1,8 @@
-import { Dispatcher } from './Dispatcher';
-import { ErrorServiceRequestDepthExceeded, ErrorUnhandledRequest, UnhandledHandlerError } from './errors';
-import type { Handler, HandlerFn, HandleRequest } from './handlers';
-import { createResponseFail, RequestResponseType, ServiceRequest } from './request';
+import type { Dispatcher } from './Dispatcher.js';
+import { ErrorServiceRequestDepthExceeded, ErrorUnhandledRequest, UnhandledHandlerError } from './errors.js';
+import type { Handler, HandleRequest, HandlerFn } from './handlers.js';
+import type { RequestResponseType, ServiceRequest } from './request.js';
+import { createResponseFail } from './request.js';
 
 const MAX_DEPTH = 10;
 
@@ -46,7 +47,7 @@ export class ServiceBus implements Dispatcher {
         handlers: readonly Handler[],
         request: R,
         dispatcher: Dispatcher,
-        defaultHandler: HandleRequest
+        defaultHandler: HandleRequest,
     ) {
         const _handlers = handlers.map((m) => ({ ...m, fn: m.fn(dispatcher) }));
         const handler = _handlers.reduce((next, h) => {

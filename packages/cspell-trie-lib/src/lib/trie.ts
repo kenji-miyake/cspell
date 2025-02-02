@@ -1,62 +1,43 @@
-import { genSequence, Sequence } from 'gensequence';
-import { CASE_INSENSITIVE_PREFIX, COMPOUND_FIX, FORBID_PREFIX, OPTIONAL_COMPOUND_FIX } from './constants';
+import { opAppend, opFilter, opMap, pipe } from '@cspell/cspell-pipe/sync';
+
+import type { PartialTrieInfo, TrieInfo } from './ITrieNode/TrieInfo.js';
+import { genSuggestions, suggest } from './suggest.js';
+import type { SuggestionCollector, SuggestionResult } from './suggestCollector.js';
+import type { SuggestionOptions } from './suggestions/genSuggestionsOptions.js';
+import type { FindFullResult, FindOptions, PartialFindOptions } from './TrieNode/find.js';
+import { createFindOptions, findLegacyCompound, findWord, findWordNode, isForbiddenWord } from './TrieNode/find.js';
 import {
-    createFindOptions,
-    FindFullResult,
-    findLegacyCompound,
-    FindOptions,
-    findWord,
-    findWordNode,
-    isForbiddenWord,
-    PartialFindOptions,
-} from './find';
-import { genSuggestions, suggest } from './suggest';
-import { SuggestionCollector, SuggestionResult } from './suggestCollector';
-import { SuggestionOptions } from './suggestions/genSuggestionsOptions';
-import {
-    clean,
     countWords,
-    createTriFromList,
+    createTrieRootFromList,
     insert,
     isWordTerminationNode,
     iteratorTrieWords,
-    mergeOptionalWithDefaults,
     orderTrie,
-} from './trie-util';
-import { PartialTrieOptions, TrieNode, TrieOptions, TrieRoot } from './TrieNode';
-import { replaceAllFactory } from './utils/util';
-import { CompoundWordsMethod, walker, WalkerIterator } from './walker';
+} from './TrieNode/trie-util.js';
+import type { TrieNode, TrieRoot } from './TrieNode/TrieNode.js';
+import { clean } from './utils/clean.js';
+import { mergeOptionalWithDefaults } from './utils/mergeOptionalWithDefaults.js';
+import { replaceAllFactory } from './utils/util.js';
+import type { CompoundWordsMethod, WalkerIterator } from './walker/index.js';
+import { walker } from './walker/index.js';
 
-export {
-    CASE_INSENSITIVE_PREFIX,
-    COMPOUND_FIX,
-    defaultTrieOptions,
-    FORBID_PREFIX,
-    OPTIONAL_COMPOUND_FIX,
-} from './constants';
-export { PartialTrieOptions, TrieOptions } from './TrieNode';
-
-/** @deprecated */
-export const COMPOUND = COMPOUND_FIX;
-/** @deprecated */
-export const OPTIONAL_COMPOUND = OPTIONAL_COMPOUND_FIX;
-/** @deprecated */
-export const NORMALIZED = CASE_INSENSITIVE_PREFIX;
-/** @deprecated */
-export const FORBID = FORBID_PREFIX;
+export type { PartialTrieInfo as PartialTrieOptions, TrieInfo as TrieOptions } from './ITrieNode/TrieInfo.js';
 
 const defaultLegacyMinCompoundLength = 3;
 
 export class Trie {
-    private _options: TrieOptions;
+    private _options: TrieInfo;
     private _findOptionsDefaults: PartialFindOptions;
     private _findOptionsExact: FindOptions;
     readonly isLegacy: boolean;
     private hasForbidden: boolean;
-    constructor(readonly root: TrieRoot, private count?: number) {
+    constructor(
+        readonly root: TrieRoot,
+        private count?: number,
+    ) {
         this._options = mergeOptionalWithDefaults(root);
         this.isLegacy = this.calcIsLegacy();
-        this.hasForbidden = !!root.c.get(root.forbiddenWordPrefix);
+        this.hasForbidden = !!root.c[root.forbiddenWordPrefix];
         this._findOptionsDefaults = {
             caseInsensitivePrefix: this._options.stripCaseAndAccentsPrefix,
             compoundFix: this._options.compoundCharacter,
@@ -77,7 +58,7 @@ export class Trie {
         return this.count !== undefined;
     }
 
-    get options(): TrieOptions {
+    get options(): Readonly<TrieInfo> {
         return this._options;
     }
 
@@ -89,29 +70,13 @@ export class Trie {
         const minLength: number | undefined = !minCompoundLength
             ? undefined
             : minCompoundLength === true
-            ? defaultLegacyMinCompoundLength
-            : minCompoundLength;
+              ? defaultLegacyMinCompoundLength
+              : minCompoundLength;
         const options = this.createFindOptions({
             compoundMode: minLength ? 'legacy' : 'compound',
             legacyMinCompoundLength: minLength,
         });
         return findWordNode(this.root, text, options).node;
-    }
-
-    /**
-     *
-     * @param text - text to search for
-     * @param minCompoundLength - minimum word compound length
-     * @deprecated - this method is no longer needed since compounding can be explicitly defined by the dictionary words.
-     */
-    findCompound(text: string, minCompoundLength = defaultLegacyMinCompoundLength): TrieNode | undefined {
-        const options = this.createFindOptions({ legacyMinCompoundLength: minCompoundLength });
-        const r = findLegacyCompound(this.root, text, options);
-        return r.node;
-    }
-
-    findExact(text: string): TrieNode | undefined {
-        return findWordNode(this.root, text, this._findOptionsExact).node;
     }
 
     has(word: string, minLegacyCompoundLength?: boolean | number): boolean {
@@ -161,13 +126,15 @@ export class Trie {
     /**
      * Provides an ordered sequence of words with the prefix of text.
      */
-    completeWord(text: string): Sequence<string> {
+    completeWord(text: string): Iterable<string> {
         const n = this.find(text);
         const compoundChar = this.options.compoundCharacter;
-        const subNodes = iteratorTrieWords(n || {})
-            .filter((w) => w[w.length - 1] !== compoundChar)
-            .map((suffix) => text + suffix);
-        return genSequence(n && isWordTerminationNode(n) ? [text] : []).concat(subNodes);
+        const subNodes = pipe(
+            iteratorTrieWords(n || {}),
+            opFilter((w) => w[w.length - 1] !== compoundChar),
+            opMap((suffix) => text + suffix),
+        );
+        return pipe(n && isWordTerminationNode(n) ? [text] : [], opAppend(subNodes));
     }
 
     /**
@@ -215,7 +182,7 @@ export class Trie {
     /**
      * Returns an iterator that can be used to get all words in the trie. For some dictionaries, this can result in millions of words.
      */
-    words(): Sequence<string> {
+    words(): Iterable<string> {
         return iteratorTrieWords(this.root);
     }
 
@@ -235,14 +202,14 @@ export class Trie {
     private calcIsLegacy(): boolean {
         const c = this.root.c;
         return !(
-            c?.get(this._options.compoundCharacter) ||
-            c?.get(this._options.stripCaseAndAccentsPrefix) ||
-            c?.get(this._options.forbiddenWordPrefix)
+            (c && c[this._options.compoundCharacter]) ||
+            c[this._options.stripCaseAndAccentsPrefix] ||
+            c[this._options.forbiddenWordPrefix]
         );
     }
 
-    static create(words: Iterable<string> | IterableIterator<string>, options?: PartialTrieOptions): Trie {
-        const root = createTriFromList(words, options);
+    static create(words: Iterable<string> | IterableIterator<string>, options?: PartialTrieInfo): Trie {
+        const root = createTrieRootFromList(words, options);
         orderTrie(root);
         return new Trie(root, undefined);
     }

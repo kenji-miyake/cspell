@@ -1,0 +1,29 @@
+{
+  "name": "example-cspell-lib-single-doc",
+  "version": "8.17.3",
+  "description": "Pure testing package for cspell-io. Its purpose is to verify cspell-io dependencies.",
+  "private": true,
+  "type": "module",
+  "bin": "bin.js",
+  "scripts": {
+    "clean": "shx rm -rf dist temp coverage \"*.tsbuildInfo\"",
+    "build": "pnpm run compile",
+    "watch": "tsc -p --watch",
+    "clean-build": "pnpm run clean && pnpm run build",
+    "compile": "tsc -p .",
+    "test": "node bin.js src/index.ts"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cspell-lib": "workspace:*"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin.js",
+    "dist/**/*.js"
+  ],
+  "keywords": []
+}

@@ -14,13 +14,13 @@ jobs:
   cspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.2
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           cache: pnpm
 
@@ -32,7 +32,7 @@ jobs:
       - run: pnpm --filter @cspell/cspell-types --filter @cspell/cspell-bundled-dicts run build
 
       - name: Restore CSpell cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4.2.0
         with:
           key: cspell-cache-v2-${{ runner.os }}-${{ hashFiles('**/*.ts', '**/*.md') }}
           path: |

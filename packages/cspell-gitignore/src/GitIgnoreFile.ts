@@ -1,6 +1,10 @@
-import { GlobMatcher, GlobMatchRule, GlobPatternNormalized } from 'cspell-glob';
-import { promises as fs } from 'fs';
-import * as path from 'path';
+import { promises as fs } from 'node:fs';
+import * as path from 'node:path';
+
+import type { GlobMatchRule, GlobPatternNormalized, GlobPatternWithRoot } from 'cspell-glob';
+import { GlobMatcher } from 'cspell-glob';
+
+import { isDefined, isParentOf, makeRelativeTo } from './helpers.js';
 
 export interface IsIgnoredExResult {
     glob: string | undefined;
@@ -14,7 +18,10 @@ export interface IsIgnoredExResult {
  * Represents an instance of a .gitignore file.
  */
 export class GitIgnoreFile {
-    constructor(readonly matcher: GlobMatcher, readonly gitignore: string) {}
+    constructor(
+        readonly matcher: GlobMatcher,
+        readonly gitignore: string,
+    ) {}
 
     get root(): string {
         return this.matcher.root;
@@ -35,17 +42,34 @@ export class GitIgnoreFile {
         return { glob, matched, gitIgnoreFile: this.gitignore, root, line };
     }
 
+    getGlobPatters(): GlobPatternWithRoot[] {
+        return this.matcher.patterns;
+    }
+
+    getGlobs(relativeTo: string): string[] {
+        return this.getGlobPatters()
+            .map((pat) => globToString(pat, relativeTo))
+            .filter(isDefined);
+    }
+
+    static parseGitignore(content: string, gitignoreFilename: string): GitIgnoreFile {
+        const options = { root: path.dirname(gitignoreFilename) };
+        const globs = content
+            .split(/\r?\n/g)
+            .map((glob, index) => ({
+                glob: glob.replace(/^#.*/, ''),
+                source: gitignoreFilename,
+                line: index + 1,
+            }))
+            .filter((g) => !!g.glob);
+        const globMatcher = new GlobMatcher(globs, options);
+        return new GitIgnoreFile(globMatcher, gitignoreFilename);
+    }
+
     static async loadGitignore(gitignore: string): Promise<GitIgnoreFile> {
         gitignore = path.resolve(gitignore);
         const content = await fs.readFile(gitignore, 'utf8');
-        const options = { root: path.dirname(gitignore) };
-        const globs = content.split('\n').map((glob, index) => ({
-            glob,
-            source: gitignore,
-            line: index + 1,
-        }));
-        const globMatcher = new GlobMatcher(globs, options);
-        return new GitIgnoreFile(globMatcher, gitignore);
+        return this.parseGitignore(content, gitignore);
     }
 }
 
@@ -78,13 +102,21 @@ export class GitIgnoreHierarchy {
 
         return undefined;
     }
+
+    getGlobPatters(): GlobPatternWithRoot[] {
+        return this.gitIgnoreChain.flatMap((gf) => gf.getGlobPatters());
+    }
+
+    getGlobs(relativeTo: string): string[] {
+        return this.gitIgnoreChain.flatMap((gf) => gf.getGlobs(relativeTo));
+    }
 }
 
 export async function loadGitIgnore(dir: string): Promise<GitIgnoreFile | undefined> {
     const file = path.join(dir, '.gitignore');
     try {
         return await GitIgnoreFile.loadGitignore(file);
-    } catch (e) {
+    } catch {
         return undefined;
     }
 }
@@ -97,6 +129,16 @@ function mustBeHierarchical(chain: GitIgnoreFile[]): void {
         }
         root = file.root;
     }
+}
+
+function globToString(glob: GlobPatternWithRoot, relativeTo: string): string | undefined {
+    if (glob.isGlobalPattern) return glob.glob;
+
+    if (isParentOf(glob.root, relativeTo) && glob.glob.startsWith('**/')) return glob.glob;
+
+    const base = makeRelativeTo(glob.root, relativeTo);
+    if (base === undefined) return undefined;
+    return (base ? base + '/' : '') + glob.glob;
 }
 
 export const __testing__ = {

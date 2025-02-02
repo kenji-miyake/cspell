@@ -1,5 +1,5 @@
-import { SuggestionCostMapDef } from '../models/suggestionCostsDef';
-import { DEFAULT_COMPOUNDED_WORD_SEPARATOR } from '../suggestions/suggestCollector';
+import type { SuggestionCostMapDef } from '../models/suggestionCostsDef.js';
+import { DEFAULT_COMPOUNDED_WORD_SEPARATOR } from '../suggestions/constants.js';
 
 export type WeightedRepMapTrie = Record<string, WeightedRepTrieNode>;
 
@@ -30,7 +30,7 @@ interface Cost {
     p?: number | undefined;
 }
 
-interface TrieCost extends Cost {
+export interface TrieCost extends Cost {
     /** nested trie nodes */
     n?: Record<string, TrieCost>;
 }
@@ -62,7 +62,10 @@ export interface WeightMap {
     readonly replace: TrieTrieCost;
     readonly swap: TrieTrieCost;
     readonly adjustments: Map<string, PenaltyAdjustment>;
+}
 
+export interface WeightCostCalculator {
+    readonly weightMap: WeightMap;
     calcInsDelCosts(pos: CostPosition): Iterable<CostPosition>;
     calcSwapCosts(pos: CostPosition): Iterable<CostPosition>;
     calcReplaceCosts(pos: CostPosition): Iterable<CostPosition>;
@@ -117,7 +120,12 @@ export function addDefsToWeightMap(map: WeightMap, defs: SuggestionCostMapDef[])
     return map;
 }
 function _createWeightMap(): WeightMap {
-    return new _WeightedMap();
+    return {
+        insDel: {},
+        replace: {},
+        swap: {},
+        adjustments: new Map(),
+    };
 }
 
 function lowest(a: number | undefined, b: number | undefined): number | undefined {
@@ -192,7 +200,7 @@ function addToTrieTrieCost(
     left: string,
     right: string,
     cost: number,
-    penalties: number | undefined
+    penalties: number | undefined,
 ): void {
     let t = trie;
     for (const c of left) {
@@ -214,7 +222,7 @@ function addSetToTrieTrieCost(
     trie: TrieTrieCost,
     set: string[],
     cost: number | undefined,
-    penalties: number | undefined
+    penalties: number | undefined,
 ) {
     if (cost === undefined) return;
     for (const left of set) {
@@ -239,7 +247,7 @@ function* searchTrieNodes<T extends { n?: Record<string, T> }>(trie: T, str: str
 
 function* walkTrieNodes<T extends { n?: Record<string, T> }>(
     t: T | undefined,
-    s: string
+    s: string,
 ): Generator<{ s: string; t: T }> {
     if (!t) return;
 
@@ -299,18 +307,19 @@ function* findTrieTrieCostPrefixes(trie: TrieTrieCost, str: string, i: number): 
     }
 }
 
-class _WeightedMap implements WeightMap {
-    insDel: TrieCost = {};
-    replace: TrieTrieCost = {};
-    swap: TrieTrieCost = {};
-    adjustments = new Map<string, PenaltyAdjustment>();
+export function createWeightCostCalculator(weightMap: WeightMap) {
+    return new _WeightCostCalculator(weightMap);
+}
+
+class _WeightCostCalculator implements WeightCostCalculator {
+    constructor(readonly weightMap: WeightMap) {}
 
     *calcInsDelCosts(pos: CostPosition): Iterable<CostPosition> {
         const { a, ai, b, bi, c, p } = pos;
-        for (const del of findTrieCostPrefixes(this.insDel, a, ai)) {
+        for (const del of findTrieCostPrefixes(this.weightMap.insDel, a, ai)) {
             yield { a, b, ai: del.i, bi, c: c + del.c, p: p + del.p };
         }
-        for (const ins of findTrieCostPrefixes(this.insDel, b, bi)) {
+        for (const ins of findTrieCostPrefixes(this.weightMap.insDel, b, bi)) {
             yield { a, b, ai, bi: ins.i, c: c + ins.c, p: p + ins.p };
         }
     }
@@ -320,7 +329,7 @@ class _WeightedMap implements WeightMap {
         // matching substrings from `b`. All substrings start at their
         // respective `ai`/`bi` positions.
         const { a, ai, b, bi, c, p } = pos;
-        for (const del of findTrieTrieCostPrefixes(this.replace, a, ai)) {
+        for (const del of findTrieTrieCostPrefixes(this.weightMap.replace, a, ai)) {
             for (const ins of findTrieCostPrefixes(del.t, b, bi)) {
                 yield { a, b, ai: del.i, bi: ins.i, c: c + ins.c, p: p + ins.p };
             }
@@ -329,7 +338,7 @@ class _WeightedMap implements WeightMap {
 
     *calcSwapCosts(pos: CostPosition): Iterable<CostPosition> {
         const { a, ai, b, bi, c, p } = pos;
-        const swap = this.swap;
+        const swap = this.weightMap.swap;
 
         for (const left of findTrieTrieCostPrefixes(swap, a, ai)) {
             for (const right of findTrieCostPrefixes(left.t, a, left.i)) {
@@ -344,7 +353,7 @@ class _WeightedMap implements WeightMap {
 
     calcAdjustment(word: string): number {
         let penalty = 0;
-        for (const adj of this.adjustments.values()) {
+        for (const adj of this.weightMap.adjustments.values()) {
             if (adj.regexp.global) {
                 for (const _m of word.matchAll(adj.regexp)) {
                     penalty += adj.penalty;
@@ -415,7 +424,7 @@ function normalizeDef(def: SuggestionCostMapDef): SuggestionCostMapDef {
 }
 
 function normalizeMap(map: string): string {
-    return map.replace(matchPossibleWordSeparators, DEFAULT_COMPOUNDED_WORD_SEPARATOR);
+    return map.replaceAll(matchPossibleWordSeparators, DEFAULT_COMPOUNDED_WORD_SEPARATOR);
 }
 
 export const __testing__ = {

@@ -1,12 +1,14 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Pipe API pipe api 1`] = `
+exports[`Pipe API > pipe api 1`] = `
 [
+  "fork",
   "helpers",
   "interleave",
   "isAsyncIterable",
   "opAppend",
   "opAwaitAsync",
+  "opBuffer",
   "opConcatMap",
   "opFilter",
   "opFirst",
@@ -21,6 +23,9 @@ exports[`Pipe API pipe api 1`] = `
   "operators",
   "pipeAsync",
   "pipeSync",
+  "reduce",
+  "reduceAsync",
+  "reduceSync",
   "toArray",
   "toAsyncIterable",
   "toDistributableIterable",

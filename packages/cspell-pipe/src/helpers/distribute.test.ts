@@ -1,7 +1,9 @@
-import { opMap, opTake } from '../operators';
-import { pipeSync } from '../pipe';
-import { toDistributableIterable } from './distribute';
-import { interleave } from './interleave';
+import { describe, expect, test } from 'vitest';
+
+import { opMap, opTake } from '../operators/index.js';
+import { pipeSync } from '../pipe.js';
+import { toDistributableIterable } from './distribute.js';
+import { interleave } from './interleave.js';
 
 describe('distribute', () => {
     test.each`
@@ -13,11 +15,11 @@ describe('distribute', () => {
         const dIter = toDistributableIterable<number>(iter);
         const a = pipeSync(
             dIter,
-            opMap((a) => a * 3)
+            opMap((a) => a * 3),
         );
         const b = pipeSync(
             dIter,
-            opMap((a) => a * 2)
+            opMap((a) => a * 2),
         );
         const r = [...interleave(a, b)];
         expect(r).toEqual(expected);

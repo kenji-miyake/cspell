@@ -1,13 +1,16 @@
-import assert from 'assert';
-import * as Simple from '../grammars/simple';
-import { TypeScript } from '../grammars';
-import { readFileSync } from 'fs';
-import * as path from 'path';
-import { normalizeGrammar } from './grammarNormalizer';
-import { tokenizeText } from './tokenizeLine';
-import type { TokenizedLine } from './types';
+import assert from 'node:assert';
+import { readFileSync } from 'node:fs';
+import * as path from 'node:path';
 
-// const oc = expect.objectContaining;
+import { describe, expect, test } from 'vitest';
+
+import { TypeScript } from '../grammars/index.js';
+import * as Simple from '../grammars/simple.js';
+import { normalizeGrammar } from './grammarNormalizer.js';
+import { tokenizeText } from './tokenizeLine.js';
+import type { TokenizedLine } from './types.js';
+
+// const oc = <T>(obj: T) => expect.objectContaining(obj);
 
 const grammar = normalizeGrammar(Simple.grammar);
 const grammarTypeScript = normalizeGrammar(TypeScript.grammar);
@@ -61,7 +64,8 @@ describe('tokenizeLine', () => {
         expect(r).toMatchSnapshot();
     });
 
-    const sampleTemplate = '\
+    const sampleTemplate =
+        '\
 msg = `\n\
 ${\n\
 a + b // Join prefix and suffix\n\
@@ -134,11 +138,11 @@ function serializeTokenizedLine(
     _config: unknown,
     indentation: string,
     _depth: number,
-    _refs: unknown
+    _refs: unknown,
 ) {
     const { line, tokens: parsedText } = val;
     const textAndScope = parsedText.map((t) => [
-        `${t.range[0]}: ${JSON.stringify(t.text.replace(/\r/g, '↤').replace(/\n/g, '↩'))}`,
+        `${t.range[0]}: ${JSON.stringify(t.text.replaceAll('\r', '↤').replaceAll('\n', '↩'))}`,
         `${t.scope.toString()}`,
     ]);
 
@@ -147,7 +151,7 @@ function serializeTokenizedLine(
     const pt = textAndScope
         .map((ts) => `${indentation}  ${ts[0]}${' '.repeat(maxLen - ts[0].length)}     -- ${ts[1]}`)
         .join('\n');
-    return `${line.lineNumber}: ${JSON.stringify(line.text.replace(/\r/g, '↤').replace(/\n/g, '↩'))}:\n${pt}`;
+    return `${line.lineNumber}: ${JSON.stringify(line.text.replaceAll('\r', '↤').replaceAll('\n', '↩'))}:\n${pt}`;
 }
 
 function isTokenizedLine(v: unknown | TokenizedLine): v is TokenizedLine {

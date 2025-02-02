@@ -1,4 +1,4 @@
-import { SuggestionCostsDefs } from './suggestionCostsDef';
+import type { SuggestionCostsDefs } from './suggestionCostsDef.js';
 
 /**
  * Use by dictionary authors to help improve the quality of suggestions
@@ -227,11 +227,16 @@ export interface CharacterSetCosts {
     penalty?: number;
 }
 
+/**
+ * @hidden
+ */
+export type IRegExp = RegExp;
+
 export interface PatternAdjustment {
     /** Id of the Adjustment, i.e. `short-compound` */
     id: string;
     /** RegExp pattern to match */
-    regexp: string | RegExp;
+    regexp: string | IRegExp;
     /** The amount of penalty to apply. */
     penalty: number;
 }

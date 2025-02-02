@@ -1,4 +1,6 @@
-import { clean } from './clean';
+import { describe, expect, test } from 'vitest';
+
+import { clean } from './clean.js';
 
 describe('Validate util', () => {
     test('tests clean up obj', () => {
@@ -10,6 +12,6 @@ describe('Validate util', () => {
             e: 'str',
         };
         const cleanObj = clean(obj);
-        expect([...Object.keys(cleanObj)]).toEqual(['b', 'c', 'e']);
+        expect(Object.keys(cleanObj)).toEqual(['b', 'c', 'e']);
     });
 });

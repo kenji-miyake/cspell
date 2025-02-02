@@ -1,6 +1,6 @@
-import { GrammarDef } from './grammarDefinition';
-import { NGrammar } from './grammarNormalized';
-import { normalizeGrammar } from './grammarNormalizer';
+import type { GrammarDef } from './grammarDefinition.js';
+import type { NGrammar } from './grammarNormalized.js';
+import { normalizeGrammar } from './grammarNormalizer.js';
 
 export type Grammar = NGrammar;
 

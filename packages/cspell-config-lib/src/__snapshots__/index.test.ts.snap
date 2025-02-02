@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`cspell-config edit config 1`] = `
+exports[`cspell-config > edit config 1`] = `
 "{
   "name": "test-package",
   "cspell": {
@@ -13,7 +13,7 @@ exports[`cspell-config edit config 1`] = `
 "
 `;
 
-exports[`cspell-config edit config 2`] = `
+exports[`cspell-config > edit config 2`] = `
 "{
   "name": "test-package",
   "cspell": {
@@ -25,7 +25,7 @@ exports[`cspell-config edit config 2`] = `
 "
 `;
 
-exports[`cspell-config edit config 3`] = `
+exports[`cspell-config > edit config 3`] = `
 "{
     // file version
     "version": "0.2",
@@ -41,7 +41,7 @@ exports[`cspell-config edit config 3`] = `
 "
 `;
 
-exports[`cspell-config edit config 4`] = `
+exports[`cspell-config > edit config 4`] = `
 "version: "0.2"
 words:
   - angle

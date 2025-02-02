@@ -1,38 +1,29 @@
-import { getDefaultCSpellIO } from '../CSpellIONode';
-import { toError } from '../errors';
-import { Stats } from '../models';
-import type { BufferEncoding } from '../models/BufferEncoding';
-import type {
-    getStat as GetStatFn,
-    getStatSync as GetStatSyncFn,
-    readFile as ReadFileFn,
-    readFileSync as ReadFileSyncFn,
-} from '../node/file';
+import { getDefaultCSpellIO } from '../CSpellIONode.js';
+import { toError } from '../errors/index.js';
+import type { BufferEncoding } from '../models/BufferEncoding.js';
+import type { Stats } from '../models/index.js';
 
-export const readFile: typeof ReadFileFn = function (
-    filename: string | URL,
-    encoding?: BufferEncoding
-): Promise<string> {
-    return getDefaultCSpellIO()
-        .readFile(filename, encoding)
-        .then((fr) => fr.content);
-};
+export async function readFileText(filename: string | URL, encoding?: BufferEncoding): Promise<string> {
+    const fr = await getDefaultCSpellIO().readFile(filename, encoding);
+    return fr.getText();
+}
 
-export const readFileSync: typeof ReadFileSyncFn = function (
-    filename: string | URL,
-    encoding?: BufferEncoding
-): string {
-    return getDefaultCSpellIO().readFileSync(filename, encoding).content;
-};
+export function readFileTextSync(filename: string | URL, encoding?: BufferEncoding): string {
+    return getDefaultCSpellIO().readFileSync(filename, encoding).getText();
+}
 
-export const getStat: typeof GetStatFn = function (filenameOrUri: string): Promise<Stats | Error> {
-    return getDefaultCSpellIO().getStat(filenameOrUri).catch(toError);
-};
+export async function getStat(filenameOrUri: string): Promise<Stats | Error> {
+    try {
+        return await getDefaultCSpellIO().getStat(filenameOrUri);
+    } catch (e) {
+        return toError(e);
+    }
+}
 
-export const getStatSync: typeof GetStatSyncFn = function (filenameOrUri: string): Stats | Error {
+export function getStatSync(filenameOrUri: string): Stats | Error {
     try {
         return getDefaultCSpellIO().getStatSync(filenameOrUri);
     } catch (e) {
         return toError(e);
     }
-};
+}

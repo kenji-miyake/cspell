@@ -1,4 +1,4 @@
-import type { DictionaryDefinitionPreferred, BaseSetting, DictionaryId, DictionaryPath } from '@cspell/cspell-types';
+import type { BaseSetting, DictionaryDefinitionPreferred, DictionaryId, DictionaryPath } from '@cspell/cspell-types';
 
 interface ChangesToBase {
     type: 'suggestions' | 'words';
@@ -24,7 +24,9 @@ const exampleDef: DictionaryDefinitionSuggestions = {
 /*********************/
 
 type FlagWordNoSuggestions = string;
-type FlagWordWithSuggestions = [forbidWord: string, suggestion: string, ...otherSuggestions: string[]];
+type FlagWordWithSuggestionsArray = [forbidWord: string, suggestion: string, ...otherSuggestions: string[]];
+type FlagWordWithSuggestionsObj = Record<string, string | string[]>;
+type FlagWordWithSuggestions = FlagWordWithSuggestionsArray | FlagWordWithSuggestionsObj;
 type FlagWord = FlagWordNoSuggestions | FlagWordWithSuggestions;
 export type FlagWords = FlagWord[];
 
@@ -33,17 +35,19 @@ export interface NewBaseSettings extends Omit<BaseSetting, 'flagWords'> {
     flagWords?: FlagWords;
 }
 
+// cspell:ignore akcent alusion
 const exampleFlagWords: NewBaseSettings = {
-    flagWords: ['crap', ['hte', 'the']],
+    flagWords: ['crap', ['hte', 'the'], { akcent: 'accent' }, { alusion: ['allusion', 'illusion'] }],
 };
 
 type TermForbid = false;
 type TermIgnore = null;
 type TermWord = true;
-type TermTypo = string[];
+type TermTypo = string[] | string;
 
 const TermForbid: TermForbid = false;
 const TermWord: TermWord = true;
+// eslint-disable-next-line unicorn/no-null
 const TermIgnore: TermIgnore = null;
 
 type Term = TermWord | TermForbid | TermIgnore | TermTypo;

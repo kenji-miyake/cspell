@@ -5,6 +5,8 @@
     "ignorePaths": [
         "**/timezonedb.h",
         "**/data_file.c",
+        "**/lexbor/encoding",
+        "**/sljit",
         "parse_date.c",
         "itab.c",
         "itab.h",
@@ -25,11 +27,7 @@
         }
     ],
     "dictionaries": ["mnemonics", "Mime Types"],
-    "ignoreWords": ["itab", "pcre", "timezonedb"],
-    "languageSettings": [
-        {
-            "languageId": "c,cpp,h"
-        }
-    ],
+    "ignoreWords": ["itab", "pcre", "timezonedb", "lexbor", "sljit"],
+    "overrides": [{ "filename": "**/*.{c,cpp,cxx,h,md}", "dictionaries": ["php"] }],
     "import": ["../../../cspell.json"]
 }

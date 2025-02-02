@@ -1,6 +1,9 @@
-import { TrieNode, FLAG_WORD, ChildMap, TrieRoot } from '../TrieNode';
-import { Sequence, genSequence } from 'gensequence';
-import { trieNodeToRoot } from '../trie-util';
+import type { Sequence } from 'gensequence';
+import { genSequence } from 'gensequence';
+
+import { trieNodeToRoot } from '../TrieNode/trie-util.js';
+import type { TrieNode, TrieRoot } from '../TrieNode/TrieNode.js';
+import { FLAG_WORD } from '../TrieNode/TrieNode.js';
 
 const EOW = '*';
 export const DATA = '__DATA__';
@@ -33,7 +36,7 @@ function leaves(node: TrieRefNode): Sequence<LeafResult> {
         if (!ref.c) {
             yield { n: ref, p };
         } else {
-            for (const n of ref.c) {
+            for (const n of Object.entries(ref.c)) {
                 yield* walk(n[1], n[0], ref);
             }
         }
@@ -67,8 +70,8 @@ function flattenToReferences(node: TrieRefNode): Sequence<TrieRefNode> {
                 if (leaf.p && leaf.p.c) {
                     leaf.p.r = leaf.p.r || [];
                     leaf.p.r.push(m);
-                    leaf.p.c.delete(leaf.n.s);
-                    if (!leaf.p.c.size) {
+                    delete leaf.p.c[leaf.n.s];
+                    if (!Object.entries(leaf.p.c).length) {
                         delete leaf.p.c;
                     }
                 }
@@ -101,9 +104,14 @@ function toLine(node: TrieRefNode, base: number): string {
 }
 
 function generateHeader(base: number, comment: string): Sequence<string> {
-    const header = ['#!/usr/bin/env cspell-trie reader', 'TrieXv2', 'base=' + base]
-        .concat(comment ? comment.split('\n').map((a) => '# ' + a) : [])
-        .concat(['# Data:', DATA]);
+    const header = [
+        '#!/usr/bin/env cspell-trie reader',
+        'TrieXv2',
+        'base=' + base,
+        ...(comment ? comment.split('\n').map((a) => '# ' + a) : []),
+        '# Data:',
+        DATA,
+    ];
     return genSequence(header);
 }
 
@@ -125,9 +133,12 @@ export function serializeTrie(root: TrieRoot, options: ExportOptions | number = 
     const rootRef: TrieRefNode = { ...root, s: '^' };
     const rows = flattenToReferences(rootRef).map((n) => toLine(n, base));
 
-    return generateHeader(radix, comment)
-        .concat(rows)
-        .map((a) => a + '\n');
+    return (
+        generateHeader(radix, comment)
+            // eslint-disable-next-line unicorn/prefer-spread
+            .concat(rows)
+            .map((a) => a + '\n')
+    );
 }
 
 function* toIterableIterator<T>(iter: Iterable<T> | IterableIterator<T>): IterableIterator<T> {
@@ -149,7 +160,7 @@ export function importTrie(linesX: Iterable<string> | IterableIterator<string>):
 
     function readHeader(iter: Iterator<string>) {
         const headerRows: string[] = [];
-        // eslint-disable-next-line no-constant-condition
+
         while (true) {
             const next = iter.next();
             if (next.done) {
@@ -179,7 +190,7 @@ export function importTrie(linesX: Iterable<string> | IterableIterator<string>):
             .slice(refOffset)
             .split(',')
             .filter((a) => !!a)
-            .map((r) => parseInt(r, base));
+            .map((r) => Number.parseInt(r, base));
         return {
             letter: line[0],
             isWord,
@@ -196,7 +207,7 @@ export function importTrie(linesX: Iterable<string> | IterableIterator<string>):
             .map((r) => nodes[r])
             .sort((a, b) => (a.s < b.s ? -1 : 1))
             .map((n) => [n.s, n]);
-        const cNode = children.length ? { c: new ChildMap(children) } : {};
+        const cNode = children.length ? { c: Object.fromEntries(children) } : {};
         return { s: letter, ...cNode, ...flags };
     }
 
@@ -212,8 +223,8 @@ export function importTrie(linesX: Iterable<string> | IterableIterator<string>):
                 nodes.push(root);
                 return { root, nodes };
             },
-            { nodes: [], root: { s: '', c: new Map<string, TrieNode>() } }
+            { nodes: [], root: { s: '', c: Object.create(null) } },
         );
 
-    return trieNodeToRoot(n.root, {});
+    return trieNodeToRoot(n.root, { isCaseAware: false });
 }

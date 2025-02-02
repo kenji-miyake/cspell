@@ -1,4 +1,6 @@
-import { assert } from './assert';
+import { describe, expect, test } from 'vitest';
+
+import { assert } from './assert.js';
 
 function catchError<T>(fn: () => T): Error | T {
     try {
@@ -14,13 +16,13 @@ describe('assert', () => {
         ${true}      | ${undefined}              | ${undefined}
         ${1}         | ${undefined}              | ${undefined}
         ${'yes'}     | ${undefined}              | ${undefined}
-        ${undefined} | ${undefined}              | ${Error('AssertionError')}
-        ${0}         | ${undefined}              | ${Error('AssertionError')}
-        ${null}      | ${undefined}              | ${Error('AssertionError')}
-        ${''}        | ${undefined}              | ${Error('AssertionError')}
-        ${false}     | ${undefined}              | ${Error('AssertionError')}
-        ${false}     | ${'Must be true or fail'} | ${Error('Must be true or fail')}
-        ${false}     | ${Error('my error')}      | ${Error('my error')}
+        ${undefined} | ${undefined}              | ${new Error('AssertionError')}
+        ${0}         | ${undefined}              | ${new Error('AssertionError')}
+        ${null}      | ${undefined}              | ${new Error('AssertionError')}
+        ${''}        | ${undefined}              | ${new Error('AssertionError')}
+        ${false}     | ${undefined}              | ${new Error('AssertionError')}
+        ${false}     | ${'Must be true or fail'} | ${new Error('Must be true or fail')}
+        ${false}     | ${new Error('my error')}  | ${new Error('my error')}
     `('compare assert to node assert $value / $message', ({ value, message, expected }) => {
         expect(catchError(() => assert(value, message))).toEqual(expected);
     });

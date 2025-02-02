@@ -78,22 +78,27 @@ Or you can specify a path to a config file with the `--config <path>` argument o
 - `maxNumberOfProblems` - defaults to **_100_** per file.
 - `minWordLength` - defaults to **_4_** - the minimum length of a word before it is checked.
 - `allowCompoundWords` - defaults to **_false_**; set to **true** to allow compound words by default.
-- `dictionaries` - list of the names of the dictionaries to use. See [Dictionaries](#Dictionaries) below.
+- `dictionaries` - list of the names of the dictionaries to use. See [Dictionaries](../docs/dictionaries.md).
 - `dictionaryDefinitions` - this list defines any custom dictionaries to use. This is how you can include other languages like Spanish.
 
   **Example**
 
   ```javascript
   "language": "en",
-  // Dictionaries "spanish", "ruby", and "corp-term" will always be checked.
+  // Dictionaries "spanish", "ruby", and "corp-terms" will always be checked.
   // Including "spanish" in the list of dictionaries means both Spanish and English
   // words will be considered correct.
   "dictionaries": ["spanish", "ruby", "corp-terms", "fonts"],
-  // Define each dictionary.  Relative paths are relative to the config file.
+  // Define each dictionary:
+  //  - Relative paths are relative to the config file.
+  //  - URLs will be retrieved via HTTP GET
   "dictionaryDefinitions": [
       { "name": "spanish", "path": "./spanish-words.txt"},
       { "name": "ruby", "path": "./ruby.txt"},
-      { "name": "company-terms", "path": "./corp-terms.txt"}
+      {
+        "name": "corp-terms",
+        "path": "https://shared-company-repository/cspell-terms.txt"
+      },
   ],
   ```
 

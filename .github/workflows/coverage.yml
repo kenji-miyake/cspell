@@ -2,31 +2,42 @@ name: Coverage
 on:
   pull_request:
     paths:
-      - "*.js"
-      - "*.ts"
-      - "*-lock.yaml"
-      - "package.json"
-      - "packages/**/*-lock.yaml"
-      - "packages/**/*.js"
-      - "packages/**/*.ts"
-      - "packages/**/package.json"
-      - ".github/workflows/coverage.yml"
-      - "!docs/**"
-      - "!website/**"
+      - '/*.js'
+      - '*.ts'
+      - '*-lock.yaml'
+      - 'package.json'
+      - 'packages/**/*-lock.yaml'
+      - 'packages/**/*.js'
+      - 'packages/**/*.ts'
+      - 'packages/**/*.mts'
+      - 'packages/**/package.json'
+      - '.github/workflows/coverage.yml'
+      - '!docs/**'
+      - '!website/**'
   push:
     branches:
       - main
     paths:
-      - "**/package.json"
-      - "**/*-lock.yaml"
-      - "**/*.ts"
-      - "**/*.js"
-      - ".github/workflows/coverage.yml"
-      - "!docs/**"
-      - "!website/**"
-
+      - '**/package.json'
+      - '**/*-lock.yaml'
+      - '**/*.ts'
+      - '**/*.mts'
+      - '**/*.js'
+      - '.github/workflows/coverage.yml'
+      - '!docs/**'
+      - '!website/**'
+  workflow_dispatch:
+    inputs:
+      NODE_VERSION:
+        description: 'Node Version'
+        required: true
+        default: '22.x'
 permissions:
   contents: read
+
+env:
+  NODE_OPTIONS: '--enable-source-maps' # coverage report is wrong if this in not set.
+  NODE_VERSION: ${{ inputs.NODE_VERSION || '22.x' }}
 
 jobs:
   coverage:
@@ -36,30 +47,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.2
-
-      - name: Use Node.js
-        uses: actions/setup-node@v3
+      - name: Install and Build
+        uses: ./.github/actions/install-build
         with:
-          cache: pnpm
+          node-version: ${{ env.NODE_VERSION }}
 
-      - run: pnpm -v
-
-      - run: pnpm i
-      - run: pnpm run build
       - run: pnpm run coverage
 
       - name: Upload coverage Coveralls
-        uses: coverallsapp/github-action@9ba913c152ae4be1327bfb9085dc806cedb44057 # 1.1.3
+        id: coveralls
+        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # 2.3.6
+        continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./lcov.info
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # v3
+        id: codecov
+        uses: codecov/codecov-action@13ce06bfc6bbe3ecf90edbbf1bc32fe5978ca1d3 # v5.3.1
+        continue-on-error: true
         with:
-          directory: "."
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: '.'
           files: ./lcov.info
+
+      - name: Show Summary
+        uses: streetsidesoftware/actions/public/summary@v1
+        with:
+          text: |
+            Coveralls: ${{ steps.coveralls.outcome }}
+            Codecov: ${{ steps.codecov.outcome }}

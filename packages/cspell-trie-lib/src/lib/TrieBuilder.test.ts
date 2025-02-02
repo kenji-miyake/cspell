@@ -1,10 +1,12 @@
-import { countNodes, isCircular } from './trie-util';
-import { TrieBuilder, buildTrie } from './TrieBuilder';
+import { describe, expect, test } from 'vitest';
+
+import { buildTrie, TrieBuilder } from './TrieBuilder.js';
+import { countNodes, isCircular } from './TrieNode/trie-util.js';
 
 describe('Validate TrieBuilder', () => {
     test('builder explicit consolidateSuffixes', () => {
         const builder = new TrieBuilder();
-        const words = sampleWords.concat(applyEndings('shock')).concat(applyEndings('stock'));
+        const words = [...sampleWords, ...applyEndings('shock'), ...applyEndings('stock')];
         builder.insert(words);
         const trie = builder.build(true);
         expect([...trie.words()].sort()).toEqual(sampleWords.sort());
@@ -87,16 +89,16 @@ const sampleWords = [
     'fun journey',
     'long walk',
     'fun walk',
-]
-    .concat(applyEndings('shock'))
-    .concat(applyEndings('stock'))
-    .concat(applyEndings('clock'))
-    .concat(applyEndings('open'))
-    .concat(applyEndings('lock'))
-    .concat(applyEndings('hack'))
-    .concat(applyEndings('will'))
-    .concat(applyEndings('shell'))
-    .concat(applyEndings('kill'));
+    ...applyEndings('shock'),
+    ...applyEndings('stock'),
+    ...applyEndings('clock'),
+    ...applyEndings('open'),
+    ...applyEndings('lock'),
+    ...applyEndings('hack'),
+    ...applyEndings('will'),
+    ...applyEndings('shell'),
+    ...applyEndings('kill'),
+];
 
 function applyEndings(word: string): string[] {
     return ['', 'ed', 'er', 'ing', 's'].map((s) => word + s);

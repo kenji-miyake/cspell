@@ -1,4 +1,6 @@
-import { validateSettings } from './validateSettings';
+import { describe, expect, test } from 'vitest';
+
+import { validateSettings } from './validateSettings.js';
 
 describe('validateSettings', () => {
     test.each`
@@ -15,12 +17,14 @@ describe('validateSettings', () => {
     test.each`
         settings
         ${[]}
-        ${undefined}
-        ${{}}
+        ${false}
+        ${true}
+        ${'hello'}
+        ${{ outFile: {} }}
         ${{ outFile: 1 }}
         ${{ outFile: 'foobar', verbose: 123 }}
         ${{ outFile: 'foobar', debug: [] }}
-    `('throws for invalid settings', ({ settings }) => {
+    `('throws for invalid settings $settings', ({ settings }) => {
         expect(() => validateSettings(settings)).toThrowErrorMatchingSnapshot();
     });
 });

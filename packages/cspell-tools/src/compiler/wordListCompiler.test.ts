@@ -1,67 +1,77 @@
 // cSpell:ignore jpegs outing dirs lcode outring outrings
 
-import { opConcatMap, pipe, toArray } from '@cspell/cspell-pipe/sync';
+import * as fsp from 'node:fs/promises';
+import * as path from 'node:path';
+
+import { opConcatMap, opTake, pipe, toArray } from '@cspell/cspell-pipe/sync';
 import * as Trie from 'cspell-trie-lib';
 import { importTrie, isCircular, iteratorTrieWords, serializeTrie } from 'cspell-trie-lib';
-import * as fsp from 'fs-extra';
-import { uniqueFilter } from 'hunspell-reader/dist/util';
-import * as path from 'path';
-import { spyOnConsole } from '../test/console';
-import { createTestHelper } from '../test/TestHelper';
-import { streamWordsFromFile } from './iterateWordsFromFile';
-import { setLogger } from './logger';
-import { readTextFile } from './readTextFile';
-import { compileTrie, compileWordList, consolidate, __testing__ } from './wordListCompiler';
-import { legacyLineToWords } from './wordListParser';
+import { uniqueFilter } from 'hunspell-reader';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-const testHelper = createTestHelper(__filename);
+import { spyOnConsole } from '../test/console.js';
+import { createTestHelper } from '../test/TestHelper.js';
+import type { CompileOptions } from './CompileOptions.js';
+import { legacyLineToWords } from './legacyLineToWords.js';
+import { setLogger } from './logger.js';
+import { readTextFile } from './readers/readTextFile.js';
+import type { SourceReaderOptions } from './SourceReader.js';
+import { streamSourceWordsFromFile } from './streamSourceWordsFromFile.js';
+import type { CompileTrieOptions } from './wordListCompiler.js';
+import { __testing__, compileTrie as _compileTrie, compileWordList as _compileWordList } from './wordListCompiler.js';
+import { normalizeTargetWords } from './wordListParser.js';
+import { defaultAllowedSplitWords } from './WordsCollection.js';
+
+const testHelper = createTestHelper(import.meta.url);
 
 const samples = path.join(testHelper.packageRoot, '../Samples/dicts');
 const sampleDictEnUS = path.join(samples, 'hunspell', 'en_US.dic');
 const sampleDictEn = path.join(samples, 'en_US.txt');
 
-const wordListHeader = __testing__.wordListHeader;
+const { wordListHeader, removeDuplicates } = __testing__;
 
-const { consoleOutput } = spyOnConsole();
-setLogger(console.log);
+const consoleSpy = spyOnConsole();
+const consoleOutput = consoleSpy.consoleOutput;
+
+const allowedSplitWords = defaultAllowedSplitWords;
+
+const readOptions: SourceReaderOptions = {
+    splitWords: false,
+    allowedSplitWords,
+    storeSplitWordsAsCompounds: undefined,
+};
 
 describe('Validate the wordListCompiler', () => {
     let temp = '.';
     beforeEach(() => {
-        testHelper.cdToTempDir();
         temp = testHelper.resolveTemp();
-        jest.resetAllMocks();
+        vi.resetAllMocks();
+        consoleSpy.attach();
+        setLogger(console.log);
     });
 
-    test('reading and normalizing a file', async () => {
-        const source = await streamWordsFromFile(path.join(samples, 'cities.txt'), {});
-        const destName = path.join(temp, 'cities.txt');
-        await compileWordList(source, destName, {
-            skipNormalization: false,
-            splitWords: undefined,
-            sort: true,
-            keepRawCase: false,
-            legacy: true,
-        });
-        const output = await fsp.readFile(destName, 'utf8');
-        expect(output).toBe(wordListHeader + '\n' + citiesResultSorted);
+    test.each`
+        destFile
+        ${'cities.txt'}
+        ${'cities.txt.gz'}
+    `('reading and normalizing to text file: $destFile', async ({ destFile }) => {
+        const source = [...(await streamSourceWordsFromFile(path.join(samples, 'cities.txt'), readOptions))];
+        const destName = path.join(temp, destFile);
+        await compileWordList(source, destName, compileOpt(false, false));
+        const result = await readTextFile(destName);
+        const expected = '\n# cspell-tools: keep-case no-split\n\n' + source.join('\n') + '\n';
+        expect(result).toEqual(expected);
         expect(consoleOutput()).toMatchSnapshot();
     });
 
     test('compiling to a file without split', async () => {
-        const source = await streamWordsFromFile(path.join(samples, 'cities.txt'), {});
+        const source = await streamSourceWordsFromFile(path.join(samples, 'cities.txt'), readOptions);
         const destName = path.join(temp, 'cities2.txt');
-        await compileWordList(source, destName, {
-            skipNormalization: false,
-            splitWords: false,
-            sort: true,
-            keepRawCase: false,
-            legacy: false,
-        });
+        await compileWordList(source, destName, compileOpt(true));
         const output = await fsp.readFile(destName, 'utf8');
         expect(output).toBe(
             wordListHeader +
-                '\n' +
+                '\n\n' +
                 citiesSorted +
                 citiesSorted
                     .toLowerCase()
@@ -69,133 +79,170 @@ describe('Validate the wordListCompiler', () => {
                     .filter((a) => !!a)
                     .map((a) => '~' + a)
                     .join('\n') +
-                '\n'
+                '\n',
         );
         expect(consoleOutput()).toMatchSnapshot();
     });
 
     test('tests normalized to a trie', () => {
-        const words = citiesResult.split('\n');
+        const words = citiesLegacyResult.split('\n');
         const nWords = toArray(legacyNormalizeWords(words));
         const tWords = [...Trie.iteratorTrieWords(normalizeWordsToTrie(words))];
         expect(tWords.sort()).toEqual([...new Set(nWords.sort())]);
         expect(consoleOutput()).toMatchSnapshot();
     });
 
-    test('reading and normalizing to a trie file', async () => {
-        const source = await streamWordsFromFile(path.join(samples, 'cities.txt'), {});
-        const destName = path.join(temp, 'cities.trie');
-        await compileTrie(source, destName, {
-            skipNormalization: false,
-            splitWords: undefined,
-            keepRawCase: false,
-            sort: false,
-            legacy: true,
-        });
-        const srcWords = (await fsp.readFile(destName, 'utf8')).split(/\r?\n/g);
-        const node = Trie.importTrie(srcWords);
-        const expected = citiesResult
-            .split('\n')
-            .filter((a) => !!a)
-            .sort();
-        const words = [...Trie.iteratorTrieWords(node)].sort();
-        expect(words).toEqual(expected);
-        expect(consoleOutput()).toMatchSnapshot();
-    });
-
-    test('reading and normalizing to a trie gz file', async () => {
-        const source = await streamWordsFromFile(path.join(samples, 'cities.txt'), {});
-        const destName = path.join(temp, 'cities.trie.gz');
-        await compileTrie(source, destName, {
-            skipNormalization: false,
-            splitWords: undefined,
-            keepRawCase: false,
-            sort: false,
-            legacy: true,
-        });
+    test.each`
+        destFile
+        ${'cities.trie'}
+        ${'cities.trie.gz'}
+    `('reading and normalizing to $destFile', async ({ destFile }) => {
+        const source = [...(await streamSourceWordsFromFile(path.join(samples, 'cities.txt'), readOptions))];
+        const destName = path.join(temp, destFile);
+        await compileTrie(source, destName, compileOpt(true));
         const resultFile = await readTextFile(destName);
-        const srcWords = resultFile.split('\n');
-        const node = Trie.importTrie(srcWords);
-        const expected = citiesResult
-            .split('\n')
-            .filter((a) => !!a)
-            .sort();
-        const words = [...Trie.iteratorTrieWords(node)].sort();
-        expect(words).toEqual(expected);
+        const resultLines = resultFile.split('\n');
+        const node = Trie.importTrie(resultLines);
+        const words = [...Trie.iteratorTrieWords(node)].filter((a) => !a.startsWith('~')).sort();
+        expect(words).toEqual([...source].sort());
         expect(consoleOutput()).toMatchSnapshot();
     });
 
     test('a simple hunspell dictionary depth 0', async () => {
-        const source = await streamWordsFromFile(path.join(samples, 'hunspell', 'example.dic'), {
+        const source = await streamSourceWordsFromFile(path.join(samples, 'hunspell', 'example.dic'), {
+            ...readOptions,
             maxDepth: 0,
         });
         const destName = path.join(temp, 'example0.txt');
-        await compileWordList(source, destName, {
-            skipNormalization: false,
-            splitWords: undefined,
-            sort: true,
-            keepRawCase: false,
-            legacy: true,
-        });
+        await compileWordList(source, destName, compileOpt(false));
         const output = await fsp.readFile(destName, 'utf8');
-        expect(output).toBe(__testing__.wordListHeader + '\n' + 'hello\ntry\nwork\n');
+        expect(output).toBe(__testing__.wordListHeader + '\n\n' + 'hello\ntry\nwork\n');
         expect(consoleOutput()).toMatchSnapshot();
     });
 
     test('a simple hunspell dictionary depth 1', async () => {
-        const source = await streamWordsFromFile(path.join(samples, 'hunspell', 'example.dic'), {
+        const source = await streamSourceWordsFromFile(path.join(samples, 'hunspell/example.dic'), {
+            ...readOptions,
             maxDepth: 1,
         });
         const destName = path.join(temp, 'example1.txt');
-        await compileWordList(source, destName, {
-            skipNormalization: false,
-            splitWords: undefined,
-            sort: true,
-            keepRawCase: false,
-            legacy: true,
-        });
+        await compileWordList(source, destName, compileOpt(false, false));
         const output = await fsp.readFile(destName, 'utf8');
-        expect(output.split('\n')).toEqual([
-            '',
-            '# cspell-tools: keep-case no-split',
-            '',
-            'hello',
-            'rework',
-            'tried',
-            'try',
-            'work',
-            'worked',
-            '',
-        ]);
+        expect(output.split('\n')).toEqual(
+            `\
+
+            # cspell-tools: keep-case no-split
+
+            hello
+            rework
+            tried
+            try
+            work
+            worked
+        `
+                .split('\n')
+                .map((line) => line.trim()),
+        );
+        expect(consoleOutput()).toMatchSnapshot();
+    });
+
+    test('Specify directives', async () => {
+        const source = await streamSourceWordsFromFile(path.join(samples, 'hunspell/example.dic'), {
+            ...readOptions,
+            maxDepth: 1,
+        });
+        const destName = path.join(temp, 'example2.txt');
+        await compileWordList(source, destName, compileOpt(false, false, ['no-generate-alternatives']));
+        const output = await fsp.readFile(destName, 'utf8');
+        expect(output.split('\n')).toEqual(
+            `\
+
+            # cspell-tools: keep-case no-split
+            # cspell-dictionary: no-generate-alternatives
+
+            hello
+            rework
+            tried
+            try
+            work
+            worked
+        `
+                .split('\n')
+                .map((line) => line.trim()),
+        );
         expect(consoleOutput()).toMatchSnapshot();
     });
 });
 
 describe('Validate Larger Dictionary', () => {
+    beforeEach(() => {
+        consoleSpy.attach();
+        setLogger(console.log);
+    });
+
     test('en_US hunspell', async () => {
-        const source = await streamWordsFromFile(sampleDictEnUS, {});
-        const words = source.take(5000).toArray();
+        const source = await streamSourceWordsFromFile(sampleDictEnUS, readOptions);
+        const words = [...pipe(source, opTake(5000))];
         const trie = normalizeWordsToTrie(words);
         expect(isCircular(trie)).toBe(false);
         const nWords = toArray(legacyNormalizeWords(words)).sort().filter(uniqueFilter(1000));
-        const results = iteratorTrieWords(trie).toArray().sort().filter(uniqueFilter(1000));
+        const results = [...iteratorTrieWords(trie)].sort().filter(uniqueFilter(1000));
         expect(results).toEqual(nWords);
-    }, 60000);
+    }, 60_000);
 
     test('en_US word list', async () => {
-        const source = await streamWordsFromFile(sampleDictEn, {});
-        const words = source.toArray();
-        const trie = consolidate(normalizeWordsToTrie(words));
+        const source = await streamSourceWordsFromFile(sampleDictEn, readOptions);
+        const words = [...source];
+        const trie = Trie.consolidate(normalizeWordsToTrie(words));
         expect(isCircular(trie)).toBe(false);
         const nWords = toArray(legacyNormalizeWords(words)).sort().filter(uniqueFilter(1000));
-        const results = iteratorTrieWords(trie).toArray().sort();
+        const results = [...iteratorTrieWords(trie)].sort();
         expect(results).toEqual(nWords);
         const data = serializeTrie(trie, { base: 40 });
         const trie2 = importTrie(data);
-        const results2 = iteratorTrieWords(trie2).toArray();
+        const results2 = [...iteratorTrieWords(trie2)];
         expect(results2).toEqual(results);
-    }, 60000);
+    }, 60_000);
 });
+
+describe('', () => {
+    test.each`
+        words                            | expected
+        ${'hello'}                       | ${['hello']}
+        ${'hello|HELLO'}                 | ${['hello']}
+        ${'hello|*hello*|*HELLO*'}       | ${['*hello*']}
+        ${'HELLO|*hello*|*HELLO*'}       | ${['*hello*']}
+        ${'HELLO|*HELLO*'}               | ${['*HELLO*']}
+        ${'Hello|*Hello*'}               | ${['*Hello*']}
+        ${'hello|+hello+'}               | ${['*hello*' /* this is on purpose */]}
+        ${'hello|hello+'}                | ${['hello*']}
+        ${'hello|+hello'}                | ${['*hello']}
+        ${'hello|hello+|+hello|+hello+'} | ${['*hello*']}
+        ${'hello|hello+|+hello|hello*'}  | ${['hello*', '*hello']}
+        ${'hello|hello+|+hello+'}        | ${['hello', '*hello+']}
+        ${'hello|+hello|+hello+'}        | ${['hello', '+hello*']}
+        ${'hello|hello+|+hello'}         | ${['hello*', '*hello']}
+        ${'*col*|+col|col+'}             | ${['*col*']}
+    `('removeDuplicate $words', ({ words, expected }) => {
+        words = typeof words === 'string' ? words.split('|') : words;
+        const result = [...removeDuplicates(words)];
+        expect(result).toEqual(expected);
+    });
+});
+
+async function compileTrie(words: Iterable<string>, destFilename: string, options: CompileTrieOptions): Promise<void> {
+    const normalizer = normalizeTargetWords(options);
+    return _compileTrie(normalizer(words), destFilename, options);
+}
+
+async function compileWordList(
+    lines: Iterable<string>,
+    destFilename: string,
+    options: CompileTrieOptions,
+): Promise<void> {
+    const normalizer = normalizeTargetWords(options);
+    return _compileWordList(normalizer(lines), destFilename, options);
+}
 
 function normalizeWordsToTrie(words: Iterable<string>): Trie.TrieRoot {
     return Trie.buildTrie(legacyNormalizeWords(words)).root;
@@ -204,8 +251,17 @@ function normalizeWordsToTrie(words: Iterable<string>): Trie.TrieRoot {
 function legacyNormalizeWords(lines: Iterable<string>): Iterable<string> {
     return pipe(
         lines,
-        opConcatMap((line) => legacyLineToWords(line))
+        opConcatMap((line) => legacyLineToWords(line, true, allowedSplitWords)),
     );
+}
+
+function compileOpt(
+    sort: boolean,
+    generateNonStrict = true,
+    dictionaryDirectives: string[] | undefined = undefined,
+    removeDuplicates = false,
+): CompileOptions {
+    return { sort, generateNonStrict, dictionaryDirectives, removeDuplicates };
 }
 
 // const cities = `\
@@ -230,7 +286,7 @@ Paris
 San Francisco
 `;
 
-const citiesResult = `\
+const citiesLegacyResult = `\
 new york
 new
 york
@@ -249,25 +305,4 @@ mexico
 city
 london
 paris
-`;
-
-const citiesResultSorted = `\
-amsterdam
-angeles
-city
-delhi
-francisco
-london
-los
-los angeles
-mexico
-mexico city
-new
-new amsterdam
-new delhi
-new york
-paris
-san
-san francisco
-york
 `;

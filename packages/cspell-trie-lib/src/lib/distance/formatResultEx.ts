@@ -1,5 +1,6 @@
-import { WeightMap } from '.';
-import { distanceAStarWeightedEx, ExResult } from './distanceAStarWeighted';
+import type { ExResult } from './distanceAStarWeighted.js';
+import { distanceAStarWeightedEx } from './distanceAStarWeighted.js';
+import { createWeightCostCalculator, type WeightMap } from './weightedMaps.js';
 
 function pL(s: string, w: number) {
     const strWidth = vizWidth(s);
@@ -14,7 +15,7 @@ function pR(s: string, w: number) {
 }
 
 function vizWidth(s: string) {
-    const r = s.replace(/[\u0300-\u036F\u007f-\u009f]/gu, '');
+    const r = s.replaceAll(/[\u0300-\u036F\u007F-\u009F]/gu, '');
     let i = 0;
     for (const c of r) {
         i += c.length;
@@ -51,11 +52,12 @@ export function formatExResult(ex: ExResult | undefined): string {
     const p = 'p: |' + parts.map(({ p, w }) => pL(p, w)).join('|') + '|';
     const penaltyMsg = penalty ? `[+${penalty}]` : '';
     return `<${ex.a.slice(1, -1)}> -> <${ex.b.slice(1, -1)}> (${cost - penalty}${penaltyMsg})\n${[a, b, c, p].join(
-        '\n'
+        '\n',
     )}\n`;
 }
 
 export function formattedDistance(wordA: string, wordB: string, weightMap: WeightMap, cost?: number) {
-    const x = distanceAStarWeightedEx(wordA, wordB, weightMap, cost);
-    return formatExResult(x);
+    const calc = createWeightCostCalculator(weightMap);
+    const distResult = distanceAStarWeightedEx(wordA, wordB, calc, cost);
+    return formatExResult(distResult);
 }
