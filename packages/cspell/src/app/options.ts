@@ -89,9 +89,24 @@ export interface LinterOptions
     mustFindFiles?: boolean;
 
     /**
+     * List of dictionary names to use.
+     */
+    dictionary?: string[] | undefined;
+
+    /**
+     * List of dictionary names to disable.
+     */
+    disableDictionary?: string[] | undefined;
+
+    /**
      * Stop processing and exit if an issue or error is found.
      */
     failFast?: boolean;
+
+    /**
+     * Keep going even if an error is found.
+     */
+    continueOnError?: boolean;
 
     /**
      * Optional list of reporters to use, overriding any specified in the
@@ -111,11 +126,34 @@ export interface LinterOptions
 }
 
 export interface TraceOptions extends BaseOptions {
+    /**
+     * Use stdin for the input.
+     */
     stdin?: boolean;
+    /**
+     * Enable the `allowCompoundWords` option.
+     */
     allowCompoundWords?: boolean;
+    /**
+     * Ignore case and accents when searching for words.
+     */
     ignoreCase?: boolean;
+    /**
+     * Show all dictionaries, not just the ones that contain the words or are enabled.
+     */
     all?: boolean;
+    /**
+     * Show only dictionaries that contain the words.
+     * If `all` is set, this option is ignored.
+     */
     onlyFound?: boolean;
+    /**
+     * Names of dictionaries to use.
+     */
+    dictionary?: string[] | undefined;
+    /**
+     * Configure how to display the dictionary path.
+     */
     dictionaryPath?: 'hide' | 'long' | 'short' | 'full';
 }
 
@@ -159,6 +197,59 @@ export interface SuggestionOptions extends BaseOptions {
      * Use REPL interface for making suggestions.
      */
     repl?: boolean;
+}
+
+export interface DictionariesOptions {
+    /**
+     * Path to configuration file.
+     */
+    config?: string;
+
+    /**
+     * Load the default configuration
+     * @default true
+     */
+    defaultConfiguration?: boolean;
+
+    /**
+     * Use color in the output.
+     * `true` to force color, `false` to turn off color.
+     * `undefined` to use color if the output is a TTY.
+     */
+    color?: boolean | undefined;
+
+    /**
+     * Show enabled:
+     * - `true` to show only enabled dictionaries.
+     * - `false` to show only disabled dictionaries.
+     * - `undefined` to show all dictionaries.
+     */
+    enabled?: boolean | undefined;
+
+    /**
+     * The locale to use when listing dictionaries.
+     */
+    locale?: string;
+
+    /**
+     * The file type to use when listing dictionaries.
+     */
+    fileType?: string;
+
+    /**
+     * show the language locales supported by the dictionary.
+     */
+    showLocales?: boolean;
+    /**
+     * show the file types supported by the dictionary.
+     */
+    showFileTypes?: boolean;
+    /**
+     * Dhow the location of the dictionary.
+     */
+    showLocation?: boolean;
+
+    pathFormat?: 'hide' | 'short' | 'long' | 'full';
 }
 
 export interface LegacyOptions {

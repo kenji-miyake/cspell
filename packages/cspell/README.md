@@ -185,13 +185,15 @@ Options:
   --no-color                   Turn off color.
   --no-default-configuration   Do not load the default configuration and
                                dictionaries.
-  --debug                      Output information useful for debugging
-                               cspell.json files.
+  --dictionary <name>          Enable a dictionary by name.
+  --disable-dictionary <name>  Disable a dictionary by name.
   --reporter <module|path>     Specify one or more reporters to use.
   --report <level>             Set how unknown words are reported (choices:
                                "all", "simple", "typos", "flagged")
   --issue-template [template]  Use a custom issue template. See --help
                                --issue-template for details.
+  --debug                      Output information useful for debugging
+                               cspell.json files.
   -h, --help                   display help for command
 
 More Examples:
@@ -268,6 +270,8 @@ Options:
   --ignore-case               Ignore case and accents when searching for words.
   --no-ignore-case            Do not ignore case and accents when searching for
                               words.
+  --dictionary <name>         Enable a dictionary by name. Can be used multiple
+                              times.
   --dictionary-path <format>  Configure how to display the dictionary path.
                               (choices: "hide", "short", "long", "full",
                               default: Display most of the path.)

@@ -1,5 +1,5 @@
 import { opMap, opTap, pipeAsync, toAsyncIterable } from '@cspell/cspell-pipe';
-import type { CSpellReporter, RunResult } from '@cspell/cspell-types';
+import type { CSpellReporter, CSpellSettings, RunResult } from '@cspell/cspell-types';
 import type { CheckTextInfo, FeatureFlags, SuggestionsForWordResult, TraceWordResult } from 'cspell-lib';
 import {
     checkTextDocument,
@@ -12,6 +12,7 @@ import {
 } from 'cspell-lib';
 
 import { getReporter } from './cli-reporter.js';
+import { configInit, type InitOptions } from './config/index.js';
 import { console } from './console.js';
 import type { TimedSuggestionsForWordResult } from './emitters/suggestionsEmitter.js';
 import { getFeatureFlags, parseFeatureFlags } from './featureFlags/index.js';
@@ -26,6 +27,8 @@ import { finalizeReporter } from './util/reporters.js';
 import { readStdin } from './util/stdin.js';
 import { getTimeMeasurer } from './util/timer.js';
 import * as util from './util/util.js';
+
+export { listDictionaries } from './dictionaries/index.js';
 export type { TraceResult } from 'cspell-lib';
 export { IncludeExcludeFlag } from 'cspell-lib';
 
@@ -51,11 +54,16 @@ export async function* trace(words: string[], options: TraceOptions): AsyncItera
     const { languageId, locale, allowCompoundWords, ignoreCase } = options;
     const configFile = await readConfig(options.config, undefined);
     const loadDefault = options.defaultConfiguration ?? configFile.config.loadDefaultConfiguration ?? true;
+    const additionalSettings: CSpellSettings = {};
+    if (options.dictionary) {
+        additionalSettings.dictionaries = options.dictionary;
+    }
 
     const config = mergeSettings(
         await getDefaultSettings(loadDefault),
         await getGlobalSettingsAsync(),
         configFile.config,
+        additionalSettings,
     );
     yield* traceWordsAsync(iWords, config, util.clean({ languageId, locale, ignoreCase, allowCompoundWords }));
 }
@@ -115,8 +123,8 @@ export async function* suggestions(
     }
 }
 
-export function createInit(): Promise<void> {
-    return Promise.reject();
+export function createInit(options: InitOptions): Promise<void> {
+    return configInit(options);
 }
 
 function registerApplicationFeatureFlags(): FeatureFlags {
