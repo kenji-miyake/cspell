@@ -4,7 +4,7 @@
     "access": "public",
     "provenance": true
   },
-  "version": "9.0.2",
+  "version": "9.1.1",
   "description": "URL parsing and manipulation utilities for cspell",
   "keywords": [
     "cspell",
@@ -34,7 +34,7 @@
     "!**/*.map"
   ],
   "scripts": {
-    "build": "tsup-node",
+    "build": "tsdown",
     "build:clean": "pnpm clean && pnpm build",
     "clean": "shx rm -rf dist coverage",
     "clean-build": "pnpm build:clean",
