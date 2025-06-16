@@ -3,7 +3,7 @@ Repository: RustPython/RustPython
 Url: "https://github.com/RustPython/RustPython.git"
 Args: ["**"]
 Lines:
- CSpell: Files checked: 674, Issues found: 768 in 104 files.
+ CSpell: Files checked: 674, Issues found: 766 in 103 files.
  exit code: 1
 Cargo.toml:107:28    - Unknown word (nsis)       -- package.metadata.packager.nsis]
 Cargo.toml:193:1     - Unknown word (rustix)     -- rustix = { version = "1.0"
@@ -57,7 +57,7 @@ common/src/lock/cell_lock.rs:180:35    - Unknown word (sharedly)   -- deadlock("
 common/src/lock/cell_lock.rs:72:23     - Unknown word (sharedly)   -- deadlock("sharedly ", "RwLock")
 compiler/codegen/src/snapshots/rustpython_compiler_core__compile__tests__nested_double_async_with.snap:29:42     - Unknown word (woohoo)     -- LoadNameAny (6, woohoo)
 compiler/codegen/src/snapshots/rustpython_compiler_core__compile__tests__nested_double_async_with.snap:3:184     - Unknown word (woohoo)     -- async with woohoo():\n
-compiler/src/lib.rs:94:27     - Unknown word (hackily)    -- TODO: do this less hackily; ruff's parser should
+compiler/src/lib.rs:96:27     - Unknown word (hackily)    -- TODO: do this less hackily; ruff's parser should
 deny.toml:156:45    - Unknown word (dotgraphs)  -- ghlighting used when creating dotgraphs for crates
 deny.toml:188:11    - Unknown word (reqwest)    -- #crate = "reqwest"
 deny.toml:193:7     - Unknown word (rustls)     -- # "rustls",
@@ -650,15 +650,13 @@ vm/src/builtins/str.rs:2254:45   - Unknown word (ῳitlecases) -- ῼitlecases .
 vm/src/builtins/str.rs:2268:20   - Unknown word (Ωppercases) -- "Greek Ωppercases ...",
 vm/src/builtins/str.rs:2269:20   - Unknown word (ῼitlecases) -- "Greek ῼitlecases ...",
 vm/src/builtins/str.rs:577:48    - Unknown word (cmpxchg)    -- len, we don't need a cmpxchg loop, since it'll always
-vm/src/builtins/super.rs:273:26    - Unknown word (cmeth)      -- def cmeth(cls, arg):\n
-vm/src/builtins/super.rs:274:30    - Unknown word (cmeth)      -- super().cmeth(arg)\n";
 vm/src/function/argument.rs:121:13    - Unknown word (kwargc)     -- let kwargc = kwarg_names.len()
 vm/src/function/argument.rs:122:36    - Unknown word (kwargc)     -- posargc = total_argc - kwargc;
 vm/src/function/builtin.rs:69:26     - Unknown word (sizedness)  -- requirements of zero-sizedness apply, see that documentation
 vm/src/object/traverse_object.rs:47:56     - Unknown word (maintaince) -- pointer* to a struct for maintaince weak ref, so no ownership
 vm/src/object/traverse_object.rs:67:56     - Unknown word (maintaince) -- pointer* to a struct for maintaince weak ref, so no ownership
 vm/src/protocol/buffer.rs:389:22    - Unknown word (fortain)    -- // TODO: support fortain order
-vm/src/stdlib/builtins.rs:441:26    - Unknown word (normalish)  -- // everything is normalish, we can just rely on
+vm/src/stdlib/builtins.rs:446:26    - Unknown word (normalish)  -- // everything is normalish, we can just rely on
 vm/src/vm/setting.rs:39:10     - Unknown word (Xfoo)       -- /// -Xfoo[=bar]
 vm/src/vm/setting.rs:42:10     - Unknown word (Wfoo)       -- /// -Wfoo
 vm/src/vm/setting.rs:75:13     - Unknown word (PYTHONUNBUFFERED) -- /// -u, PYTHONUNBUFFERED=x
