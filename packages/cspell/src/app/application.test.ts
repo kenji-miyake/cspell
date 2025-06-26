@@ -17,17 +17,20 @@ const samplesRoot = r(packageRoot, 'samples');
 const fixturesRoot = r(packageRoot, 'fixtures');
 const featuresRoot = r(fixturesRoot, 'features');
 const tempRoot = r(packageRoot, 'temp');
+const searchRoot = path.resolve(samplesRoot, 'config-search');
 
 const sampleOptions = { root: samplesRoot };
 
-const oc = <T>(obj: T) => expect.objectContaining(obj);
-const ac = <T>(a: Array<T>) => expect.arrayContaining(a);
+const oc = (...params: Parameters<typeof expect.objectContaining>) => expect.objectContaining(...params);
+const ac = (...params: Parameters<typeof expect.arrayContaining>) => expect.arrayContaining(...params);
 
 vi.mock('node:stream/consumers', () => ({ default: { text: vi.fn() } }));
 
 const timeout = 10_000;
 
 const testOptions = { timeout };
+
+const j = path.join;
 
 describe('Validate the Application', () => {
     afterEach(() => {
@@ -73,6 +76,103 @@ describe('Validate the Application', () => {
         expect(reporter.debugCount).toBe(0);
         expect(reporter.runResult).toEqual(result);
         expect(result.files).toBe(1);
+        return;
+    });
+
+    test('Runs the application with stop config search at', testOptions, async () => {
+        const files = ['index.txt'];
+
+        const rootDir = j(searchRoot, 'stop-config-search', 'main');
+        const stopSearchAt = j(searchRoot, 'stop-config-search');
+
+        const options = {
+            root: rootDir,
+            stopConfigSearchAt: [stopSearchAt],
+        };
+
+        const reporter = new InMemoryReporter();
+        const result = await App.lint(files, options, reporter);
+
+        expect(reporter.errorCount).toBe(0);
+        expect(reporter.infoCount).toBeGreaterThan(0);
+        expect(reporter.debugCount).toBe(0);
+        expect(reporter.runResult).toEqual(result);
+        expect(result.files).toBe(1);
+        expect(result.issues).toBe(0);
+        return;
+    });
+
+    test('Stops config search at specified directory (no config found)', testOptions, async () => {
+        const files = ['text.txt'];
+
+        const rootDir = j(searchRoot, 'search-stop', 'src');
+        const stopSearchAt = j(searchRoot, 'search-stop', 'src');
+
+        const options = {
+            root: rootDir,
+            stopConfigSearchAt: [stopSearchAt],
+        };
+
+        const reporter = new InMemoryReporter();
+        const result = await App.lint(files, options, reporter);
+
+        expect(reporter.errorCount).toBe(0);
+        expect(reporter.infoCount).toBeGreaterThan(0);
+        expect(reporter.debugCount).toBe(0);
+        expect(reporter.runResult).toEqual(result);
+        expect(result.files).toBe(1);
+        expect(result.issues).toBe(1);
+        expect(reporter.log.some((line) => line.includes('Config Files Found') && line.includes('None found'))).toBe(
+            true,
+        );
+        return;
+    });
+
+    test('limits config lookup using stopConfigSearchAt for each project', testOptions, async () => {
+        const files = ['word.md'];
+        const rootDir = j(searchRoot, 'repo', 'apps', 'src');
+
+        const stopApps = j(searchRoot, 'repo', 'apps');
+        const stopLibs = j(searchRoot, 'repo', 'libs');
+        const stopConfigSearchAt = [stopApps, stopLibs];
+
+        const options = {
+            root: rootDir,
+            stopConfigSearchAt,
+        };
+
+        const reporter = new InMemoryReporter();
+        const result = await App.lint(files, options, reporter);
+
+        expect(reporter.errorCount).toBe(0);
+        expect(reporter.infoCount).toBeGreaterThan(0);
+        expect(reporter.debugCount).toBe(0);
+        expect(reporter.runResult).toEqual(result);
+        expect(result.files).toBe(1);
+        expect(result.issues).toBe(1);
+        expect(reporter.log.some((line) => line.includes('Config Files Found') && line.includes('None found'))).toBe(
+            true,
+        );
+
+        expect(reporter.issues[0].text).toBe('baddword'); // cspell:disable-line
+        return;
+    });
+
+    test('Tests running the application with no config search', testOptions, async () => {
+        const files = ['**/*.txt'];
+        const config = j(searchRoot, 'cspell.temp.json');
+        const searchOptions = { root: searchRoot };
+        const options = { ...searchOptions, config, configSearch: false };
+        const reporter = new InMemoryReporter();
+        const lint = App.lint(files, options, reporter);
+        const result = await lint;
+
+        expect(reporter.errorCount).toBe(0);
+        expect(reporter.infoCount).toBeGreaterThan(0);
+        expect(reporter.debugCount).toBe(0);
+        expect(reporter.runResult).toEqual(result);
+        expect(result.files).toBe(3);
+        expect(result.issues).toBe(3);
         return;
     });
 
@@ -148,13 +248,13 @@ describe('Validate createInit', () => {
     test('createInit', async () => {
         async function worked() {
             try {
-                await App.createInit();
+                await App.createInit({ output: 'temp/', format: 'yaml', locale: 'en-GB' });
             } catch {
                 return false;
             }
             return true;
         }
-        expect(await worked()).toBe(false);
+        expect(await worked()).toBe(true);
     });
 });
 

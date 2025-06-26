@@ -4,7 +4,7 @@
     "access": "public",
     "provenance": true
   },
-  "version": "9.0.2",
+  "version": "9.1.2",
   "description": "Types for cspell and cspell-lib",
   "type": "commonjs",
   "sideEffects": false,
@@ -50,9 +50,9 @@
   },
   "scripts": {
     "clean": "shx rm -rf dist temp coverage \"*.tsbuildInfo\"",
-    "build": "pnpm build:tsc && pnpm build:tsup && pnpm run build-schema",
+    "build": "pnpm build:tsc && pnpm build:tsdown && pnpm run build-schema",
     "build:tsc": "tsc -p tsconfig.json",
-    "build:tsup": "tsup-node --entry src/index.ts --entry src/Parser/index.ts --format cjs,esm  --dts --out-dir dist",
+    "build:tsdown": "tsdown --entry src/index.ts --entry src/Parser/index.ts --format cjs,esm  --dts --out-dir dist",
     "build-schema": "pnpm build-cspell-schema",
     "clean-build": "pnpm run clean && pnpm run build",
     "coverage": "vitest run --coverage",

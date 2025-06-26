@@ -11,7 +11,7 @@ export class CSpellConfigFileJson extends ImplCSpellConfigFile {
 
     constructor(
         readonly url: URL,
-        readonly settings: CSpellSettings,
+        settings: CSpellSettings,
     ) {
         super(url, settings);
     }
@@ -20,9 +20,36 @@ export class CSpellConfigFileJson extends ImplCSpellConfigFile {
         return stringify(this.settings, undefined, this.indent) + '\n';
     }
 
+    removeAllComments(): this {
+        // comment-json uses symbols for comments, so we need to remove them.
+        for (const key of Object.getOwnPropertySymbols(this.settings)) {
+            delete this.settings[key as unknown as keyof typeof this.settings];
+        }
+        Object.assign(this.settings, JSON.parse(JSON.stringify(this.settings)));
+        return this;
+    }
+
+    setSchema(schema: string): this {
+        this.settings.$schema = schema;
+        return this;
+    }
+
+    setComment(field: keyof CSpellSettings, comment: string, inline?: boolean): this {
+        const prefix = inline ? 'after:' : 'before:';
+        const symbolKey = Symbol.for(prefix + field);
+        const token = {
+            type: 'LineComment',
+            value: comment,
+            inline,
+        };
+        const settings: Record<symbol, unknown> = this.settings as Record<symbol, unknown>;
+        settings[symbolKey] = [token];
+        return this;
+    }
+
     public static parse(file: TextFile): CSpellConfigFileJson {
         try {
-            const cspell: CSpellSettings | unknown = parse(file.content);
+            const cspell: CSpellSettings | unknown = parseJson(file.content);
             if (!isCSpellSettings(cspell)) {
                 throw new ParseError(file.url);
             }
@@ -37,6 +64,14 @@ export class CSpellConfigFileJson extends ImplCSpellConfigFile {
             }
             throw new ParseError(file.url, undefined, { cause });
         }
+    }
+}
+
+function parseJson(content: string): unknown {
+    try {
+        return JSON.parse(content);
+    } catch {
+        return parse(content);
     }
 }
 

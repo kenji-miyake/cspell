@@ -415,7 +415,7 @@ export async function runLint(cfg: LintRequest): Promise<RunResult> {
             setEnvironmentVariable(ENV_CSPELL_GLOB_ROOT, cfg.root);
         }
 
-        const configInfo: ConfigInfo = await readConfig(cfg.configFile, cfg.root);
+        const configInfo: ConfigInfo = await readConfig(cfg.configFile, cfg.root, cfg.options.stopConfigSearchAt);
         if (cfg.options.defaultConfiguration !== undefined) {
             configInfo.config.loadDefaultConfiguration = cfg.options.defaultConfiguration;
         }
@@ -447,7 +447,9 @@ export async function runLint(cfg: LintRequest): Promise<RunResult> {
         reporter.info(`Config Files Found:\n    ${configInfo.source}\n`, MessageTypes.Info);
 
         const configErrors = await countConfigErrors(configInfo);
-        if (configErrors && cfg.options.exitCode !== false) return runResult({ errors: configErrors });
+        if (configErrors && cfg.options.exitCode !== false && !cfg.options.continueOnError) {
+            return runResult({ errors: configErrors });
+        }
 
         // Get Exclusions from the config files.
         const { root } = cfg;
@@ -457,6 +459,9 @@ export async function runLint(cfg: LintRequest): Promise<RunResult> {
             const files = await determineFilesToCheck(configInfo, cfg, reporter, globInfo);
 
             const result = await processFiles(files, configInfo, cacheSettings);
+            if (configErrors && cfg.options.exitCode !== false) {
+                result.errors ||= configErrors;
+            }
             debugStats && console.error('stats: %o', getDefaultConfigLoader().getStats());
             return result;
         } catch (e) {
