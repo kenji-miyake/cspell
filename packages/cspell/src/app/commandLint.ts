@@ -1,7 +1,7 @@
 import type { AddHelpTextContext, Command } from 'commander';
-import { Option as CommanderOption } from 'commander';
 
 import * as App from './application.mjs';
+import { collect, crOpt } from './commandHelpers.js';
 import { type LinterCliOptions, ReportChoicesAll } from './options.js';
 import { DEFAULT_CACHE_LOCATION } from './util/cache/index.js';
 import { canUseColor } from './util/canUseColor.js';
@@ -52,15 +52,13 @@ More Examples:
         Only spell check the "/*.md" files in $FILES,
         where $FILES is a shell variable that contains the list of files.
 
+    cspell --help --verbose
+        Show all options including hidden options.
+
 References:
     https://cspell.org
     https://github.com/streetsidesoftware/cspell
 `;
-
-function collect(value: string | string[], previous: string[] | undefined): string[] {
-    const values = Array.isArray(value) ? value : [value];
-    return previous ? [...previous, ...values] : values;
-}
 
 export function commandLint(prog: Command): Command {
     const spellCheckCommand = prog.command('lint', { isDefault: true });
@@ -69,6 +67,16 @@ export function commandLint(prog: Command): Command {
         .option(
             '-c, --config <cspell.json>',
             'Configuration file to use.  By default cspell looks for cspell.json in the current directory.',
+        )
+        .addOption(crOpt('--config-search', 'Allow searching for configuration files.', undefined).hideHelp())
+        .option(
+            '--no-config-search',
+            'Disable automatic searching for additional configuration files in parent directories. Only the specified config file (if any) will be used.',
+        )
+        .option(
+            '--stop-config-search-at <dir>',
+            'Specify a directory at which to stop searching for configuration files when walking up from the files being checked. Useful for limiting config inheritance.',
+            collect,
         )
         .option('-v, --verbose', 'Display more information about the files being checked and the configuration.')
         .option(
@@ -113,6 +121,7 @@ export function commandLint(prog: Command): Command {
         )
         .option('--fail-fast', 'Exit after first file with an issue or error.')
         .addOption(crOpt('--no-fail-fast', 'Process all files even if there is an error.').hideHelp())
+        .option('--continue-on-error', 'Continue processing files even if there is a configuration error.')
         .option('-r, --root <root folder>', 'Root directory, defaults to current directory.')
         .addOption(crOpt('--relative', 'Issues are displayed relative to the root.').default(true).hideHelp())
         .option('--no-relative', 'Issues are displayed with absolute path instead of relative to the root.')
@@ -154,7 +163,8 @@ export function commandLint(prog: Command): Command {
         .addOption(crOpt('--no-color', 'Turn off color.').default(undefined))
         .addOption(crOpt('--default-configuration', 'Load the default configuration and dictionaries.').hideHelp())
         .addOption(crOpt('--no-default-configuration', 'Do not load the default configuration and dictionaries.'))
-        .option('--debug', 'Output information useful for debugging cspell.json files.')
+        .option('--dictionary <name>', 'Enable a dictionary by name.', collect)
+        .option('--disable-dictionary <name>', 'Disable a dictionary by name.', collect)
         .option('--reporter <module|path>', 'Specify one or more reporters to use.', collect)
         .addOption(crOpt('--report <level>', 'Set how unknown words are reported').choices(ReportChoicesAll))
         .addOption(
@@ -165,9 +175,8 @@ export function commandLint(prog: Command): Command {
         .addOption(crOpt('--issues-summary-report', 'Output a summary of issues found.').hideHelp())
         .addOption(crOpt('--show-perf-summary', 'Output a performance summary report.').hideHelp())
         .option('--issue-template [template]', 'Use a custom issue template. See --help --issue-template for details.')
+        .addOption(crOpt('--debug', 'Output information useful for debugging cspell.json files.').hideHelp())
         // Planned options
-        // .option('--dictionary <dictionary name>', 'Enable a dictionary by name.', collect)
-        // .option('--no-dictionary <dictionary name>', 'Disable a dictionary by name.', collect)
         // .option('--import', 'Import a configuration file.', collect)
         .usage(usage)
         .addHelpText('after', augmentCommandHelp)
@@ -257,28 +266,4 @@ function augmentCommandHelp(context: AddHelpTextContext) {
     }
     output.push(...hiddenHelp, advanced);
     return helpIssueTemplate(opts) + output.join('\n');
-}
-
-/**
- * Create Option - a helper function to create a commander option.
- * @param name - the name of the option
- * @param description - the description of the option
- * @param parseArg - optional function to parse the argument
- * @param defaultValue - optional default value
- * @returns CommanderOption
- */
-function crOpt<T>(
-    name: string,
-    description: string,
-    parseArg?: (value: string, previous: T) => T,
-    defaultValue?: T,
-): CommanderOption {
-    const option = new CommanderOption(name, description);
-    if (parseArg) {
-        option.argParser(parseArg);
-    }
-    if (defaultValue !== undefined) {
-        option.default(defaultValue);
-    }
-    return option;
 }

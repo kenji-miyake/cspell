@@ -35,23 +35,21 @@
     "commander": "^14.0.0",
     "csv-parse": "^5.6.0",
     "csv-stringify": "^6.5.2",
-    "jest-diff": "^29.7.0",
+    "jest-diff": "^30.0.4",
     "shelljs": "^0.10.0",
-    "simple-git": "^3.27.0",
+    "simple-git": "^3.28.0",
     "vscode-uri": "^3.1.0",
     "yaml": "^2.8.0"
   },
   "devDependencies": {
     "@cspell/cspell-bundled-dicts": "workspace:*",
     "@cspell/dict-de-de": "^4.1.0",
-    "@cspell/dict-en_us": "^4.4.9",
+    "@cspell/dict-en_us": "^4.4.13",
     "@cspell/dict-rust": "^4.0.11",
     "@cspell/dict-shell": "^1.1.0",
     "@cspell/dict-win32": "^2.0.7",
-    "@types/jest": "^29.5.14",
-    "@types/shelljs": "^0.8.16",
-    "cspell": "workspace:*",
-    "jest": "^29.7.0"
+    "@types/shelljs": "^0.8.17",
+    "cspell": "workspace:*"
   },
   "main": "tester.js",
   "keywords": [],
