@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## v0.1.0 (2025-10-01)
+
 ## v9.2.1 (2025-08-31)
 
 ### Dictionary Updates
